@@ -59,6 +59,46 @@ thead.fi-ta-header {
 }
 
 /* If both toolbar and headers are sticky, offset the header */
-.fi-ta-header-ctn + .fi-ta-content thead {
-    top: 60px; /* Adjust based on toolbar height */
+.fi-ta-header-ctn+.fi-ta-content thead {
+    top: 60px;
+    /* Adjust based on toolbar height */
+}
+
+/* Ultra thin scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.4) transparent;
+}
+
+.filament-app ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.filament-app ::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.4);
+    border-radius: 10px;
+}
+
+.filament-app {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 100, 100, 0.4) transparent;
 }
