@@ -57,20 +57,20 @@ class ClientStatsWidget extends BaseWidget
         $returnedAmount = (clone $orderQuery)->where('return_client', true)->sum('total_amount'); // قيمة البضاعة المرجعة
 
         return [
-            Stat::make(__('app.client_pending_balance'), number_format($pendingAmount, 2) . ' EGP')
+            Stat::make(__('app.client_pending_balance'), number_format($pendingAmount, 2) . ' ' . __('statuses.currency'))
                 ->description($pendingCount . ' ' . __('app.stats_descriptions.pending_req'))
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning')
                 ->chart([3, 5, 2, 6, 3, 5, 4]),
 
-            Stat::make(__('app.paid_to_client'), number_format($collectedAmount, 2) . ' EGP')
+            Stat::make(__('app.paid_to_client'), number_format($collectedAmount, 2) . ' ' . __('statuses.currency'))
                 ->description($collectedCount . ' ' . __('app.stats_descriptions.completed_req'))
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('success')
                 ->chart([2, 4, 6, 8, 5, 9, 10]),
 
             Stat::make(__('app.returned_items'), $returnedCount . ' ' . __('app.orders'))
-                ->description(__('app.stats_descriptions.value') . ': ' . number_format($returnedAmount, 2) . ' EGP')
+                ->description(__('app.stats_descriptions.value') . ': ' . number_format($returnedAmount, 2) . ' ' . __('statuses.currency'))
                 ->descriptionIcon('heroicon-m-arrow-uturn-left')
                 ->color('info')
                 ->chart([1, 0, 2, 1, 0, 1, 3]),

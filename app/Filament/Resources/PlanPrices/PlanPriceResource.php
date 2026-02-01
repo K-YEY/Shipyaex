@@ -29,7 +29,7 @@ class PlanPriceResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'سعر باقة';
+        return __('app.plan_price');
     }
 
     public static function getPluralModelLabel(): string
@@ -39,7 +39,7 @@ class PlanPriceResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'الإعدادات والبيانات';
+        return __('app.settings');
     }
     public static function form(Schema $schema): Schema
     {

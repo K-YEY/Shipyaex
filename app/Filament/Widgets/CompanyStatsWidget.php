@@ -41,19 +41,19 @@ class CompanyStatsWidget extends BaseWidget
         $netProfit = $netProfitFromOrders - $additionalExpenses;
 
         return [
-            Stat::make(__('app.company_revenue'), number_format($totalFees, 2) . ' EGP')
+            Stat::make(__('app.company_revenue'), number_format($totalFees, 2) . ' ' . __('statuses.currency'))
                 ->description(__('app.stats_descriptions.earnings'))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success')
                 ->chart([10, 15, 12, 18, 20, 15, 22]),
 
-            Stat::make(__('app.total_expenses'), number_format($totalExpenses, 2) . ' EGP')
+            Stat::make(__('app.total_expenses'), number_format($totalExpenses, 2) . ' ' . __('statuses.currency'))
                 ->description(__('app.shippers') . ' + ' . __('app.finance'))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('danger')
                 ->chart([5, 8, 6, 9, 7, 8, 6]),
 
-            Stat::make(__('app.net_profit'), number_format($netProfit, 2) . ' EGP')
+            Stat::make(__('app.net_profit'), number_format($netProfit, 2) . ' ' . __('statuses.currency'))
                 ->description(__('app.stats_descriptions.after_expenses'))
                 ->descriptionIcon('heroicon-m-presentation-chart-line')
                 ->color('primary')

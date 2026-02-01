@@ -70,4 +70,25 @@ return [
     
     // Navigation
     'settings_group' => 'Settings',
+
+    // OrderStatus Resource Extra
+    'clear_reasons_label' => 'Clear Refused Reasons Automatically',
+    'clear_reasons_helper' => 'When this status is selected, the system will automatically clear any previously associated refused reasons for the order.',
+    'refused_reasons_section' => 'Associated Refused Reasons',
+    'refused_reasons_desc' => 'Define which refused reasons are applicable for this status.',
+    'applicable_refused_reasons' => 'Available Refused Reasons',
+    'applicable_refused_reasons_helper' => 'Select reasons that users can choose from when this status is selected.',
+    'manage_reasons' => 'Manage Reasons',
+    'reasons_updated_success' => 'Refused reasons updated successfully ✅',
+    'clear_reasons_tooltip' => 'Clears refused reasons when this status is selected',
+    'has_reasons_count' => 'Count of Associated Reasons',
+    'yes' => 'Yes',
+    'no' => 'No',
+    'status_information' => 'Status Information',
+    'status_name' => 'Status Name',
+    'badge_color' => 'Badge Color',
+    'sort_order' => 'Sort Order',
+    'sort_order_helper' => 'Lower numbers appear first, customize the order as you wish.',
+    'all' => 'All',
+    'currency' => 'EGP',
 ];

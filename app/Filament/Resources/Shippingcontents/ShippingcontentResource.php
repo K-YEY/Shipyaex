@@ -29,7 +29,7 @@ class ShippingcontentResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'نوع شحنة';
+        return __('app.shipping_content');
     }
 
     public static function getPluralModelLabel(): string
@@ -39,7 +39,7 @@ class ShippingcontentResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'الإعدادات والبيانات';
+        return __('app.settings');
     }
 
     public static function form(Schema $schema): Schema

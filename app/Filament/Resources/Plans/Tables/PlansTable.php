@@ -15,19 +15,19 @@ class PlansTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('اسم الباقة')
+                    ->label(__('app.name'))
                     ->searchable(),
                 TextColumn::make('order_count')
-                    ->label('عدد الأوردرات')
+                    ->label(__('orders.orders'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('app.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('آخر تحديث')
+                    ->label(__('app.date'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -36,12 +36,12 @@ class PlansTable
                 //
             ])
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('مسح المختار'),
-                ])->label('عمليات على المختار'),
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

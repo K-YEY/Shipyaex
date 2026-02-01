@@ -100,4 +100,10 @@ return [
     'refused_reasons_desc' => 'حدد ايه هي أسباب الرفض اللي بتظهر مع الحالة دي',
     'applicable_refused_reasons' => 'أسباب الرفض المتاحة',
     'applicable_refused_reasons_helper' => 'اختار الأسباب اللي ينفع تظهر لليوزر لما يختار الحالة دي',
+    'manage_reasons' => 'إدارة أسباب الرفض',
+    'reasons_updated_success' => 'تم تحديث أسباب الرفض بنجاح ✅',
+    'clear_reasons_tooltip' => 'بيمسح أسباب الرفض لما تختار الحالة دي',
+    'has_reasons_count' => 'عدد الأسباب المرتبطة',
+    'yes' => 'ايوه',
+    'no' => 'لا',
 ];

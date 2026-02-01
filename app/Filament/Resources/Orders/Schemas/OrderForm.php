@@ -39,7 +39,7 @@ class OrderForm
         return $schema
             ->components([
                 TextInput::make('code')
-                    ->label('كود الأوردر')
+                    ->label(__('orders.code'))
                     ->required()
                     ->disabled()
                     ->dehydrated()
@@ -60,12 +60,12 @@ class OrderForm
                 
                 // 🔗 كود شركة أخرى (اختياري)
                 TextInput::make('external_code')
-                    ->label('كود برة (اختياري)')
-                    ->placeholder('كود من شركة شحن تانية لو متاح')
-                    ->helperText('لو الأوردر ده جاي من شركة تانية، ضيف الكود بتاعهم هنا'),
+                    ->label(__('orders.external_code'))
+                    ->placeholder(__('orders.external_code_input_placeholder'))
+                    ->helperText(__('orders.external_code_modal_description')),
 
                 Select::make('shipper_id')
-                    ->label('اختار الكابتن')
+                    ->label(__('orders.shipper_select_label'))
                     ->relationship(
                         name: 'shipper',
                         titleAttribute: 'name',
@@ -88,7 +88,7 @@ class OrderForm
                     })
                     ->hidden($isClient),
                 Select::make('client_id')
-                    ->label('العميل صاحب الأوردر')
+                    ->label(__('orders.client'))
                     ->options(function () use ($isClient, $user) {
                         if ($isClient) {
                             // لو كNoينت، يجيب اسمه بس
@@ -111,7 +111,7 @@ class OrderForm
                         $set('shipping_content', null);
                     }),
                 TextInput::make('name')
-                    ->label('اسم المستلم')
+                    ->label(__('orders.recipient_name'))
                     ->required()
                     ->datalist(
                         Order::query()
@@ -122,7 +122,7 @@ class OrderForm
                             ->toArray()
                     ),
                 TextInput::make('phone')
-                    ->label('رقم التليفون')
+                    ->label(__('orders.phone'))
                     ->required()
                     ->tel()
                     ->datalist(
@@ -134,7 +134,7 @@ class OrderForm
                             ->toArray()
                     ),
                 TextInput::make('phone_2')
-                    ->label('رقم تليفون تاني (اختياري)')
+                    ->label(__('orders.phone') . ' 2')
                     ->tel()
                     ->datalist(
                         Order::query()
@@ -146,7 +146,7 @@ class OrderForm
                     ),
 
                 Select::make('shipping_content')
-                    ->label('نوع الشحنة / المحتوى')
+                    ->label(__('app.shipping_content'))
                     ->options(function (Get $get) {
                         $clientId = $get('client_id');
 
@@ -181,11 +181,11 @@ class OrderForm
                     }),
 
                 Textarea::make('address')
-                    ->label('العنوان بالتفصيل')
+                    ->label(__('orders.address'))
                     ->required()
                     ->columnSpanFull(),
                 Select::make('governorate_id')
-                    ->label('المحافظة')
+                    ->label(__('orders.governorate'))
                     ->relationship('governorate', 'name')
                     ->required()
                     ->reactive()
@@ -244,7 +244,7 @@ class OrderForm
                     ->required(fn (Get $get) => (bool) $get('client_id')),
 
                 Select::make('city_id')
-                    ->label('المنطقة / المدينة')
+                    ->label(__('orders.city'))
                     ->options(function (Get $get) {
                         $areaId = $get('governorate_id');
                         if (! $areaId) {
@@ -258,63 +258,63 @@ class OrderForm
                     ->reactive()
                     ->disabled(fn (Get $get) => ! $get('governorate_id')),
                 TextInput::make('total_amount')
-                    ->label('إجمالي مبلغ الأوردر')
+                    ->label(__('orders.total_amount'))
                     ->numeric()
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Get $get, callable $set) use ($recalculate) {
                         $recalculate($get, $set);
                     }),
 
                 TextInput::make('fees')
-                    ->label('مصاريف الشحن')
+                    ->label(__('orders.shipping_fees'))
                     ->numeric()
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Get $get, callable $set) use ($recalculate) {
                         $recalculate($get, $set);
                     }),
 
                 TextInput::make('shipper_fees')
-                    ->label('عمولة الكابتن')
+                    ->label(__('orders.shipper_commission'))
                     ->numeric()
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Get $get, callable $set) use ($recalculate) {
                         $recalculate($get, $set);
                     })
                     ->hidden($isClient),
                 TextInput::make('cop')
-                    ->label('حق الشركة')
+                    ->label(__('orders.company_share'))
                     ->numeric()
                     ->readonly()
                     ->hidden($isClient), // ❌ مخفية للعميل
 
                 TextInput::make('cod')
-                    ->label('مبلغ التحصيل (COD)')
+                    ->label(__('orders.collection_amount'))
                     ->numeric()
                     ->readonly(),
                 Select::make('status')
-                    ->label('حالة الأوردر')
+                    ->label(__('orders.status'))
                     ->options([
-                        'out for delivery' => '🚚 خرج للتوصيل',
-                        'deliverd' => '✅ اتسلم بسلامة',
-                        'hold' => '⏸️ استنى شوية',
-                        'undelivered' => '❌ مجاش / راجع',
+                        'out for delivery' => '🚚 ' . __('app.out_for_delivery'),
+                        'deliverd' => '✅ ' . __('app.delivered'),
+                        'hold' => '⏸️ ' . __('app.hold'),
+                        'undelivered' => '❌ ' . __('app.undelivered'),
                     ])
                     ->default('out for delivery'),
                 Textarea::make('order_note')
-                    ->label('ملاحظات الأوردر')
-                    ->placeholder('اكتب أي ملاحظات تهم الكابتن (اختياري)...')
+                    ->label(__('orders.order_notes'))
+                    ->placeholder(__('orders.order_notes_input_placeholder'))
                     ->rows(3)
                     ->maxLength(500)
                     ->default(null)
                     ->columnSpanFull(),
                 
                 \Filament\Forms\Components\Toggle::make('allow_open')
-                    ->label('مسموح بالفتح')
+                    ->label(__('app.allow_open'))
                     ->default(true)
-                    ->helperText('هل يسمح للمستلم بفتح الشحنة قبل الدفع؟'),
+                    ->helperText(__('app.allow_open_helper')),
 
             ]);
     }

@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Providers;
-
+use BezhanSalleh\LanguageSwitch\LanguageSwitch;
 use App\Models\CollectedClient;
 use App\Models\CollectedShipper;
 use App\Policies\CollectedClientPolicy;
 use App\Policies\CollectedShipperPolicy;
-use BezhanSalleh\LanguageSwitch\LanguageSwitch;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,16 +27,12 @@ class AppServiceProvider extends ServiceProvider
         // Configure Language Switch
         LanguageSwitch::configureUsing(function (LanguageSwitch $switch) {
             $switch
-                ->locales(['ar', 'en'])
-                ->flags([
-                    'ar' => asset('flags/ar.png'),
-                    'en' => asset('flags/en.png'),
-                ])
-                ->labels([
-                    'ar' => 'عربي',
-                    'en' => 'English',
-                ])
-                ->visible(insidePanels: true, outsidePanels: false);
+                ->locales(['ar','en'])
+                  ->flags([
+                'ar' => asset('flags/ar.png'),
+                'en' => asset('flags/en.png'),
+            ])
+            ->flagsOnly();
         });
 
         // Register Policies

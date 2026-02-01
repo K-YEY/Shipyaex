@@ -13,10 +13,10 @@ class PlanForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('اسم الباقة')
+                    ->label(__('app.name'))
                     ->required(),
                 TextInput::make('order_count')
-                    ->label('عدد الأوردرات المسموح بيها')
+                    ->label(__('orders.orders'))
                     ->required()
                     ->numeric()
                     ->default(0),

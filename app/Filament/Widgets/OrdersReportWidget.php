@@ -99,85 +99,85 @@ class OrdersReportWidget extends BaseWidget
 
         return [
             // Row 1: Status counts
-            Stat::make('📦 All Orders', $allOrders)
-                ->description('Total')
+            Stat::make('📦 ' . __('app.total_orders'), $allOrders)
+                ->description(__('app.stats_descriptions.total'))
                 ->color('primary'),
             
-            Stat::make('🚚 Out for Delivery', $outForDelivery)
-                ->description(number_format($outForDeliveryTotal, 2) . ' EGP')
+            Stat::make('🚚 ' . __('app.out_for_delivery'), $outForDelivery)
+                ->description(number_format($outForDeliveryTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('info'),
             
-            Stat::make('⏸️ Hold', $hold)
-                ->description(number_format($holdTotal, 2) . ' EGP')
+            Stat::make('⏸️ ' . __('app.hold'), $hold)
+                ->description(number_format($holdTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('warning'),
             
-            Stat::make('✅ Delivered', $delivered)
-                ->description(number_format($deliveredTotal, 2) . ' EGP')
+            Stat::make('✅ ' . __('app.delivered'), $delivered)
+                ->description(number_format($deliveredTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('success'),
             
-            Stat::make('❌ Undelivered', $undelivered)
-                ->description(number_format($undeliveredTotal, 2) . ' EGP')
+            Stat::make('❌ ' . __('app.undelivered'), $undelivered)
+                ->description(number_format($undeliveredTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('danger'),
 
             // Row 2: Shipper collection
-            Stat::make('📦 Uncollected Shipper', $unCollectedShipper)
-                ->description(number_format($unCollectedShipperTotal, 2) . ' EGP')
+            Stat::make('📦 ' . __('app.uncollected_shipper'), $unCollectedShipper)
+                ->description(number_format($unCollectedShipperTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('warning'),
             
-            Stat::make('✅ Collected Shipper', $collectedShipper)
-                ->description(number_format($collectedShipperTotal, 2) . ' EGP')
+            Stat::make('✅ ' . __('app.collected_shipper'), $collectedShipper)
+                ->description(number_format($collectedShipperTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('success'),
             
-            Stat::make('📤 Unreturned Shipper', $unReturnShipper)
-                ->description(number_format($unReturnShipperTotal, 2) . ' EGP')
+            Stat::make('📤 ' . __('app.unreturned_shipper'), $unReturnShipper)
+                ->description(number_format($unReturnShipperTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('gray'),
             
-            Stat::make('↩️ Returned Shipper', $returnShipper)
-                ->description(number_format($returnShipperTotal, 2) . ' EGP')
+            Stat::make('↩️ ' . __('app.returned_shipper'), $returnShipper)
+                ->description(number_format($returnShipperTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('info'),
 
-            Stat::make('💰 Uncollected Client', $unCollectedClient)
-                ->description(number_format($unCollectedClientTotal, 2) . ' EGP')
+            Stat::make('💰 ' . __('app.uncollected_client'), $unCollectedClient)
+                ->description(number_format($unCollectedClientTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('warning'),
 
             // Row 3: Client collection
-            Stat::make('✅ Collected Client', $collectedClient)
-                ->description(number_format($collectedClientTotal, 2) . ' EGP')
+            Stat::make('✅ ' . __('app.collected_client'), $collectedClient)
+                ->description(number_format($collectedClientTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('success'),
             
-            Stat::make('↩️ Returned Client', $returnClient)
-                ->description(number_format($returnClientTotal, 2) . ' EGP')
+            Stat::make('↩️ ' . __('app.returned_client'), $returnClient)
+                ->description(number_format($returnClientTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('info'),
             
-            Stat::make('📤 Unreturned Client', $unReturnClient)
-                ->description(number_format($unReturnClientTotal, 2) . ' EGP')
+            Stat::make('📤 ' . __('app.unreturned_client'), $unReturnClient)
+                ->description(number_format($unReturnClientTotal, 2) . ' ' . __('statuses.currency'))
                 ->color('gray'),
 
             // Row 4: Financial Summary
-            Stat::make('💵 Total Fees', number_format($totalFees, 2) . ' EGP')
-                ->description('Fees')
+            Stat::make('💵 ' . __('app.total_fees'), number_format($totalFees, 2) . ' ' . __('statuses.currency'))
+                ->description(__('orders.shipping_fees'))
                 ->color('primary'),
             
-            Stat::make('🚚 Shipper Fees', number_format($totalShipperFees, 2) . ' EGP')
-                ->description('Shipper Fees')
+            Stat::make('🚚 ' . __('app.shipper_fees'), number_format($totalShipperFees, 2) . ' ' . __('statuses.currency'))
+                ->description(__('orders.shipper_commission'))
                 ->color('info'),
 
             // Row 5: Profits
-            Stat::make('💰 Net Profit', number_format($netProfit, 2) . ' EGP')
-                ->description('From collected orders')
+            Stat::make('💰 ' . __('app.net_profit'), number_format($netProfit, 2) . ' ' . __('statuses.currency'))
+                ->description(__('app.stats_descriptions.from_collected'))
                 ->color('success'),
             
-            Stat::make('📊 Total Revenue', number_format($totalRevenue, 2) . ' EGP')
-                ->description('From delivered orders')
+            Stat::make('📊 ' . __('app.total_revenue'), number_format($totalRevenue, 2) . ' ' . __('statuses.currency'))
+                ->description(__('app.stats_descriptions.from_delivered'))
                 ->color('success'),
             
-            Stat::make('💸 Expenses', number_format($totalExpenses, 2) . ' EGP')
-                ->description('Shipper fees + expenses')
+            Stat::make('💸 ' . __('app.expenses_label'), number_format($totalExpenses, 2) . ' ' . __('statuses.currency'))
+                ->description(__('app.stats_descriptions.shipper_expenses'))
                 ->color('danger'),
         ];
         } catch (\Exception $e) {
             return [
-                Stat::make('⚠️ Error', 'Failed to load data')
+                Stat::make('⚠️ ' . __('statuses.error'), __('app.data_load_error'))
                     ->description($e->getMessage())
                     ->color('danger'),
             ];

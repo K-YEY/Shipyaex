@@ -12,7 +12,7 @@ class ShippingcontentForm
         return $schema
             ->components([
             TextInput::make("name")
-                ->label('اسم نوع الشحنة')
+                ->label(__('app.name'))
                 ->required(),
             ]);
     }

@@ -17,12 +17,12 @@ class UserForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('الاسم بالكامل')
+                    ->label(__('app.name'))
                     ->required()
                     ->maxLength(255),
                     
                 TextInput::make('phone')
-                    ->label('رقم التليفون')
+                    ->label(__('app.phone'))
                     ->required()
                     ->tel()
                     ->maxLength(20)
@@ -32,16 +32,16 @@ class UserForm
                         ignoreRecord: true
                     )
                     ->validationMessages([
-                        'unique' => 'الرقم ده مسجل فعلاً! جرب رقم تاني.',
+                        'unique' => __('app.unique_phone'),
                     ]),
                     
                 TextInput::make('address')
-                    ->label('العنوان')
+                    ->label(__('app.address'))
                     ->required()
                     ->maxLength(500),
 
                 TextInput::make('username')
-                    ->label('اسم المستخدم (Username)')
+                    ->label(__('app.username'))
                     ->required()
                     ->alphaDash()
                     ->maxLength(50)
@@ -51,11 +51,11 @@ class UserForm
                         ignoreRecord: true
                     )
                     ->validationMessages([
-                        'unique' => 'الاسم ده محجوز يا ريس، اختار واحد تاني.',
+                        'unique' => __('app.unique_username'),
                     ]),
                     
                 TextInput::make('password')
-                    ->label('كلمة السر')
+                    ->label(__('app.password'))
                     ->password()
                     ->revealable()
                     ->required(fn (?object $record) => $record === null)
@@ -63,25 +63,25 @@ class UserForm
                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->minLength(6)
                     ->validationMessages([
-                        'min' => 'كلمة السر لازم تكون 6 حروف على الأقل.',
+                        'min' => __('app.min_password'),
                     ]),
                     
                 TextInput::make('commission')
-                    ->label('العمولة (للكباتن)')
+                    ->label(__('orders.shipper_commission'))
                     ->required()
                     ->numeric()
                     ->minValue(0)
                     ->default(0.0),
                     
                 Select::make('shipping_content_id')
-                    ->label('أنواع الشحنات')
+                    ->label(__('app.shipping_contents'))
                     ->relationship('shippingContents', 'name')
                     ->multiple()
                     ->searchable()
                     ->preload(),
                     
                 Select::make('plan_id')
-                    ->label('الباقة (للعملاء)')
+                    ->label(__('app.plan'))
                     ->options(
                         Plan::pluck('name', 'id')
                     )
@@ -89,18 +89,15 @@ class UserForm
                     ->preload(),
                     
                 Select::make('roles')
-                    ->label('الصلاحية (دوره إيه؟)')
+                    ->label(__('app.status'))
                     ->relationship('roles', 'name', fn ($query) => $query->where('name', '!=', 'super_admin'))
                     ->multiple()
                     ->preload()
                     ->searchable()
-                    ->required()
-                    ->validationMessages([
-                        'required' => 'لازم تحدد صلاحية واحدة على الأقل.',
-                    ]),
+                    ->required(),
                     
                 Toggle::make('is_blocked')
-                    ->label('محظور؟')
+                    ->label(__('app.is_blocked'))
                     ->default(false),
             ]);
     }

@@ -15,18 +15,18 @@ class ShippingcontentsTable
         return $table
             ->columns([
                 TextColumn::make("name")
-                    ->label('اسم نوع الشحنة'),
+                    ->label(__('app.name')),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('مسح المختار'),
-                ])->label('عمليات على المختار'),
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

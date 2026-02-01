@@ -103,15 +103,15 @@ class MonthlyRevenueChart extends ApexChartWidget
                 ],
                 'series' => [
                     [
-                        'name' => 'Revenue (EGP)',
+                        'name' => __('app.total_revenue') . ' (' . __('statuses.currency') . ')',
                         'data' => $revenue,
                     ],
                     [
-                        'name' => 'Profit (EGP)',
+                        'name' => __('app.net_profit') . ' (' . __('statuses.currency') . ')',
                         'data' => $profit,
                     ],
                     [
-                        'name' => 'Orders Count',
+                        'name' => __('app.total_orders'),
                         'data' => $orders,
                     ],
                 ],
@@ -168,12 +168,12 @@ class MonthlyRevenueChart extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'No Data',
+                    'name' => __('app.no_data'),
                     'data' => [0],
                 ],
             ],
             'xaxis' => [
-                'categories' => ['No Data'],
+                'categories' => [__('app.no_data')],
             ],
         ];
     }

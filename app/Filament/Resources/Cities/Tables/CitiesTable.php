@@ -15,18 +15,18 @@ class CitiesTable
         return $table
             ->columns([
                 TextColumn::make('governorate.name')
-                    ->label('المحافظة')
+                    ->label(__('app.governorate'))
                     ->searchable(),
                 TextColumn::make('name')
-                    ->label('المدينة / المنطقة')
+                    ->label(__('app.city'))
                     ->searchable(),
                 TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('app.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('آخر تحديث')
+                    ->label(__('app.date'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -35,12 +35,12 @@ class CitiesTable
                 //
             ])
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('مسح المختار'),
-                ])->label('عمليات على المختار'),
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

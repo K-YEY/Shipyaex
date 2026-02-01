@@ -15,17 +15,17 @@ class GovernoratesTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('اسم المحافظة')
+                    ->label(__('app.name'))
                     ->searchable(),
                 TextColumn::make('follow_up_hours')
-                    ->label('ساعات المتابعة')
+                    ->label(__('app.follow_up_hours'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('shipper.name')
-                    ->label('الكابتن الافتراضي')
+                    ->label(__('app.default_shipper'))
                     ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('app.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

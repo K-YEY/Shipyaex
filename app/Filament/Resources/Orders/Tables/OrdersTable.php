@@ -56,7 +56,7 @@ class OrdersTable
         return $table
             ->columns([
                 TextColumn::make('code')
-                    ->label('كود الأوردر')
+                    ->label(__('orders.code'))
                     ->color(function ($record) {
                         try {
                             // Check governorate specific hours first, then fallback to global setting
@@ -82,43 +82,44 @@ class OrdersTable
                     ->alignCenter()
                     ->searchable( isIndividual: true,),
                 TextColumn::make('external_code')
-                    ->label('كود خارجي')
+                    ->label(__('orders.external_code'))
                     ->color('warning')
                     ->badge()
                     ->sortable() ->alignCenter()
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(isIndividual: true)
-                    ->placeholder('➕ ضيف')
+                    ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
                         self::isAdmin() ? 
                         Action::make('editExternalCode')
-                            ->modalHeading('📝 كود خارجي')
-                            ->modalDescription('ضيف أو عدل كود شركة الشحن الخارجية')
+                            ->modalHeading(__('orders.external_code_modal_heading'))
+                            ->modalDescription(__('orders.external_code_modal_description'))
                             ->form([
                                 \Filament\Forms\Components\TextInput::make('external_code')
-                                    ->label('كود برة')
-                                    ->placeholder('اكتب الكود هنا...')
+                                    ->label(__('orders.external_code_input_label'))
+                                    ->placeholder(__('orders.external_code_input_placeholder'))
                                     ->default(fn ($record) => $record->external_code),
                             ])
                             ->action(function (Order $record, array $data) {
                                 $record->update(['external_code' => $data['external_code']]);
                                 
                                 Notification::make()
-                                    ->title('✅ الكود اتحدث يا ريس')
-                                    ->body("أوردر رقم #{$record->code}")
+                                    ->title(__('orders.external_code_success'))
+                                    ->body("Order #{$record->code}")
                                     ->success()
                                     ->send();
                             })
                             ->modalWidth('sm')
                     : null),
                 TextColumn::make('created_at')
-                    ->label('تاريخ التسجيل')
+                    ->label(__('orders.registration_date'))
                     ->date('Y-m-d')
                     ->sortable()
                     ->searchable(isIndividual: true)
                     ->alignCenter()
                     ->toggleable(),
                 TextColumn::make('shipper_date')
+                    ->label(__('orders.shipper_date'))
                     ->date('Y-m-d')
                     ->toggleable()  
                     ->searchable(isIndividual: true)
@@ -126,11 +127,12 @@ class OrdersTable
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('name')
+                    ->label(__('orders.recipient_name'))
                     ->searchable(isIndividual: true)
                     ->alignCenter()
                     ->toggleable(),
                 TextColumn::make('customer_phones')
-                    ->label('التليفون')
+                    ->label(__('orders.phone'))
                     ->getStateUsing(
                         fn ($record) => collect([
                             $record->phone,
@@ -148,7 +150,7 @@ class OrdersTable
                     )
                     ->toggleable()->alignCenter(),
                 TextColumn::make('address')
-                    ->label('العنوان')
+                    ->label(__('orders.address'))
                     ->toggleable()
                     ->searchable(isIndividual: true)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
@@ -167,12 +169,12 @@ class OrdersTable
                     ->sortable(),
                 TextInputColumn::make('total_amount')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        'الإجمالي<br><span style="color:var(--primary-600); font-weight:bold;">' . 
+                        __('orders.total_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
                         number_format((fn() => $this->getFilteredTableQuery()->sum('total_amount'))->call($livewire), 2) . 
                         '</span>'
                     ))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->sortable()
                     ->toggleable()
                     ->searchable(isIndividual: true)
@@ -180,11 +182,11 @@ class OrdersTable
 
                 TextInputColumn::make('fees')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        'شحن<br><span style="color:var(--primary-600); font-weight:bold;">' . 
+                        __('orders.shipping_fees') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
                         number_format((fn() => $this->getFilteredTableQuery()->sum('fees'))->call($livewire), 2) . 
                         '</span>'
                     ))
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
                     ->visible(self::isAdmin())
@@ -194,11 +196,11 @@ class OrdersTable
 
                 TextInputColumn::make('shipper_fees')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        'عمولة<br><span style="color:var(--primary-600); font-weight:bold;">' . 
+                        __('orders.shipper_commission') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
                         number_format((fn() => $this->getFilteredTableQuery()->sum('shipper_fees'))->call($livewire), 2) . 
                         '</span>'
                     ))
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
                     ->visible(self::isAdmin() || self::isShipper())
@@ -207,11 +209,11 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
                 TextInputColumn::make('net_fees')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        'الصافي<br><span style="color:var(--primary-600); font-weight:bold;">' . 
+                        __('orders.net_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
                         number_format((fn() => $this->getFilteredTableQuery()->sum('total_amount') - $this->getFilteredTableQuery()->sum('shipper_fees'))->call($livewire), 2) . 
                         '</span>'
                     ))
-                    ->prefix('ج.م')
+                    ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("total_amount - COALESCE(shipper_fees, 0) $direction"))
                     ->visible(self::isShipper())
@@ -221,12 +223,12 @@ class OrdersTable
 
                 TextColumn::make('cop')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        'الشركة<br><span style="color:var(--primary-600); font-weight:bold;">' . 
+                        __('orders.company_share') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
                         number_format((fn() => $this->getFilteredTableQuery()->sum('cop'))->call($livewire), 2) . 
                         '</span>'
                     ))
                     ->numeric()
-                    ->state(fn ($record) => number_format($record->cop, 2) . ' ج.م')
+                    ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->searchable(isIndividual: true)
                     ->visible(self::isAdmin() || !self::isClient())
@@ -235,12 +237,12 @@ class OrdersTable
 
                 TextColumn::make('cod')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        'التحصيل<br><span style="color:var(--primary-600); font-weight:bold;">' . 
+                        __('orders.collection_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
                         number_format((fn() => $this->getFilteredTableQuery()->sum('cod'))->call($livewire), 2) . 
                         '</span>'
                     ))
                     ->numeric()
-                    ->state(fn ($record) => number_format($record->cod, 2) . ' ج.م')
+                    ->state(fn ($record) => number_format($record->cod, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->visible(self::isAdmin() || self::isClient())
                     ->searchable(isIndividual: true)
@@ -249,13 +251,13 @@ class OrdersTable
                 TextColumn::make('status')
                     ->label(new \Illuminate\Support\HtmlString(
                         view('filament.tables.columns.status-select-header', [
-                            'label' => 'حالة الأوردر',
+                            'label' => __('orders.status'),
                             'field' => 'status',
                             'options' => [
-                                self::STATUS_OUT_FOR_DELIVERY => '🚚 خرج للتوصيل',
-                                self::STATUS_DELIVERED => '✅ اتسلم بسلامة',
-                                self::STATUS_UNDELIVERED => '❌ مجاش / راجع',
-                                self::STATUS_HOLD => '⏸️ استنى شوية',
+                                self::STATUS_OUT_FOR_DELIVERY => '🚚 ' . __('app.out_for_delivery'),
+                                self::STATUS_DELIVERED => '✅ ' . __('app.delivered'),
+                                self::STATUS_UNDELIVERED => '❌ ' . __('app.undelivered'),
+                                self::STATUS_HOLD => '⏸️ ' . __('app.hold'),
                             ],
                         ])->render()
                     ))
@@ -419,7 +421,7 @@ class OrdersTable
 
                     )      ->extraHeaderAttributes(['style' => 'min-width: 200px']),
                 TextColumn::make('status_note')
-                    ->label('ملاحظات الحالة')
+                    ->label(__('orders.status_notes'))
                     ->badge()                    
                     ->alignCenter()
                     ->extraHeaderAttributes(['style' => 'min-width: 200px'])
@@ -460,25 +462,25 @@ class OrdersTable
                     ->wrap(),
 
                 TextColumn::make('order_note')
-                    ->label('ملاحظات الأوردر')
+                    ->label(__('orders.order_notes'))
                     ->color('success')
                     ->badge()
                     ->sortable()
                     ->alignCenter()
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(isIndividual: true)
-                    ->placeholder('➕ ضيف ملاحظة')
+                    ->placeholder(__('orders.order_notes_placeholder'))
                     ->limit(50)
                     ->tooltip(fn ($record) => $record->order_note)
                     ->action(
                         self::isAdmin() ? 
                         Action::make('editOrderNote')
-                            ->modalHeading('📝 ملاحظات الأوردر')
-                            ->modalDescription('ضيف أو عدل ملاحظات الأوردر ده')
+                            ->modalHeading(__('orders.order_notes_modal_heading'))
+                            ->modalDescription(__('orders.external_code_modal_description'))
                             ->form([
                                 \Filament\Forms\Components\Textarea::make('order_note')
-                                    ->label('الملاحظات')
-                                    ->placeholder('اكتب ملاحظاتك هنا...')
+                                    ->label(__('orders.order_notes_input_label'))
+                                    ->placeholder(__('orders.order_notes_input_placeholder'))
                                     ->rows(4)
                                     ->maxLength(500)
                                     ->default(fn ($record) => $record->order_note),
@@ -487,8 +489,8 @@ class OrdersTable
                                 $record->update(['order_note' => $data['order_note']]);
                                 
                                 Notification::make()
-                                    ->title('✅ ملاحظات الأوردر اتحدثت')
-                                    ->body("أوردر رقم #{$record->code}")
+                                    ->title(__('orders.order_notes_success'))
+                                    ->body("Order #{$record->code}")
                                     ->success()
                                     ->send();
                             })
@@ -582,17 +584,17 @@ class OrdersTable
             ])
             ->filters([
                 \Filament\Tables\Filters\TrashedFilter::make()
-                    ->label('الأوردرات الممسوحة')
-                    ->placeholder('الأوردرات النشطة')
-                    ->trueLabel('الممسوح بس')
-                    ->falseLabel('الكل مع الممسوح')
+                    ->label(__('orders.filters.deleted_orders'))
+                    ->placeholder(__('orders.filters.active_orders'))
+                    ->trueLabel(__('orders.filters.deleted_only'))
+                    ->falseLabel(__('orders.filters.all_with_deleted'))
                     ->visible(self::isAdmin()),
 
                 \Filament\Tables\Filters\SelectFilter::make('follow_up_status')
-                    ->label('متابعة التأخير')
+                    ->label(__('orders.filters.delay_follow_up'))
                     ->options([
-                        'delayed' => '🚨 متأخرة (تجاوزت الوقت)',
-                        'on_time' => '✅ تمام (لسة في الوقت)',
+                        'delayed' => __('orders.filters.delayed'),
+                        'on_time' => __('orders.filters.on_time'),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
                         if (empty($data['value'])) {
@@ -618,38 +620,38 @@ class OrdersTable
                     }),
                     
                 \Filament\Tables\Filters\SelectFilter::make('status')
-                    ->label('الحالة')
+                    ->label(__('orders.status'))
                     ->options([
-                        self::STATUS_OUT_FOR_DELIVERY => '🚚 خرج للتوصيل',
-                        self::STATUS_DELIVERED => '✅ اتسلم',
-                        self::STATUS_UNDELIVERED => '❌ مجاش / راجع',
-                        self::STATUS_HOLD => '⏸️ استنى شوية',
+                        self::STATUS_OUT_FOR_DELIVERY => '🚚 ' . __('app.out_for_delivery'),
+                        self::STATUS_DELIVERED => '✅ ' . __('app.delivered'),
+                        self::STATUS_UNDELIVERED => '❌ ' . __('app.undelivered'),
+                        self::STATUS_HOLD => '⏸️ ' . __('app.hold'),
                     ]),
                 \Filament\Tables\Filters\TernaryFilter::make('collected_shipper')
-                    ->label('اتحصل من الكابتن؟')
-                    ->placeholder('الكل يا ريس')
-                    ->trueLabel('أيوة')
-                    ->falseLabel('لأ'),
+                    ->label(__('orders.filters.collected_from_shipper'))
+                    ->placeholder(__('statuses.all'))
+                    ->trueLabel(__('statuses.yes'))
+                    ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('return_shipper')
-                    ->label('رجع من الكابتن؟')
-                    ->placeholder('الكل يا ريس')
-                    ->trueLabel('أيوة')
-                    ->falseLabel('لأ'),
+                    ->label(__('orders.filters.returned_from_shipper'))
+                    ->placeholder(__('statuses.all'))
+                    ->trueLabel(__('statuses.yes'))
+                    ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('has_return')
-                    ->label('فيه مرتجع؟')
-                    ->placeholder('الكل يا ريس')
-                    ->trueLabel('أيوة')
-                    ->falseLabel('لأ'),
+                    ->label(__('orders.filters.has_return'))
+                    ->placeholder(__('statuses.all'))
+                    ->trueLabel(__('statuses.yes'))
+                    ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('collected_client')
-                    ->label('اتسوى مع العميل؟')
-                    ->placeholder('الكل يا ريس')
-                    ->trueLabel('أيوة')
-                    ->falseLabel('لأ'),
+                    ->label(__('orders.filters.settled_with_client'))
+                    ->placeholder(__('statuses.all'))
+                    ->trueLabel(__('statuses.yes'))
+                    ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('return_client')
-                    ->label('رجع للعميل؟')
-                    ->placeholder('الكل يا ريس')
-                    ->trueLabel('أيوة')
-                    ->falseLabel('لأ'),
+                    ->label(__('orders.filters.returned_to_client'))
+                    ->placeholder(__('statuses.all'))
+                    ->trueLabel(__('statuses.yes'))
+                    ->falseLabel(__('statuses.no')),
             ])
             ->recordActions(self::getRecordActions())
             ->headerActions(self::getHeaderActions())
@@ -657,7 +659,7 @@ class OrdersTable
                 // 📤 EXPORT & PRINT
                 BulkActionGroup::make([
                     BulkAction::make('exportSelected')
-                        ->label('Export Orders')
+                        ->label(__('orders.bulk_actions.export_orders'))
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('success')
                         ->deselectRecordsAfterCompletion()
@@ -679,7 +681,7 @@ class OrdersTable
                         }),
                     
                     BulkAction::make('exportExternalCodes')
-                        ->label('Export Codes')
+                        ->label(__('orders.bulk_actions.export_codes'))
                         ->icon('heroicon-o-document-text')
                         ->color('success')
                         ->deselectRecordsAfterCompletion()
@@ -701,7 +703,7 @@ class OrdersTable
                         }),
                     
                     BulkAction::make('printLabels')
-                        ->label('Print Labels')
+                        ->label(__('orders.bulk_actions.print_labels'))
                         ->icon('heroicon-o-printer')
                         ->color('success')
                         ->deselectRecordsAfterCompletion()
@@ -718,18 +720,18 @@ class OrdersTable
 
                             return redirect()->away(route('orders.print-labels', ['ids' => implode(',', $orderIds)]));
                         }),
-                ])->label('📤 Export & Print'),
+                ])->label(__('orders.bulk_actions.export_print_group')),
                 
                 // 📋 ORDER MANAGEMENT
                 BulkActionGroup::make([
                     BulkAction::make('assignShipper')
-                        ->label('Assign Shipper')
+                        ->label(__('orders.bulk_actions.assign_shipper'))
                         ->icon('heroicon-o-truck')
                         ->color('primary')
                         ->visible(self::isAdmin())
                         ->form([
                             Select::make('shipper_id')
-                                ->label('Select Shipper')
+                                ->label(__('orders.shipper_select_label'))
                                 ->options(
                                     User::whereHas('roles', fn($q) => $q->where('name', 'shipper'))
                                         ->pluck('name', 'id')

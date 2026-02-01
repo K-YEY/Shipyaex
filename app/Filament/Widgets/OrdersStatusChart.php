@@ -146,7 +146,7 @@ class OrdersStatusChart extends ApexChartWidget
                                 ],
                                 'total' => [
                                     'show' => true,
-                                    'label' => 'Total Orders',
+                                    'label' => __('app.total_orders'),
                                     'fontSize' => '16px',
                                     'fontWeight' => 600,
                                     'color' => '#9ca3af',
@@ -204,7 +204,7 @@ class OrdersStatusChart extends ApexChartWidget
                 'height' => 350,
             ],
             'series' => [1],
-            'labels' => ['No Data'],
+            'labels' => [__('app.no_data')],
             'colors' => ['#9ca3af'],
         ];
     }

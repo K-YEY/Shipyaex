@@ -33,7 +33,7 @@ class ClientsResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'عميل';
+        return __('app.client');
     }
 
     public static function getPluralModelLabel(): string
@@ -48,12 +48,12 @@ class ClientsResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('اسم العميل')
+                    ->label(__('app.name'))
                     ->required()
                     ->maxLength(255),
                     
                 TextInput::make('phone')
-                    ->label('رقم التليفون')
+                    ->label(__('app.phone'))
                     ->required()
                     ->tel()
                     ->maxLength(20)
@@ -63,15 +63,15 @@ class ClientsResource extends Resource
                         ignoreRecord: true
                     )
                     ->validationMessages([
-                        'unique' => 'الرقم ده موجود قبل كدا! شوف غيره.',
+                        'unique' => __('app.unique_phone'),
                     ]),
                     
                 TextInput::make('address')
-                    ->label('العنوان')
+                    ->label(__('app.address'))
                     ->maxLength(500),
 
                 TextInput::make('username')
-                    ->label('اسم المستخدم (Username)')
+                    ->label(__('app.username'))
                     ->required()
                     ->alphaDash()
                     ->maxLength(50)
@@ -81,11 +81,11 @@ class ClientsResource extends Resource
                         ignoreRecord: true
                     )
                     ->validationMessages([
-                        'unique' => 'الاسم ده محجوز يا ريس، اختار واحد تاني.',
+                        'unique' => __('app.unique_username'),
                     ]),
                     
                 TextInput::make('password')
-                    ->label('كلمة السر')
+                    ->label(__('app.password'))
                     ->password()
                     ->revealable()
                     ->required(fn (?object $record) => $record === null)
@@ -93,17 +93,17 @@ class ClientsResource extends Resource
                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->minLength(6)
                     ->validationMessages([
-                        'min' => 'كلمة السر لازم تكون 6 حروف على الأقل.',
+                        'min' => __('app.min_password'),
                     ]),
                     
                 Select::make('plan_id')
-                    ->label('الباقة / السعر')
+                    ->label(__('app.plan_id'))
                     ->options(Plan::pluck('name', 'id'))
                     ->searchable()
                     ->preload(),
                     
                 Toggle::make('is_blocked')
-                    ->label('محظور؟')
+                    ->label(__('app.is_blocked'))
                     ->default(false),
             ]);
     }
@@ -114,31 +114,31 @@ class ClientsResource extends Resource
             ->query(User::role('client'))
             ->columns([
                 TextColumn::make('id')
-                    ->label('كود العميل')
+                    ->label(__('app.client') . ' ID')
                     ->sortable()
                     ->searchable()
                     ->badge()
                     ->color('primary'),
                 TextColumn::make('name')
-                    ->label('الاسم')
+                    ->label(__('app.name'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('phone')
-                    ->label('التليفون')
+                    ->label(__('app.phone'))
                     ->searchable()
                     ->copyable()
-                    ->copyMessage('الرقم اتنسخ!'),
+                    ->copyMessage(__('app.copied')),
                 TextColumn::make('address')
-                    ->label('العنوان')
+                    ->label(__('app.address'))
                     ->searchable()
                     ->limit(30)
                     ->tooltip(fn ($record) => $record->address),
                 TextColumn::make('plan.name')
-                    ->label('الباقة')
+                    ->label(__('app.plan'))
                     ->badge()
                     ->color('success'),
                 TextColumn::make('created_at')
-                    ->label('تاريخ التسجيل')
+                    ->label(__('app.created_at'))
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -147,12 +147,12 @@ class ClientsResource extends Resource
                 //
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make()->label('تعديل'),
-                \Filament\Actions\DeleteAction::make()->label('مسح'),
+                \Filament\Actions\EditAction::make()->label(__('app.edit')),
+                \Filament\Actions\DeleteAction::make()->label(__('app.delete')),
             ])
             ->toolbarActions([
                 \Filament\Actions\CreateAction::make()
-                    ->label('عميل جديد')
+                    ->label(__('app.new') . ' ' . __('app.client'))
                     ->mutateFormDataUsing(function (array $data): array {
                         // Add role client تلقائياً
                         return $data;

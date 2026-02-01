@@ -16,40 +16,40 @@ class PlanPricesTable
         return $table
             ->columns([
                 TextColumn::make('plan.name')
-                    ->label('الباقة')
+                    ->label(__('app.plan'))
                     ->searchable(),
                 TextColumn::make('location_id')
-                    ->label('المكان / المحافظة')
+                    ->label(__('app.governorate'))
                     ->formatStateUsing(function ($state, $record) {
                         return $record->governorate->name;
                     })
                     ->sortable(),
                 TextColumn::make('price')
-                    ->label('السعر')
+                    ->label(__('app.price'))
                     ->numeric(),
                 TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('app.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->label('آخر تحديث')
+                    ->label(__('app.date'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('plan_id')
-                    ->label('فلترة بالباقة')
+                    ->label(__('app.plan'))
                     ->relationship('plan', 'name'),
             ])
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('مسح المختار'),
-                ])->label('عمليات على المختار'),
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

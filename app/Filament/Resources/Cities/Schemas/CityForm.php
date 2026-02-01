@@ -13,11 +13,11 @@ class CityForm
         return $schema
             ->components([
                 Select::make('governorate_id')
-                    ->label('المحافظة')
+                    ->label(__('app.governorate'))
                     ->relationship('governorate', 'name')
                     ->required(),
                 TextInput::make('name')
-                    ->label('اسم المدينة / المنطقة')
+                    ->label(__('app.city'))
                     ->required(),
             ]);
     }

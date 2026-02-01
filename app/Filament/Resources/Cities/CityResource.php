@@ -29,7 +29,7 @@ class CityResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'مدينة';
+        return __('app.city');
     }
 
     public static function getPluralModelLabel(): string
@@ -39,7 +39,7 @@ class CityResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'المناطق الجغرافية';
+        return __('app.geographic_locations');
     }
     public static function form(Schema $schema): Schema
     {

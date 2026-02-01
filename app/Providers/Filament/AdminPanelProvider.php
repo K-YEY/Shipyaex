@@ -5,7 +5,10 @@ namespace App\Providers\Filament;
 use App\Filament\Auth\Login;
 use App\Filament\Widgets\OrdersReportWidget;
 use App\Filament\Widgets\OrdersStatsOverview;
+use App\Filament\Widgets\OrdersByGovernorateChart;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
+
 use Moataz01\FilamentNotificationSound\FilamentNotificationSoundPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -31,33 +34,14 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->brandName(__('app.dashboard'))
             ->brandLogo(asset('logo.png'))
             ->brandLogoHeight('3rem')
-            ->favicon(asset('logo.png'))
+            ->favicon(asset('favicon.ico'))
             ->login(Login::class)
             ->colors([
                 'primary' => Color::Red,
             ])->sidebarCollapsibleOnDesktop(true)
-            ->renderHook(
-                'panels::head.end',
-                fn (): string => '
-                    <link rel="manifest" href="/manifest.json">
-                    <meta name="theme-color" content="#dc2626">
-                    <link rel="icon" type="image/png" href="/logo.png">
-                    <link rel="apple-touch-icon" href="/logo.png">
-                    <meta name="apple-mobile-web-app-capable" content="yes">
-                    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-                    <meta name="apple-mobile-web-app-title" content="ShipManager">
-                ',
-            )
-            ->renderHook(
-                'panels::body.end',
-                fn (): string => '<script src="/js/pwa.js"></script>',
-            )
-            ->renderHook(
-                'panels::user-menu.before',
-                fn (): \Illuminate\Contracts\View\View => view('filament.components.pwa-install'),
-            )
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
 
@@ -71,7 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
                 OrdersStatsOverview::class,
                 OrdersReportWidget::class,
-                \App\Filament\Widgets\OrdersByGovernorateChart::class,
+                OrdersByGovernorateChart::class,
             ])
 
             ->plugins([
@@ -92,15 +76,11 @@ class AdminPanelProvider extends PanelProvider
                     ]),
                 
                 // Apex Charts Plugin
-                \Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin::make(),
-
+                FilamentApexChartsPlugin::make(),
                 // Notification Sound Plugin
                 FilamentNotificationSoundPlugin::make()
-                    ->soundPath(asset('sound.mp3')) // Custom sound path
-                    ->volume(1.0) // Volume (0.0 to 1.0)
-                    ->showAnimation(true) // Show animation on notification badge
-                    ->enabled(true), // Enable/disable the plugin
-            StickyTableHeaderPlugin::make()->shouldScrollToTopOnPageChanged(enabled:  true, behavior: "smooth"),        
+                    ->soundPath(asset('sound.mp3')),
+                StickyTableHeaderPlugin::make(),        
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -112,7 +92,6 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-
             ])
             ->authMiddleware([
                 Authenticate::class,

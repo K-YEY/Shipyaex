@@ -29,9 +29,7 @@ Route::get('/', function () {
 // Language Switcher Route
 
 
-Route::get('/pwa-test', function () {
-    return view('pwa-test');
-})->name('pwa.test');
+
 
 // Collecting Invoice Routes
 Route::middleware(['auth'])->group(function () {
@@ -55,11 +53,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/print-labels', [ShippingLabelController::class, 'printMultiple'])
         ->name('orders.print-labels');
     
-    // PWA Routes
-    Route::post('/api/push-subscribe', [App\Http\Controllers\PWAController::class, 'subscribe'])
-        ->name('pwa.subscribe');
-    
-    Route::post('/api/push-unsubscribe', [App\Http\Controllers\PWAController::class, 'unsubscribe'])
-        ->name('pwa.unsubscribe');
+   
 });
 

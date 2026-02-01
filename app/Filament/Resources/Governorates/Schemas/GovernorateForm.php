@@ -13,15 +13,15 @@ class GovernorateForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('اسم المحافظة')
+                    ->label(__('app.name'))
                     ->required(),
                 TextInput::make('follow_up_hours')
-                    ->label('ساعات المتابعة')
+                    ->label(__('app.follow_up_hours'))
                     ->required()
                     ->numeric()
                     ->default(0),
                Select::make('shipper_id')
-                    ->label('الكابتن الافتراضي')
+                    ->label(__('app.default_shipper'))
                     ->relationship(
                         name: 'shipper',
                         titleAttribute: 'name',

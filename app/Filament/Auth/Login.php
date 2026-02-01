@@ -25,7 +25,7 @@ class Login extends PagesLogin
     protected function getLoginFormComponent(): Component
     {
         return TextInput::make('username')
-            ->label('Username')
+            ->label(__('app.username'))
             ->required()
             ->autocomplete('username')
             ->autofocus()
@@ -43,7 +43,7 @@ class Login extends PagesLogin
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([
-            'data.login' => __('filament-panels::pages/auth/login.messages.failed'),
+            'data.username' => __('app.error_message'),
         ]);
     }
 }

@@ -15,12 +15,12 @@ class ExpenseForm
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255)
-                    ->label('اسم المصروف'),
+                    ->label(__('app.name')),
                 TextInput::make('amount')
                     ->required()
                     ->numeric()
-                    ->prefix('ج.م')
-                    ->label('المبلغ'),
+                    ->prefix(__('statuses.currency'))
+                    ->label(__('app.amount')),
             ]);
     }
 }

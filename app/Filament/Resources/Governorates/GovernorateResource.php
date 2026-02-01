@@ -29,7 +29,7 @@ class GovernorateResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'محافظة';
+        return __('app.governorate');
     }
 
     public static function getPluralModelLabel(): string
@@ -39,7 +39,7 @@ class GovernorateResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'المناطق الجغرافية';
+        return __('app.geographic_locations');
     }
 
     public static function form(Schema $schema): Schema

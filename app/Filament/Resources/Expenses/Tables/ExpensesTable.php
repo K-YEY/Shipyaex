@@ -17,27 +17,27 @@ class ExpensesTable
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->label('المصروف'),
+                    ->label(__('app.expense')),
                 TextColumn::make('amount')
-                    ->state(fn ($record) => number_format($record->amount, 2) . ' ج.م')
+                    ->state(fn ($record) => number_format($record->amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
-                    ->label('المبلغ'),
+                    ->label(__('app.amount')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('تاريخ الصرف'),
+                    ->label(__('app.date')),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                EditAction::make()->label('تعديل'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('مسح المختار'),
-                ])->label('عمليات على المختار'),
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

@@ -40,7 +40,7 @@ class RefusedReasonResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'الإعدادات والبيانات';
+        return __('app.settings');
     }
 
     protected static ?int $navigationSort = 2;
@@ -132,7 +132,7 @@ class RefusedReasonResource extends Resource
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('orderStatuses_count')
-                    ->label('Used in Statuses')
+                    ->label(__('statuses.order_statuses'))
                     ->counts('orderStatuses')
                     ->badge()
                     ->color('success')

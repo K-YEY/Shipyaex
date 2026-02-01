@@ -14,17 +14,17 @@ class PlanPriceForm
         return $schema
             ->components([
                 Select::make('plan_id')
-                    ->label('الباقة')
+                    ->label(__('app.plan'))
                     ->relationship('plan', 'name')
                     ->required(),
                 Select::make('location_id')
-                    ->label('المحافظة')
+                    ->label(__('app.governorate'))
                     ->options(function () {
                         return Governorate::pluck('name', 'id')->toArray();
                     })
                     ->required(),
                 TextInput::make('price')
-                    ->label('السعر')
+                    ->label(__('app.price'))
                     ->numeric()
                     ->default(null),
 

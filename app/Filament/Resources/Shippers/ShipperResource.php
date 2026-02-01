@@ -32,7 +32,7 @@ class ShipperResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'كابتن';
+        return __('app.shipper');
     }
 
     public static function getPluralModelLabel(): string
@@ -45,12 +45,12 @@ class ShipperResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('اسم الكابتن')
+                    ->label(__('app.name'))
                     ->required()
                     ->maxLength(255),
                     
                 TextInput::make('phone')
-                    ->label('رقم التليفون')
+                    ->label(__('app.phone'))
                     ->required()
                     ->tel()
                     ->maxLength(20)
@@ -60,15 +60,15 @@ class ShipperResource extends Resource
                         ignoreRecord: true
                     )
                     ->validationMessages([
-                        'unique' => 'الرقم ده موجود قبل كدا! شوف غيره.',
+                        'unique' => __('app.unique_phone'),
                     ]),
                     
                 TextInput::make('address')
-                    ->label('العنوان')
+                    ->label(__('app.address'))
                     ->maxLength(500),
 
                 TextInput::make('username')
-                    ->label('اسم المستخدم (Username)')
+                    ->label(__('app.username'))
                     ->required()
                     ->alphaDash()
                     ->maxLength(50)
@@ -78,11 +78,11 @@ class ShipperResource extends Resource
                         ignoreRecord: true
                     )
                     ->validationMessages([
-                        'unique' => 'الاسم ده محجوز يا ريس، اختار واحد تاني.',
+                        'unique' => __('app.unique_username'),
                     ]),
                     
                 TextInput::make('password')
-                    ->label('كلمة السر')
+                    ->label(__('app.password'))
                     ->password()
                     ->revealable()
                     ->required(fn (?object $record) => $record === null)
@@ -90,19 +90,19 @@ class ShipperResource extends Resource
                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->minLength(6)
                     ->validationMessages([
-                        'min' => 'كلمة السر لازم تكون 6 حروف على الأقل.',
+                        'min' => __('app.min_password'),
                     ]),
                     
                 TextInput::make('commission')
-                    ->label('العمولة')
+                    ->label(__('app.total_commission'))
                     ->required()
                     ->numeric()
                     ->minValue(0)
                     ->default(0.0)
-                    ->suffix('ج.م'),
+                    ->suffix(__('statuses.currency')),
                     
                 Toggle::make('is_blocked')
-                    ->label('محظور؟')
+                    ->label(__('app.is_blocked'))
                     ->default(false),
             ]);
     }
@@ -113,30 +113,30 @@ class ShipperResource extends Resource
             ->query(User::role('shipper'))
             ->columns([
                 TextColumn::make('id')
-                    ->label('كود الكابتن')
+                    ->label(__('app.shipper') . ' ID')
                     ->sortable()
                     ->searchable()
                     ->badge()
                     ->color('primary'),
                 TextColumn::make('name')
-                    ->label('اسم الكابتن')
+                    ->label(__('app.name'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('phone')
-                    ->label('التليفون')
+                    ->label(__('app.phone'))
                     ->searchable()
                     ->copyable()
-                    ->copyMessage('الرقم اتنسخ!'),
+                    ->copyMessage(__('app.copied')),
                 TextColumn::make('commission')
-                    ->label('العمولة')
-                    ->state(fn ($record) => number_format($record->commission, 2) . ' ج.م')
+                    ->label(__('app.total_commission'))
+                    ->state(fn ($record) => number_format($record->commission, 2) . ' ' . __('statuses.currency'))
                     ->sortable(),
                 TextColumn::make('address')
-                    ->label('العنوان')
+                    ->label(__('app.address'))
                     ->limit(30)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->label('تاريخ التسجيل')
+                    ->label(__('app.created_at'))
                     ->dateTime('Y-m-d')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -145,12 +145,12 @@ class ShipperResource extends Resource
                 //
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make()->label('تعديل'),
-                \Filament\Actions\DeleteAction::make()->label('مسح'),
+                \Filament\Actions\EditAction::make()->label(__('app.edit')),
+                \Filament\Actions\DeleteAction::make()->label(__('app.delete')),
             ])
             ->toolbarActions([
                 \Filament\Actions\CreateAction::make()
-                    ->label('كابتن جديد')
+                    ->label(__('app.new') . ' ' . __('app.shipper'))
                     ->after(function ($record) {
                         $record->assignRole('shipper');
                     }),

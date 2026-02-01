@@ -21,40 +21,40 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('id')
-                    ->label('كود العضو')
+                    ->label(__('app.users') . ' ID')
                     ->sortable()
                     ->searchable()
                     ->copyable()
-                    ->copyMessage('الكود اتنسخ يا ريس!')
+                    ->copyMessage(__('app.copied'))
                     ->copyMessageDuration(1500)
                     ->badge()
                     ->color('primary'),
                 TextColumn::make('username')
-                    ->label('اسم المستخدم')
+                    ->label(__('app.username'))
                     ->searchable()->icon('heroicon-o-hashtag')
                     ->copyable()
-                    ->copyMessage('اتنسخ!')
+                    ->copyMessage(__('app.copied'))
                     ->copyMessageDuration(1500)
                     ->iconPosition(IconPosition::Before)->color('warning')->iconColor('warning'),
                 TextColumn::make('name')
-                    ->label('الاسم')
+                    ->label(__('app.name'))
                     ->searchable(),
                 TextColumn::make('roles.name')->color('info')
-                    ->label('الصلاحية')->toggleable()->badge(),
+                    ->label(__('app.status'))->toggleable()->badge(),
             
                 ToggleColumn::make('is_blocked')
-                    ->label('محظور؟')
+                    ->label(__('app.is_blocked'))
                     ->onColor('danger')    // Color when status is 1 (Blocked)
                     ->offColor('success')  // Color when status is 0 (Unblocked)
                     ->onIcon('heroicon-s-lock-closed')   // icon for blocking
                     ->offIcon('heroicon-s-lock-open'),
                 TextColumn::make('deleted_at')
-                    ->label('تاريخ المسح')
+                    ->label(__('orders.filters.deleted_orders'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('app.created_at'))
                     ->dateTime('d M, Y H:i')
                     ->since()
                     ->toggleable()
@@ -62,15 +62,15 @@ class UsersTable
             ])
             ->filters([
                 TrashedFilter::make()
-                    ->label('المحذوفات'),
+                    ->label(__('orders.filters.deleted_orders')),
                 SelectFilter::make('roles')
                     ->relationship('roles', 'name', fn ($query) => $query->where('name', '!=', 'super_admin'))
-                    ->label('فلترة بالصلاحية'),
+                    ->label(__('app.status')),
                 SelectFilter::make('is_blocked')
-                    ->label('حالة الحظر')
+                    ->label(__('app.is_blocked'))
                     ->options([
-                        '1' => 'محظور',
-                        '0' => 'شغال تمام',
+                        '1' => __('statuses.yes'),
+                        '0' => __('statuses.no'),
                     ]),
 
             ])

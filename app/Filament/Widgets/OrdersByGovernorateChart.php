@@ -13,7 +13,7 @@ class OrdersByGovernorateChart extends ChartWidget
 
     public function getHeading(): ?string
     {
-        return '📊 Orders by Governorate';
+        return '📊 ' . __('app.orders_by_governorate');
     }
 
     public static function canView(): bool
@@ -54,7 +54,7 @@ class OrdersByGovernorateChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Number of Orders',
+                    'label' => __('app.total_orders'),
                     'data' => $data,
                     'backgroundColor' => [
                         '#36A2EB', '#FF6384', '#4BC0C0', '#FFCE56', '#9966FF', 

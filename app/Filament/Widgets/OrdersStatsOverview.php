@@ -92,7 +92,7 @@ class OrdersStatsOverview extends BaseWidget
         return $stats;
         } catch (\Exception $e) {
             return [
-                Stat::make('⚠️ Error', 'Failed to load data')
+                Stat::make('⚠️ Error', __('app.data_load_error'))
                     ->description($e->getMessage())
                     ->descriptionIcon('heroicon-m-exclamation-triangle')
                     ->color('danger'),

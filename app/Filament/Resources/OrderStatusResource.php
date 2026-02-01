@@ -40,7 +40,7 @@ class OrderStatusResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'الإعدادات والبيانات';
+        return __('app.settings');
     }
 
     protected static ?int $navigationSort = 1;
@@ -137,10 +137,10 @@ class OrderStatusResource extends Resource
                     ->color(fn ($record) => $record->color),
 
                 Tables\Columns\IconColumn::make('clear_refused_reasons')
-                    ->label('Clear Reasons')
+                    ->label(__('statuses.clear_reasons_label'))
                     ->boolean()
                     ->alignCenter()
-                    ->tooltip('Clears refused reasons when selected'),
+                    ->tooltip(__('statuses.clear_reasons_tooltip')),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('statuses.active'))
@@ -153,7 +153,7 @@ class OrderStatusResource extends Resource
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('refusedReasons_count')
-                    ->label('Refused Reasons')
+                    ->label(__('statuses.refused_reasons'))
                     ->counts('refusedReasons')
                     ->badge()
                     ->color('info')
@@ -174,25 +174,25 @@ class OrderStatusResource extends Resource
                     ->falseLabel(__('statuses.inactive_only')),
 
                 Tables\Filters\TernaryFilter::make('clear_refused_reasons')
-                    ->label('Clear Refused Reasons')
-                    ->placeholder('All')
-                    ->trueLabel('Clears Reasons')
-                    ->falseLabel('Keeps Reasons'),
+                    ->label(__('statuses.clear_reasons_label'))
+                    ->placeholder(__('statuses.all'))
+                    ->trueLabel(__('statuses.yes'))
+                    ->falseLabel(__('statuses.no')),
             ])
             ->recordActions([
                 EditAction::make(),
                 \Filament\Actions\Action::make('manageRefusedReasons')
-                    ->label('Manage Reasons')
+                    ->label(__('statuses.manage_reasons'))
                     ->icon('heroicon-o-list-bullet')
                     ->color('info')
                     ->form([
                         Forms\Components\Select::make('refusedReasons')
-                            ->label('Refused Reasons')
+                            ->label(__('statuses.refused_reasons'))
                             ->relationship('refusedReasons', 'name')
                             ->multiple()
                             ->preload()
                             ->searchable()
-                            ->helperText('Select which refused reasons apply to this status'),
+                            ->helperText(__('statuses.applicable_refused_reasons_helper')),
                     ])
                     ->fillForm(fn ($record) => [
                         'refusedReasons' => $record->refusedReasons->pluck('id')->toArray(),
@@ -200,7 +200,7 @@ class OrderStatusResource extends Resource
                     ->action(function ($record, array $data) {
                         $record->refusedReasons()->sync($data['refusedReasons'] ?? []);
                         \Filament\Notifications\Notification::make()
-                            ->title('Refused reasons updated successfully')
+                            ->title(__('statuses.reasons_updated_success'))
                             ->success()
                             ->send();
                     }),

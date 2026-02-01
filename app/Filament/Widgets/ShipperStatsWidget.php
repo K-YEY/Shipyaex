@@ -54,19 +54,19 @@ class ShipperStatsWidget extends BaseWidget
         $totalFees = (clone $orderQuery)->where('status', 'deliverd')->sum('shipper_fees');
 
         return [
-            Stat::make(__('app.pending_collections'), number_format($pendingAmount, 2) . ' EGP')
+            Stat::make(__('app.pending_collections'), number_format($pendingAmount, 2) . ' ' . __('statuses.currency'))
                 ->description($pendingCount . ' ' . __('app.stats_descriptions.pending_req'))
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning')
                 ->chart([5, 2, 8, 4, 3, 5, 2]),
 
-            Stat::make(__('app.collected_amount'), number_format($collectedAmount, 2) . ' EGP')
+            Stat::make(__('app.collected_amount'), number_format($collectedAmount, 2) . ' ' . __('statuses.currency'))
                 ->description($collectedCount . ' ' . __('app.stats_descriptions.completed_req'))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success')
                 ->chart([2, 5, 3, 8, 4, 9, 10]),
 
-            Stat::make(__('app.total_commission'), number_format($totalFees, 2) . ' EGP')
+            Stat::make(__('app.total_commission'), number_format($totalFees, 2) . ' ' . __('statuses.currency'))
                 ->description(__('app.stats_descriptions.earnings'))
                 ->descriptionIcon('heroicon-m-gift')
                 ->color('primary')
