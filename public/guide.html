@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل استخدام ShipManager | التوثيق</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Cairo:wght@400;600;700;900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/logo.png">
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-bg: #fef2f2;
+            --sidebar-bg: #ffffff;
+            --main-bg: #f8fafc;
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --border: #e2e8f0;
+            --accent: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--main-bg);
+            color: var(--text-body);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions a {
+            text-decoration: none;
+            color: white;
+            background: var(--text-heading);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .header-actions a:hover {
+            opacity: 0.9;
+        }
+
+        /* Types of Layout */
+        .wrapper {
+            display: flex;
+            margin-top: 70px;
+            /* Header Height */
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 300px;
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--border);
+            padding: 2rem 1rem;
+            position: fixed;
+            right: 0;
+            top: 70px;
+            bottom: 0;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            display: block;
+            text-decoration: none;
+            color: var(--text-body);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: var(--main-bg);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-right-color: var(--primary);
+        }
+
+        .nav-link i {
+            margin-left: 10px;
+            font-size: 1.1rem;
+            vertical-align: middle;
+            color: #94a3b8;
+        }
+
+        .nav-link.active i {
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        .content {
+            flex-grow: 1;
+            margin-right: 300px;
+            /* Sidebar Width */
+            padding: 3rem 4rem;
+            max-width: 1200px;
+        }
+
+        .section {
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .section:last-child {
+            border: none;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--text-heading);
+            margin: 2rem 0 1rem;
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--text-body);
+            margin: 1.5rem 0 0.5rem;
+            font-weight: 600;
+        }
+
+        p,
+        li {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 1rem;
+        }
+
+        ul {
+            margin-right: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Cards & Boxes */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .info-box i {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .info-box-title {
+            color: #1e40af;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .role-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .role-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .role-icon {
+            width: 40px;
+            height: 40px;
+            background: #fee2e2;
+            color: var(--primary);
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 1.2rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .bg-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .bg-yellow {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .bg-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .bg-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Steps */
+        .step {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-num {
+            min-width: 35px;
+            height: 35px;
+            background: var(--text-heading);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        code {
+            background: #e2e8f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+                /* Hide for now, can be toggled */
+            }
+
+            .content {
+                margin-right: 0;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="ri-box-3-fill"></i> ShipManager
+            <span
+                style="font-size:0.8rem; background:var(--primary-bg); color:var(--primary); padding:2px 8px; border-radius:4px; margin-right:10px;">Docs</span>
+        </div>
+        <div class="header-actions">
+            <a href="/admin">الذهاب للوحة التحكم <i class="ri-arrow-left-line"></i></a>
+        </div>
+    </header>
+
+    <div class="wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">مقدمة</div>
+            <a href="#intro" class="nav-link active"><i class="ri-home-4-line"></i> نظرة عامة</a>
+            <a href="#pwa" class="nav-link"><i class="ri-smartphone-line"></i> تثبيت التطبيق</a>
+
+            <div class="sidebar-title" style="margin-top: 2rem;">النظام</div>
+            <a href="#roles" class="nav-link"><i class="ri-user-settings-line"></i> الأدوار والصلاحيات</a>
+            <a href="#statuses" class="nav-link"><i class="ri-list-check"></i> حالات الأوردر</a>
+
+            <div class="sidebar-title" style="margin-top: 2rem;">دليل التشغيل</div>
+            <a href="#workflow-client" class="nav-link"><i class="ri-store-2-line"></i> دورة العميل</a>
+            <a href="#workflow-shipper" class="nav-link"><i class="ri-motorbike-line"></i> دورة المندوب</a>
+            <a href="#workflow-admin" class="nav-link"><i class="ri-admin-line"></i> دورة الأدمن</a>
+
+            <div class="sidebar-title" style="margin-top: 2rem;">الإعدادات والمالية</div>
+            <a href="#areas" class="nav-link"><i class="ri-map-pin-line"></i> المناطق والتسعير</a>
+            <a href="#plans" class="nav-link"><i class="ri-vip-crown-line"></i> الباقات</a>
+            <a href="#finance" class="nav-link"><i class="ri-pie-chart-line"></i> المالية والتقارير</a>
+            <a href="#advanced" class="nav-link"><i class="ri-settings-4-line"></i> المرتجعات والباركود</a>
+
+            <div class="sidebar-title" style="margin-top: 2rem;">الدعم</div>
+            <a href="#faq" class="nav-link"><i class="ri-question-line"></i> أسئلة شائعة</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Introduction Section -->
+            <section id="intro" class="section">
+                <h1>أهلاً بك في ShipManager</h1>
+                <p>نظامك المتكامل لإدارة شركات الشحن بذكاء. هذا الدليل "المانيوال" الخاص بالسيستم، هيشرحلك كل زرار بيعمل
+                    ايه وازاي تدير الشركة، المناديب، والعملاء من مكان واحد.</p>
+
+                <div class="info-box">
+                    <i class="ri-information-fill"></i>
+                    <div>
+                        <div class="info-box-title">معلومة سريعة</div>
+                        السيستم ده بيشتغل بنظام Real-time، يعني أي حركة بتحصل (تسليم، مرتجع، إضافة أوردر) بتسمع عند الكل
+                        في نفس الثانية بالإشعارات.
+                    </div>
+                </div>
+            </section>
+
+            <!-- PWA Section -->
+            <section id="pwa" class="section">
+                <h2>📱 تثبيت التطبيق (PWA)</h2>
+                <p>عشان تستفيد بأقصى سرعة وتجيلك الإشعارات، لازم تثبت الموقع كتطبيق على موبايلك أو الكمبيوتر.</p>
+
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon" style="background:var(--primary-bg); color:var(--primary);"><i
+                                class="ri-android-fill"></i></div>
+                        <h3>للأندرويد والكمبيوتر</h3>
+                    </div>
+                    <p>هتلاقي زرار <strong>"تثبيت التطبيق"</strong> ظهرلك فوق في المنيو (أو في شريط العنوان في Chrome).
+                        اضغط عليه وهينزل كأبلكيشن منفصل.</p>
+                </div>
+
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon" style="background:#000; color:#fff;"><i class="ri-apple-fill"></i></div>
+                        <h3>للأيفون (iOS)</h3>
+                    </div>
+                    <p>افتح الموقع من Safari، اضغط على زرار <strong>Share</strong> اللي تحت، واختار <strong>Add to Home
+                            Screen</strong>.</p>
+                </div>
+            </section>
+
+            <!-- Roles Section -->
+            <section id="roles" class="section">
+                <h2>👥 من معانا في السيستم؟ (الأدوار)</h2>
+                <p>السيستم بيقسم الناس لـ 3 أنواع، كل واحد بيشوف حاجات مختلفة:</p>
+
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon"><i class="ri-admin-fill"></i></div>
+                        <h3>1. المدير (Admin)</h3>
+                    </div>
+                    <p>ده "المايسترو" اللي شايف كل حاجة. بيقدر يعين المناديب، يراجع الحسابات، ويتحكم في الإعدادات.</p>
+                </div>
+
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon" style="background:#dbeafe; color:#1e40af;"><i
+                                class="ri-user-star-fill"></i></div>
+                        <h3>2. العميل (Client)</h3>
+                    </div>
+                    <p>التاجر اللي بيبعت شغله معاك. بيشوف بس أوردراته هو، وحالته المالية، وبيقدر يضيف شغل جديد (يدوي أو
+                        إكسيل).</p>
+                </div>
+
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon" style="background:#fef9c3; color:#ca8a04;"><i
+                                class="ri-motorbike-fill"></i></div>
+                        <h3>3. المندوب (Shipper)</h3>
+                    </div>
+                    <p>الكابتن اللي بيوصل. بيشوف بس الأوردرات المكلف بيها. وبيقدر يغير حالتها (تساليم أو مرتجع) ويبعت
+                        طلب توريد بالفلوس.</p>
+                </div>
+            </section>
+
+            <!-- Statuses Section -->
+            <section id="statuses" class="section">
+                <h2>📝 لغة السيستم (حالات الأوردر)</h2>
+                <p>الأوردر بيمر بمراحل، لازم تكون فاهم معنى كل حالة:</p>
+
+                <table style="width:100%; border-collapse: collapse; margin-top:1rem;">
+                    <tr style="background:#f1f5f9; text-align:right;">
+                        <th style="padding:1rem; border:1px solid var(--border);">الحالة</th>
+                        <th style="padding:1rem; border:1px solid var(--border);">المعنى</th>
+                        <th style="padding:1rem; border:1px solid var(--border);">مين بيعملها؟</th>
+                    </tr>
+                    <tr>
+                        <td style="padding:1rem; border:1px solid var(--border);"><span class="status-badge"
+                                style="background:#e2e8f0; color:#475569">جديد (New)</span></td>
+                        <td style="padding:1rem; border:1px solid var(--border);">الأوردر لسه متضاف، ومحدش استلمه.</td>
+                        <td style="padding:1rem; border:1px solid var(--border);">العميل / الأدمن</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1rem; border:1px solid var(--border);"><span class="status-badge bg-blue">مع
+                                مندوب (Out for Delivery)</span></td>
+                        <td style="padding:1rem; border:1px solid var(--border);">خرج للتوصيل وظهر في موبايل المندوب.
+                        </td>
+                        <td style="padding:1rem; border:1px solid var(--border);">الأدمن</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1rem; border:1px solid var(--border);"><span class="status-badge bg-green">تم
+                                التسليم (Delivered)</span></td>
+                        <td style="padding:1rem; border:1px solid var(--border);">العميل استلم ودفع الفلوس (المبلغ دخل
+                            عهدة المندوب).</td>
+                        <td style="padding:1rem; border:1px solid var(--border);">المندوب</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1rem; border:1px solid var(--border);"><span
+                                class="status-badge bg-red">مرتجع (Refused)</span></td>
+                        <td style="padding:1rem; border:1px solid var(--border);">العميل رفض الاستلام (لازم اختيار سبب
+                            الرفض).</td>
+                        <td style="padding:1rem; border:1px solid var(--border);">المندوب</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1rem; border:1px solid var(--border);"><span
+                                class="status-badge bg-yellow">مؤجل (On Hold)</span></td>
+                        <td style="padding:1rem; border:1px solid var(--border);">تأجيل ميعاد التسليم، ولسه مع المندوب.
+                        </td>
+                        <td style="padding:1rem; border:1px solid var(--border);">المندوب</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Workflow Client -->
+            <section id="workflow-client" class="section">
+                <h2>🛍️ دورة العمل: العميل (التاجر)</h2>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <h3>إضافة الأوردرات</h3>
+                        <p>بيدخل على صفحة <strong>"الأوردرات"</strong> ويضغط <strong>"إضافة جديد"</strong>. يقدر كمان
+                            يرفع ملف Excel لو عنده كمية كبيرة.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <h3>طباعة البوليسة</h3>
+                        <p>بيضغط على علامة "الطباعة" 🖨️ جنب الأوردر عشان يلزقها على الشنطة.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div>
+                        <h3>طلب الفلوس (التسوية)</h3>
+                        <p>لما يتجمع له مبلغ "صافي ربح"، بيدخل على <strong>"تسويات العملاء"</strong> ويعمل طلب جديد عشان
+                            تحوله فلوسه.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workflow Shipper -->
+            <section id="workflow-shipper" class="section">
+                <h2>🛵 دورة العمل: المندوب (الكابتن)</h2>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <h3>استلام التكليف</h3>
+                        <p>بيجيله إشعار على موبايله إن فيه شغل جديد. بيفتح <strong>"الأوردرات المكلف بها"</strong>
+                            بيلاقي خط السير.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <h3>تحديث الحالة (التسليم)</h3>
+                        <p>وصل للزبون؟ بيفتح الأوردر ويضغط <strong>"تغيير الحالة"</strong>. لو سلم يختار Delivered، لو
+                            رجع يختار Refused ويختار السبب.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div>
+                        <h3>التوريد (تسليم الفلوس)</h3>
+                        <p>آخر اليوم بيفتح <strong>"توريد النقدية"</strong>، بيلاقي المبلغ اللي معاه، بيعمل "طلب توريد"
+                            ويبعته للأدمن عشان يسلمه الفلوس.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workflow Admin -->
+            <section id="workflow-admin" class="section">
+                <h2>👔 دورة العمل: المدير (الأدمن)</h2>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <h3>توزيع الشغل (Assign)</h3>
+                        <p>بتعلم على الأوردرات في الجدول، وتختار <strong>Assign Shipper</strong> وتختار المندوب المناسب
+                            للمنطقة.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <h3>استلام التوريدات</h3>
+                        <p>بيجيلك إشعار إن المندوب عاوز يورد، بتدخل على <strong>"توريدات الكباتن"</strong> وتعمل
+                            <strong>"اعتماد"</strong> بعد ما تعد الفلوس منه.
+                        </p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div>
+                        <h3>محاسبة العملاء</h3>
+                        <p>العميل طلب فلوسه؟ بتدخل على <strong>"التسويات"</strong>، السيستم حاسبله (التحصيل - مصاريف
+                            الشحن). بتحوله المبلغ وتعمل <strong>"اعتماد"</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Governorates & Cities -->
+            <section id="areas" class="section">
+                <h2>🌍 المناطق وتسعير الشحن</h2>
+                <p>السيستم بيحسب مصاريف الشحن أوتوماتيك بناءً على "عنوان المستلم". عشان ده يحصل، لازم تكون معرف المناطق
+                    وأسعارها.</p>
+
+                <div class="step">
+                    <div class="step-num"><i class="ri-map-pin-line"></i></div>
+                    <div>
+                        <h3>1. المحافظات والمدن</h3>
+                        <p>من قائمة <strong>"المناطق"</strong>، بتضيف المحافظات (زي: القاهرة، الجيزة). وجوا كل محافظة
+                            بتضيف المدن (زي: التجمع، المعادي).</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num"><i class="ri-price-tag-3-line"></i></div>
+                    <div>
+                        <h3>2. التسعير (Pricing)</h3>
+                        <p>بتقدر تحدد سعر شحن "افتراضي" للمحافظة كلها. أو تدخل جوا مدينة معينة وتحددلها سعر خاص (مثلاً:
+                            الشيخ زايد أغلى من وسط البلد).</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Plans -->
+            <section id="plans" class="section">
+                <h2>💎 باقات الأسعار (Plans)</h2>
+                <p>مش كل العملاء زى بعض! السيستم بيسمحلك تعمل "باقات أسعار" مختلفة:</p>
+
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon" style="background:#f3e8ff; color:#7e22ce;"><i
+                                class="ri-vip-crown-fill"></i></div>
+                        <h3>الفكرة إيه؟</h3>
+                    </div>
+                    <p>ممكن تعمل باقة اسمها <strong>"VIP"</strong> للتجار الكبار، وتعمل فيها خصم 10 جنيه على شحن
+                        القاهرة. وباقة تانية <strong>"Standard"</strong> للعملاء الجدد بسعر عادي.</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">!</div>
+                    <div>
+                        <h3>إزاي تعين باقة لعميل؟</h3>
+                        <p>بعد ما تنشئ الباقة وتحدد أسعارها لكل محافظة، ادخل على صفحة <strong>"المستخدمين"</strong> ->
+                            تعديل العميل -> واختار الباقة من خانة <strong>"Plan"</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expenses & Reports -->
+            <section id="finance" class="section">
+                <h2>💰 المالية والتقارير</h2>
+                <p>عشان تعرف مكسبك الحقيقي، لازم تسجل اللي داخل واللي خارج.</p>
+
+                <h3>1. المصاريف (Expenses)</h3>
+                <p>من قائمة <strong>"المصاريف"</strong>، سجل أي حاجة الشركة بتدفعها: (إيجار مقر، كهرباء، بنزين، مرتبات،
+                    صيانة). دي بتتخصم تلقائياً من الأرباح في التقارير.</p>
+
+                <h3>2. التقارير (Dashboard)</h3>
+                <p>الصفحة الرئيسية للوحة التحكم هي "لوحة القيادة" بتاعتك. بتوريك:</p>
+                <ul>
+                    <li><strong>إجمالي التحصيلات (COD):</strong> الفلوس اللي المناديب جابوها.</li>
+                    <li><strong>صافي الربح (Net Profit):</strong> (عمولتك من الشحن - المصاريف).</li>
+                    <li><strong>أداء المناديب:</strong> مين أكتر واحد وصل أوردرات الشهر ده.</li>
+                    <li><strong>أداء المحافظات:</strong> إيه أكتر محافظة بيجيلك منها شغل.</li>
+                </ul>
+            </section>
+
+            <!-- Advanced Tools: Returns, Refused Reasons, Barcode -->
+            <section id="advanced" class="section">
+                <h2>🛠️ أدوات متقدمة</h2>
+
+                <div class="step">
+                    <div class="step-num"><i class="ri-error-warning-line"></i></div>
+                    <div>
+                        <h3>إدارة أسباب الرفض (Refused Reasons)</h3>
+                        <p>عشان التقارير تكون دقيقة، لازم تعرف ليه الأوردر رجع.</p>
+                        <ul>
+                            <li>من صفحة <strong>"حالات الأوردر"</strong>، ادخل على حالة <strong>Refused</strong>.</li>
+                            <li>هتلاقي قسم تحت اسمه <strong>"أسباب الرفض المرتبطة"</strong>.</li>
+                            <li>ضيف الأسباب المحتملة (تالف، العميل لا يرد، السعر غالي...). دي اللي هتظهر للمندوب لما
+                                يختار الحالة دي.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num"><i class="ri-arrow-go-back-line"></i></div>
+                    <div>
+                        <h3>المرتجعات (Returns)</h3>
+                        <p>لو الأوردر اتسلم بس العميل رجع جزء منه؟</p>
+                        <ul>
+                            <li>المندوب وهو بيسلم، فيه زرار <strong>"Has Return"</strong> (هل يوجد مرتجع؟).</li>
+                            <li>لو فعله، السيستم هيفهم إن الشحنة دي راجعة للمخزن، وممكن يخصم تمن الشحن بس ويرجع الباقي.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num"><i class="ri-barcode-line"></i></div>
+                    <div>
+                        <h3>الماسح الضوئي (Barcode Scanner)</h3>
+                        <p>لو عندك كمية أوردرات كبيرة، استخدم الباركود:</p>
+                        <ul>
+                            <li>في صفحة الأوردرات، اضغط على زرار <strong>"Scanner"</strong>.</li>
+                            <li>وجه المسدس على بوليصة الشحن.</li>
+                            <li>السيستم هيفتحلك الأوردر فوراً، وتقدر تغير حالته لـ "Delivered" بضغطة واحدة من غير ما
+                                تدور عليه.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="faq" class="section">
+                <h2>💡 أسئلة وإجابات سريعة</h2>
+
+                <details
+                    style="background:#fff; border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:1rem; cursor:pointer;">
+                    <summary style="font-weight:700;">هل ينفع أعدل سعر الأوردر بعد التسليم؟</summary>
+                    <p style="margin-top:1rem;">آه، الأدمن بس اللي يقدر. المندوب والمندوب عنده بس صلاحية تعديل "المبلغ
+                        المحصل" لو فيه خصم وقتي.</p>
+                </details>
+
+                <details
+                    style="background:#fff; border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:1rem; cursor:pointer;">
+                    <summary style="font-weight:700;">إزاي أعرف مين المندوب اللي معاه الأوردر؟</summary>
+                    <p style="margin-top:1rem;">من جدول الأوردرات، فيه عمود اسمه "المندوب"، وممكن تفلتر الجدول باسم
+                        مندوب معين.</p>
+                </details>
+            </section>
+
+            <footer style="text-align:center; padding-top:2rem; color:#94a3b8; font-size:0.9rem;">
+                &copy; 2026 ShipManager Pro. All rights reserved.
+            </footer>
+
+        </main>
+    </div>
+
+    <script>
+        // Active Link Highlight
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        window.onscroll = () => {
+            let current = "";
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute("id");
+                }
+            });
+
+            navLinks.forEach((a) => {
+                a.classList.remove("active");
+                if (a.getAttribute("href").includes(current)) {
+                    a.classList.add("active");
+                }
+            });
+        };
+    </script>
+</body>
+
+</html>

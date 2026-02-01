@@ -1,0 +1,64 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* ========== Table Borders ========== */
+
+/* Body Rows - Vertical Borders */
+.fi-ta-row {
+    @apply divide-x divide-gray-200 dark:divide-gray-700;
+}
+
+/* Body Rows - Horizontal Borders */
+.fi-ta-table>tbody>tr {
+    @apply border-b border-gray-200 dark:border-gray-700;
+}
+
+/* Table Container - Outer Border */
+.fi-ta-table {
+    @apply border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden;
+}
+
+/* ========== RTL Support ========== */
+[dir="rtl"] .fi-ta-table,
+[dir="rtl"] .fi-ta-row {
+    direction: rtl;
+}
+
+/* ========== Striped Rows Enhancement ========== */
+.fi-ta-row:nth-child(even) {
+    @apply bg-gray-50 dark:bg-gray-800/50;
+}
+
+/* ========== Hover Effect ========== */
+/* ========== Sticky Header Support ========== */
+.fi-ta-ctn {
+    position: relative;
+    overflow-x: auto;
+}
+
+thead.fi-ta-header {
+    position: sticky !important;
+    top: 0;
+    z-index: 10;
+    @apply bg-white dark:bg-gray-900 shadow-sm;
+}
+
+/* Fix for columns alignment with sticky header */
+.fi-ta-header th {
+    @apply bg-gray-50 dark:bg-gray-800;
+}
+
+/* Sticky top toolbar (Search/Filters) */
+.fi-ta-header-ctn {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    @apply bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700;
+}
+
+/* If both toolbar and headers are sticky, offset the header */
+.fi-ta-header-ctn + .fi-ta-content thead {
+    top: 60px; /* Adjust based on toolbar height */
+}
