@@ -108,6 +108,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Custom Permissions
+    |--------------------------------------------------------------------------
+    |
+    | Sometimes you need permissions that don't map to resources, pages, or
+    | widgets. Define any custom permissions here and they'll be available
+    | when editing roles in your application.
+    |
+    */
+
+    'custom_permissions' => [
+        'Access:Admin',
+        'Access:Client',
+        'Access:Shipper',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Policies
     |--------------------------------------------------------------------------
     |
@@ -172,6 +189,84 @@ return [
                 'update',
                 'delete',
             ],
+            \App\Filament\Resources\Orders\OrderResource::class => [
+                'view',
+                'view_any',
+                'create',
+                'update',
+                'delete',
+                'delete_any',
+                'view_shipper_fees',
+                'edit_shipper_fees',
+                'view_cop',
+                'edit_cop',
+                'view_net_fees',
+                'view_financial_summary',
+                'edit_financial_summary',
+                'view_customer_details',
+                'edit_customer_details',
+                'view_shipper_details',
+                'assign_shipper',
+                'view_dates',
+                'view_external_code',
+                'edit_external_code',
+                'view_order_notes',
+                'edit_order_notes',
+                'view_status_notes',
+                'edit_locked',
+                'edit_client',
+                'manage_collections',
+                'cancel_collections',
+                'view_location',
+                'barcode_scanner',
+                'change_status',
+                'manage_returns',
+                'print_labels',
+                'export_data',
+                'view_all',
+                'view_own',
+                'view_assigned',
+            ],
+            \App\Filament\Resources\CollectedShippers\CollectedShipperResource::class => [
+                'view',
+                'view_any',
+                'create',
+                'update',
+                'delete',
+                'delete_any',
+                'view_all',
+                'view_own',
+            ],
+            \App\Filament\Resources\CollectedClients\CollectedClientResource::class => [
+                'view',
+                'view_any',
+                'create',
+                'update',
+                'delete',
+                'delete_any',
+                'view_all',
+                'view_own',
+            ],
+            \App\Filament\Resources\ReturnedShipperResource::class => [
+                'view',
+                'view_any',
+                'create',
+                'update',
+                'delete',
+                'delete_any',
+                'view_all',
+                'view_own',
+            ],
+            \App\Filament\Resources\ReturnedClientResource::class => [
+                'view',
+                'view_any',
+                'create',
+                'update',
+                'delete',
+                'delete_any',
+                'view_all',
+                'view_own',
+            ],
         ],
         'exclude' => [
             //
@@ -219,19 +314,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Custom Permissions
-    |--------------------------------------------------------------------------
-    |
-    | Sometimes you need permissions that don't map to resources, pages, or
-    | widgets. Define any custom permissions here and they'll be available
-    | when editing roles in your application.
-    |
-    */
-
-    'custom_permissions' => [],
-
-    /*
-    |--------------------------------------------------------------------------
     | Entity Discovery
     |--------------------------------------------------------------------------
     |
@@ -242,9 +324,9 @@ return [
     */
 
     'discovery' => [
-        'discover_all_resources' => false,
-        'discover_all_widgets' => false,
-        'discover_all_pages' => false,
+        'discover_all_resources' => true,
+        'discover_all_widgets' => true,
+        'discover_all_pages' => true,
     ],
 
     /*

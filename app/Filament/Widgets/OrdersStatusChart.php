@@ -27,7 +27,7 @@ class OrdersStatusChart extends ApexChartWidget
     /**
      * Sort order
      */
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 5;
 
     /**
      * Widget column span

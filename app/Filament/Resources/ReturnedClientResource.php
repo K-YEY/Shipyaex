@@ -63,4 +63,19 @@ class ReturnedClientResource extends Resource
             'edit' => Pages\EditReturnedClient::route('/{record}/edit'),
         ];
     }
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user->can('ViewAll:ReturnedClient')) {
+            return $query;
+        }
+
+        if ($user->can('ViewOwn:ReturnedClient')) {
+            return $query->where('client_id', $user->id);
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
 }

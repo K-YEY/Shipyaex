@@ -32,7 +32,7 @@ class ListOrders extends ListRecords
         $user = auth()->user();
 
         // ✅ تحقق فقط لو الUser عميل
-        if ($user->isClient()) {
+        if ($user->can('Access:Client')) {
             $start = Setting::get('working_hours_orders_start', '05:00');
             $end   = Setting::get('working_hours_orders_end', '17:00');
 
@@ -46,19 +46,16 @@ class ListOrders extends ListRecords
                     ->danger()
                     ->persistent()
                     ->send();
-
             }
         }
-        if(!$user->isShipper()){
-            return [
-                $this->getScannerToggleAction(),
-                CreateAction::make()
+
+        return [
+            $this->getScannerToggleAction(),
+            CreateAction::make()
                 ->label('إضافة أوردر جديد')
                 ->icon('heroicon-o-plus')
-            ->visible(!$this->scannerMode),
+                ->visible(fn() => !$this->scannerMode && $user->can('Create:Order')),
         ];
-        }
-        return [];
     }
 
     protected function getScannerToggleAction(): Action
@@ -67,6 +64,7 @@ class ListOrders extends ListRecords
             ->label($this->scannerMode ? 'رجوع للجدول' : 'سكانر الباركود (Barcode)')
             ->icon($this->scannerMode ? 'heroicon-o-table-cells' : 'heroicon-o-qr-code')
             ->color($this->scannerMode ? 'gray' : 'info')
+            ->visible(fn() => auth()->user()->can('BarcodeScanner:Order'))
             ->action(function () {
                 $this->scannerMode = !$this->scannerMode;
                 if (!$this->scannerMode) {
@@ -209,13 +207,10 @@ class ListOrders extends ListRecords
         }
 
         $user = auth()->user();
-        $isAdmin = $user->isAdmin();
-        $isShipper = $user->isShipper();
-        $isClient = $user->isClient();
 
         switch ($action) {
             case 'delivered':
-                if (!$isAdmin && !$isShipper) {
+                if (!$user->can('ChangeStatus:Order')) {
                     Notification::make()
                         ->title('❌ الحركة دي مش مسموحة ليك')
                         ->danger()
@@ -237,7 +232,7 @@ class ListOrders extends ListRecords
                 break;
 
             case 'collected_shipper':
-                if (!$isAdmin && !$isShipper) {
+                if (!$user->can('ManageCollections:Order')) {
                     Notification::make()
                         ->title('❌ Action Not Allowed')
                         ->danger()
@@ -259,7 +254,7 @@ class ListOrders extends ListRecords
                 break;
 
             case 'collected_client':
-                if (!$isAdmin && !$isClient) {
+                if (!$user->can('ManageCollections:Order')) {
                     Notification::make()
                         ->title('❌ Action Not Allowed')
                         ->danger()
@@ -293,7 +288,7 @@ class ListOrders extends ListRecords
                 break;
 
             case 'return_shipper':
-                if (!$isAdmin && !$isShipper) {
+                if (!$user->can('ManageReturns:Order')) {
                     Notification::make()
                         ->title('❌ Action Not Allowed')
                         ->danger()
@@ -363,14 +358,17 @@ class ListOrders extends ListRecords
             'view' => '👁️ عرض فقط (بدون إجراء)',
         ];
 
-        if (!$user->isClient()) {
+        if ($user->can('ChangeStatus:Order')) {
             $options['delivered'] = '✅ تسليم الأوردر';
-            $options['collected_shipper'] = '📦 تحصيل من الكابتن';
-            $options['return_shipper'] = '↩️ مرتجع من الكابتن';
         }
 
-        if (!$user->isShipper()) {
+        if ($user->can('ManageCollections:Order')) {
+            $options['collected_shipper'] = '📦 تحصيل من الكابتن';
             $options['collected_client'] = '💰 تسوية مع العميل';
+        }
+
+        if ($user->can('ManageReturns:Order')) {
+            $options['return_shipper'] = '↩️ مرتجع من الكابتن';
         }
 
         return $options;

@@ -13,12 +13,12 @@ class OrdersStatsOverview extends BaseWidget
 {
     protected ?string $pollingInterval = '30s';
     
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 5;
 
 
     public static function canView(): bool
     {
-        return auth()->user() && auth()->user()->can('view_any_order');
+        return auth()->user() && auth()->user()->can('ViewAny:Order');
     }
 
     protected function getStats(): array
@@ -30,19 +30,21 @@ class OrdersStatsOverview extends BaseWidget
             
             if (!$user) return [];
             
-            // تحديد الفلترة حسب الـ Role
-            $isClient = $user->isClient();
-            $isShipper = $user->isShipper();
-            $isAdmin = $user->isAdmin();
+            // تحديد الفلترة حسب الـ Permissions
+            $isClient = $user->can('ViewOwn:Order');
+            $isShipper = $user->can('ViewAssigned:Order');
+            $isAdmin = $user->can('ViewAll:Order'); // Has power to see all
             
-            // بناء الـ base query حسب الـ Role
+            // بناء الـ base query حسب الـ Permissions
             $orderQuery = Order::whereNotNull('status');
             
-            if ($isClient) {
+            if ($isClient && !$isAdmin) {
                 $orderQuery->where('client_id', $user->id);
-            } elseif ($isShipper) {
+            } elseif ($isShipper && !$isAdmin) {
                 $orderQuery->where('shipper_id', $user->id);
             }
+            // If it's an admin, no specific filtering by client_id or shipper_id is needed,
+            // as they should see all orders. The query remains as is.
 
         // إجمالي الأوردرات
         $totalOrders = (clone $orderQuery)->count();

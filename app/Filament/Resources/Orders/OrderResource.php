@@ -86,23 +86,18 @@ class OrderResource extends Resource
         
         $user = auth()->user();
 
-        // إذا لم يكن هناك User مسجل
-        if (!$user) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        // Admin / super_admin / panel_user يرى All
-        if ($user->isAdmin() || $user->hasRole('panel_user')) {
+        // ViewAll:Order يرى All
+        if ($user->can('ViewAll:Order')) {
             return $query;
         }
 
-        // Client يرى أوردراته فقط
-        if ($user->isClient()) {
+        // ViewOwn:Order يرى أوردراته فقط (للعملاء)
+        if ($user->can('ViewOwn:Order')) {
             return $query->where('client_id', $user->id);
         }
 
-        // Shipper يرى الأوردرات الموكلة له فقط
-        if ($user->isShipper()) {
+        // ViewAssigned:Order يرى الأوردرات الموكلة له فقط (للمناديب)
+        if ($user->can('ViewAssigned:Order')) {
             return $query->where('shipper_id', $user->id);
         }
 
@@ -121,5 +116,49 @@ class OrderResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         return 'primary';
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            // Financials
+            'view_shipper_fees',
+            'edit_shipper_fees',
+            'view_cop',
+            'edit_cop',
+            'view_net_fees',
+            'view_financial_summary', // Total, Fees, COD
+            'edit_financial_summary',
+            // Customer Info
+            'view_customer_details', // Name, Phone, Address
+            'edit_customer_details',
+            // Shipper Info
+            'view_shipper_details', // Shipper Name, Phone
+            'assign_shipper',
+            // Order Details
+            'view_dates',
+            'view_external_code',
+            'edit_external_code',
+            'view_order_notes',
+            'edit_order_notes',
+            'view_status_notes',
+            'edit_locked',
+            'edit_client',
+            'manage_collections',
+            'cancel_collections',
+            'view_location',
+            'barcode_scanner',
+            // Actions
+            'change_status',
+            'manage_returns',
+            'print_labels',
+            'export_data',
+        ];
     }
 }

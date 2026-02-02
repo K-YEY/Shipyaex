@@ -19,10 +19,7 @@ class ShipperStatsWidget extends BaseWidget
         $user = auth()->user();
         if (!$user) return false;
 
-        $isAdmin = $user->isAdmin();
-        $isShipper = $user->isShipper();
-
-        return $isAdmin || $isShipper;
+        return $user->can('ViewAssigned:Order') || $user->can('ViewAll:Order');
     }
 
     protected function getStats(): array
@@ -30,7 +27,7 @@ class ShipperStatsWidget extends BaseWidget
         $user = auth()->user();
         if (!$user) return [];
 
-        $isShipper = $user->isShipper();
+        $isShipper = $user->can('ViewAssigned:Order') && !$user->can('ViewAll:Order');
 
         // استعلام التحصيلات
         $collectionQuery = CollectedShipper::query();

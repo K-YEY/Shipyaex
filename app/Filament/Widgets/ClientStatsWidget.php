@@ -17,10 +17,7 @@ class ClientStatsWidget extends BaseWidget
         $user = auth()->user();
         if (!$user) return false;
 
-        $isAdmin = $user->isAdmin();
-        $isClient = $user->isClient();
-
-        return $isAdmin || $isClient;
+        return $user->can('ViewOwn:Order') || $user->can('ViewAll:Order');
     }
 
     protected function getStats(): array
@@ -28,7 +25,7 @@ class ClientStatsWidget extends BaseWidget
         $user = auth()->user();
         if (!$user) return [];
 
-        $isClient = $user->isClient();
+        $isClient = $user->can('ViewOwn:Order') && !$user->can('ViewAll:Order');
 
         $collectionQuery = CollectedClient::query();
         $orderQuery = Order::query()->whereNotNull('status');

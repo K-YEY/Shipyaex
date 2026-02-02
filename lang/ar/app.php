@@ -138,4 +138,11 @@ return [
         'from_collected' => 'من الأوردرات اللي اتحصلت',
         'shipper_expenses' => 'عمولات كباتن + مصاريف',
     ]),
+
+    // Tabs & New Fields
+    'general_info' => 'بيانات عامة',
+    'customer_info' => 'بيانات العميل',
+    'financial_summary' => 'الملخص المالي',
+    'allow_open' => 'مسموح بفتح الطرد',
+    'allow_open_helper' => 'السماح للعميل بفتح الشحنة ومعاينتها',
 ];

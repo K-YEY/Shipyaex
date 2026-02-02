@@ -44,14 +44,7 @@ class CollectedClientResource extends Resource
      */
     public static function canViewNavigation(): bool
     {
-        $user = auth()->user();
-        
-        // Shipper مش بيشوف تحصيل Clients
-        if ($user->isShipper()) {
-            return false;
-        }
-        
-        return true;
+        return auth()->user()->can('ViewAny:CollectedClient');
     }
 
     public static function getNavigationGroup(): ?string
@@ -94,17 +87,14 @@ class CollectedClientResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        // Admin يرى All
-        if ($user->isAdmin()) {
+        if ($user->can('ViewAll:CollectedClient')) {
             return $query;
         }
 
-        // Client يرى تحصيNoته فقط
-        if ($user->isClient()) {
+        if ($user->can('ViewOwn:CollectedClient')) {
             return $query->where('client_id', $user->id);
         }
 
-        // Users الآخرين No يرون شيء
         return $query->whereRaw('1 = 0');
     }
 
@@ -115,11 +105,11 @@ class CollectedClientResource extends Resource
     {
         $user = auth()->user();
 
-        if ($user->isAdmin()) {
+        if ($user->can('ViewAll:CollectedClient')) {
             return static::getModel()::where('status', 'pending')->count() ?: null;
         }
 
-        if ($user->isClient()) {
+        if ($user->can('ViewOwn:CollectedClient')) {
             return static::getModel()::where('client_id', $user->id)
                 ->where('status', 'pending')
                 ->count() ?: null;

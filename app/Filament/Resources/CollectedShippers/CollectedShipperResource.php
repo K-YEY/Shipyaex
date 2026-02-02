@@ -93,17 +93,14 @@ class CollectedShipperResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        // Admin يرى All
-        if ($user->isAdmin()) {
+        if ($user->can('ViewAll:CollectedShipper')) {
             return $query;
         }
 
-        // Shipper يرى تحصيNoته فقط
-        if ($user->isShipper()) {
+        if ($user->can('ViewOwn:CollectedShipper')) {
             return $query->where('shipper_id', $user->id);
         }
 
-        // Users الآخرين No يرون شيء
         return $query->whereRaw('1 = 0');
     }
 
@@ -114,11 +111,11 @@ class CollectedShipperResource extends Resource
     {
         $user = auth()->user();
 
-        if ($user->isAdmin()) {
+        if ($user->can('ViewAll:CollectedShipper')) {
             return static::getModel()::where('status', 'pending')->count() ?: null;
         }
 
-        if ($user->isShipper()) {
+        if ($user->can('ViewOwn:CollectedShipper')) {
             return static::getModel()::where('shipper_id', $user->id)
                 ->where('status', 'pending')
                 ->count() ?: null;

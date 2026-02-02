@@ -11,11 +11,12 @@ use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
 //TODO: create modal for clients and shippers from users table DB
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, SoftDeletes, Authorizable;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -112,19 +113,19 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->can('access_as_admin') || 
+        return $this->can('Access:Admin') || 
                $this->hasRole(config('filament-shield.super_admin.name', 'super_admin')) ||
                $this->hasRole('admin'); // Fallback for existing installations
     }
 
     public function isClient(): bool
     {
-        return $this->can('access_as_client') || $this->hasRole('client'); // Fallback for existing installations
+        return $this->can('Access:Client') || $this->hasRole('client'); // Fallback for existing installations
     }
 
     public function isShipper(): bool
     {
-        return $this->can('access_as_shipper') || $this->hasRole('shipper'); // Fallback for existing installations
+        return $this->can('Access:Shipper') || $this->hasRole('shipper'); // Fallback for existing installations
     }
 
     /**
@@ -132,7 +133,7 @@ class User extends Authenticatable
      */
     public static function getAdmins()
     {
-        $admins = self::permission('access_as_admin')->get();
+        $admins = self::permission('Access:Admin')->get();
         if ($admins->isEmpty()) {
             $admins = self::role(['admin', 'super_admin'])->get();
         }

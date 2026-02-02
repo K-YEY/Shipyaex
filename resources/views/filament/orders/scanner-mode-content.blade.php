@@ -192,7 +192,7 @@
                                 <td class="fi-ta-cell px-3 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $order['shipper'] }}</td>
                                 <td class="fi-ta-cell px-3 py-4">
                                     <div class="flex items-center justify-center gap-1">
-                                        @if(!auth()->user()->hasRole('client'))
+                                        @if(auth()->user()->can('ChangeStatus:Order'))
                                             <x-filament::icon-button
                                                 wire:click="quickAction({{ $order['id'] }}, 'delivered')"
                                                 icon="heroicon-o-check-circle"
@@ -201,16 +201,18 @@
                                                 tooltip="تسليم"
                                                 :disabled="$order['status'] === 'deliverd'"
                                             />
+                                        @endif
+                                        @if(auth()->user()->can('ManageCollections:Order'))
                                             <x-filament::icon-button
                                                 wire:click="quickAction({{ $order['id'] }}, 'collected_shipper')"
                                                 icon="heroicon-o-truck"
                                                 color="info"
                                                 size="sm"
-                                                tooltip="تحصيل Fromدوب"
+                                                tooltip="تحصيل From دوب"
                                                 :disabled="$order['collected_shipper']"
                                             />
                                         @endif
-                                        @if(!auth()->user()->hasRole('shipper'))
+                                        @if(auth()->user()->can('ManageCollections:Order'))
                                             <x-filament::icon-button
                                                 wire:click="quickAction({{ $order['id'] }}, 'collected_client')"
                                                 icon="heroicon-o-banknotes"

@@ -89,7 +89,7 @@ class UserForm
                     ->preload(),
                     
                 Select::make('roles')
-                    ->label(__('app.status'))
+                    ->label(__('filament-shield::filament-shield.resource.label.roles'))
                     ->relationship('roles', 'name', fn ($query) => $query->where('name', '!=', 'super_admin'))
                     ->multiple()
                     ->preload()

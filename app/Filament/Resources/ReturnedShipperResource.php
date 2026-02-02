@@ -63,4 +63,19 @@ class ReturnedShipperResource extends Resource
             'edit' => Pages\EditReturnedShipper::route('/{record}/edit'),
         ];
     }
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user->can('ViewAll:ReturnedShipper')) {
+            return $query;
+        }
+
+        if ($user->can('ViewOwn:ReturnedShipper')) {
+            return $query->where('shipper_id', $user->id);
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
 }

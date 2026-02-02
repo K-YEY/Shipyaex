@@ -138,4 +138,11 @@ return [
         'from_collected' => 'From collected orders',
         'shipper_expenses' => 'Shipper fees + expenses',
     ]),
+
+    // Tabs & New Fields
+    'general_info' => 'General Info',
+    'customer_info' => 'Customer Info',
+    'financial_summary' => 'Financial Summary',
+    'allow_open' => 'Allow Open',
+    'allow_open_helper' => 'Allow customer to open and inspect the package',
 ];
