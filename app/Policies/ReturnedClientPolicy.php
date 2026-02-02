@@ -67,4 +67,19 @@ class ReturnedClientPolicy
         return $authUser->can('Reorder:ReturnedClient');
     }
 
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:ReturnedClient');
+    }
+
+    public function viewAll(AuthUser $authUser, ReturnedClient $returnedClient): bool
+    {
+        return $authUser->can('ViewAll:ReturnedClient');
+    }
+
+    public function viewOwn(AuthUser $authUser, ReturnedClient $returnedClient): bool
+    {
+        return $authUser->can('ViewOwn:ReturnedClient');
+    }
+
 }

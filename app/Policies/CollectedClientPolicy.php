@@ -67,4 +67,19 @@ class CollectedClientPolicy
         return $authUser->can('Reorder:CollectedClient');
     }
 
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:CollectedClient');
+    }
+
+    public function viewAll(AuthUser $authUser, CollectedClient $collectedClient): bool
+    {
+        return $authUser->can('ViewAll:CollectedClient');
+    }
+
+    public function viewOwn(AuthUser $authUser, CollectedClient $collectedClient): bool
+    {
+        return $authUser->can('ViewOwn:CollectedClient');
+    }
+
 }

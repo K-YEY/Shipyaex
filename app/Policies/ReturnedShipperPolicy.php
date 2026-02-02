@@ -67,4 +67,19 @@ class ReturnedShipperPolicy
         return $authUser->can('Reorder:ReturnedShipper');
     }
 
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:ReturnedShipper');
+    }
+
+    public function viewAll(AuthUser $authUser, ReturnedShipper $returnedShipper): bool
+    {
+        return $authUser->can('ViewAll:ReturnedShipper');
+    }
+
+    public function viewOwn(AuthUser $authUser, ReturnedShipper $returnedShipper): bool
+    {
+        return $authUser->can('ViewOwn:ReturnedShipper');
+    }
+
 }

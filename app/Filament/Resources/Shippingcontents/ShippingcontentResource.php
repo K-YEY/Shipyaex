@@ -14,7 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
-class ShippingcontentResource extends Resource
+class ShippingContentResource extends Resource
 {
     protected static ?string $model = ShippingContent::class;
 

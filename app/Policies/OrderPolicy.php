@@ -14,197 +14,212 @@ class OrderPolicy
     
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ViewAny:Order');
+        return $authUser->can('ViewAny:Order');
     }
 
     public function view(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('View:Order');
+        return $authUser->can('View:Order');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Create:Order');
+        return $authUser->can('Create:Order');
     }
 
     public function update(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('Update:Order');
+        return $authUser->can('Update:Order');
     }
 
     public function delete(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('Delete:Order');
+        return $authUser->can('Delete:Order');
     }
 
     public function restore(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('Restore:Order');
+        return $authUser->can('Restore:Order');
     }
 
     public function forceDelete(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ForceDelete:Order');
+        return $authUser->can('ForceDelete:Order');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ForceDeleteAny:Order');
+        return $authUser->can('ForceDeleteAny:Order');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('RestoreAny:Order');
+        return $authUser->can('RestoreAny:Order');
     }
 
     public function replicate(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('Replicate:Order');
+        return $authUser->can('Replicate:Order');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Reorder:Order');
+        return $authUser->can('Reorder:Order');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('DeleteAny:Order');
+        return $authUser->can('DeleteAny:Order');
     }
 
     public function viewShipperFees(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewShipperFees:Order');
+        return $authUser->can('ViewShipperFees:Order');
     }
 
     public function editShipperFees(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditShipperFees:Order');
+        return $authUser->can('EditShipperFees:Order');
     }
 
     public function viewCop(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewCop:Order');
+        return $authUser->can('ViewCop:Order');
     }
 
     public function editCop(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditCop:Order');
+        return $authUser->can('EditCop:Order');
     }
 
     public function viewNetFees(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewNetFees:Order');
+        return $authUser->can('ViewNetFees:Order');
     }
 
     public function viewFinancialSummary(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewFinancialSummary:Order');
+        return $authUser->can('ViewFinancialSummary:Order');
     }
 
     public function editFinancialSummary(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditFinancialSummary:Order');
+        return $authUser->can('EditFinancialSummary:Order');
     }
 
     public function viewCustomerDetails(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewCustomerDetails:Order');
+        return $authUser->can('ViewCustomerDetails:Order');
     }
 
     public function editCustomerDetails(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditCustomerDetails:Order');
+        return $authUser->can('EditCustomerDetails:Order');
     }
 
     public function viewShipperDetails(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewShipperDetails:Order');
+        return $authUser->can('ViewShipperDetails:Order');
     }
 
     public function assignShipper(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('AssignShipper:Order');
+        return $authUser->can('AssignShipper:Order');
     }
 
     public function viewDates(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewDates:Order');
+        return $authUser->can('ViewDates:Order');
     }
 
     public function viewExternalCode(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewExternalCode:Order');
+        return $authUser->can('ViewExternalCode:Order');
     }
 
     public function editExternalCode(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditExternalCode:Order');
+        return $authUser->can('EditExternalCode:Order');
     }
 
     public function viewOrderNotes(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewOrderNotes:Order');
+        return $authUser->can('ViewOrderNotes:Order');
     }
 
     public function editOrderNotes(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditOrderNotes:Order');
+        return $authUser->can('EditOrderNotes:Order');
     }
 
     public function viewStatusNotes(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewStatusNotes:Order');
+        return $authUser->can('ViewStatusNotes:Order');
     }
 
     public function editLocked(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditLocked:Order');
+        return $authUser->can('EditLocked:Order');
     }
 
     public function editClient(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('EditClient:Order');
+        return $authUser->can('EditClient:Order');
     }
 
     public function manageCollections(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ManageCollections:Order');
+        return $authUser->can('ManageCollections:Order');
     }
 
     public function cancelCollections(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('CancelCollections:Order');
+        return $authUser->can('CancelCollections:Order');
     }
 
     public function viewLocation(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ViewLocation:Order');
+        return $authUser->can('ViewLocation:Order');
     }
 
     public function barcodeScanner(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('BarcodeScanner:Order');
+        return $authUser->can('BarcodeScanner:Order');
     }
 
     public function changeStatus(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ChangeStatus:Order');
+        return $authUser->can('ChangeStatus:Order');
     }
 
     public function manageReturns(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ManageReturns:Order');
+        return $authUser->can('ManageReturns:Order');
     }
 
     public function printLabels(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('PrintLabels:Order');
+        return $authUser->can('PrintLabels:Order');
     }
 
     public function exportData(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->hasPermissionTo('ExportData:Order');
+        return $authUser->can('ExportData:Order');
+    }
+
+    public function viewAll(AuthUser $authUser, Order $order): bool
+    {
+        return $authUser->can('ViewAll:Order');
+    }
+
+    public function viewOwn(AuthUser $authUser, Order $order): bool
+    {
+        return $authUser->can('ViewOwn:Order');
+    }
+
+    public function viewAssigned(AuthUser $authUser, Order $order): bool
+    {
+        return $authUser->can('ViewAssigned:Order');
     }
 
 }

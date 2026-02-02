@@ -67,4 +67,9 @@ class ShippingContentPolicy
         return $authUser->can('Reorder:ShippingContent');
     }
 
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:ShippingContent');
+    }
+
 }

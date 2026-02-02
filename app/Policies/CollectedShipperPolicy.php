@@ -67,4 +67,19 @@ class CollectedShipperPolicy
         return $authUser->can('Reorder:CollectedShipper');
     }
 
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:CollectedShipper');
+    }
+
+    public function viewAll(AuthUser $authUser, CollectedShipper $collectedShipper): bool
+    {
+        return $authUser->can('ViewAll:CollectedShipper');
+    }
+
+    public function viewOwn(AuthUser $authUser, CollectedShipper $collectedShipper): bool
+    {
+        return $authUser->can('ViewOwn:CollectedShipper');
+    }
+
 }

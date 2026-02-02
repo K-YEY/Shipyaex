@@ -267,6 +267,14 @@ return [
                 'view_all',
                 'view_own',
             ],
+            \App\Filament\Resources\Shippingcontents\ShippingContentResource::class => [
+                'view',
+                'view_any',
+                'create',
+                'update',
+                'delete',
+                'delete_any',
+            ],
         ],
         'exclude' => [
             //
