@@ -373,10 +373,7 @@ class OrderObserver
                 ->orderBy('order_count', 'asc')
                 ->first();
 
-            $admins = User::permission('access_as_admin')->get();
-            if ($admins->isEmpty()) {
-                $admins = User::role(['admin', 'super_admin'])->get();
-            }
+            $admins = User::getAdmins();
             
             // تحديد نوع الإشعار
             $isFirstExceed = ($exceededBy === 1);

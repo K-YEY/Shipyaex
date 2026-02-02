@@ -77,7 +77,7 @@ class OrderForm
                                                 if (!auth()->user()->can('EditClient:Order')) {
                                                     return [$user->id => $user->name];
                                                 }
-                                                return User::permission('access_as_client')
+                                                return User::permission('Access:Client')
                                                     ->pluck('name', 'id');
                                             })
                                             ->default(fn () => !auth()->user()->can('EditClient:Order') ? $user->id : null)
@@ -96,7 +96,7 @@ class OrderForm
                                             ->relationship(
                                                 name: 'shipper',
                                                 titleAttribute: 'name',
-                                                modifyQueryUsing: fn ($query) => $query->permission('access_as_shipper')
+                                                modifyQueryUsing: fn ($query) => $query->permission('Access:Shipper')
                                             )
                                             ->searchable()
                                             ->preload()

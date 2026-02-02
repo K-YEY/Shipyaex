@@ -18,7 +18,7 @@ class CompanyStatsWidget extends BaseWidget
         if (!$user) return false;
 
         // Only Admin / Super Admin
-        return $user->hasPermissionTo('access_as_admin');
+        return $user->can('Access:Admin');
     }
 
     protected function getStats(): array

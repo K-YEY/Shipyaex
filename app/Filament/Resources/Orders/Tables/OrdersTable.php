@@ -533,7 +533,7 @@ class OrdersTable
                                 Select::make('shipper_id')
                                     ->label('اختار الكابتن')
                                     ->options(
-                                        User::permission('access_as_shipper')
+                                        User::permission('Access:Shipper')
                                             ->pluck('name', 'id')
                                     )
                                     ->searchable()
