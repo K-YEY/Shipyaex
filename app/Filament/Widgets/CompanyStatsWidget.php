@@ -14,11 +14,7 @@ class CompanyStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        $user = auth()->user();
-        if (!$user) return false;
-
-        // Only Admin / Super Admin
-        return $user->can('Access:Admin');
+        return auth()->user() && auth()->user()->can('View:CompanyStats');
     }
 
     protected function getStats(): array

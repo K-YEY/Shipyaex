@@ -71,7 +71,8 @@ class UserForm
                     ->required()
                     ->numeric()
                     ->minValue(0)
-                    ->default(0.0),
+                    ->default(0.0)
+                    ->disabled(fn () => !auth()->user()->can('EditCommission:User')),
                     
                 Select::make('shipping_content_id')
                     ->label(__('app.shipping_contents'))
@@ -86,7 +87,8 @@ class UserForm
                         Plan::pluck('name', 'id')
                     )
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->disabled(fn () => !auth()->user()->can('EditPlan:User')),
                     
                 Select::make('roles')
                     ->label(__('filament-shield::filament-shield.resource.label.roles'))
@@ -94,11 +96,13 @@ class UserForm
                     ->multiple()
                     ->preload()
                     ->searchable()
-                    ->required(),
+                    ->required()
+                    ->disabled(fn () => !auth()->user()->can('EditRoles:User')),
                     
                 Toggle::make('is_blocked')
                     ->label(__('app.is_blocked'))
-                    ->default(false),
+                    ->default(false)
+                    ->disabled(fn () => !auth()->user()->can('BlockUser:User')),
             ]);
     }
 }

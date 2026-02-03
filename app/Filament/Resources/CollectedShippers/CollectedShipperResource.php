@@ -44,13 +44,7 @@ class CollectedShipperResource extends Resource
      */
     public static function canViewNavigation(): bool
     {
-        $user = auth()->user();
-        
-        if ($user->isClient()) {
-            return false;
-        }
-        
-        return true;
+        return auth()->user()->can('ViewAny:CollectedShipper');
     }
 
     public static function getNavigationGroup(): ?string

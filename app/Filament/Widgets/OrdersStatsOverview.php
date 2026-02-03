@@ -18,7 +18,7 @@ class OrdersStatsOverview extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user() && auth()->user()->can('ViewAny:Order');
+        return auth()->user() && auth()->user()->can('View:OrdersStatsOverview');
     }
 
     protected function getStats(): array

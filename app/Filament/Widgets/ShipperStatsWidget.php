@@ -16,10 +16,7 @@ class ShipperStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        $user = auth()->user();
-        if (!$user) return false;
-
-        return $user->can('ViewAssigned:Order') || $user->can('ViewAll:Order');
+        return auth()->user() && auth()->user()->can('View:ShipperStats');
     }
 
     protected function getStats(): array

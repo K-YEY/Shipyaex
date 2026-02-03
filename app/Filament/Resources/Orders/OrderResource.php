@@ -101,8 +101,9 @@ class OrderResource extends Resource
             return $query->where('shipper_id', $user->id);
         }
 
-        // Default: أظهر All
-        return $query;
+        // Default: لا تظهر شيئاً (Fail Closed)
+        // إذا لم يكن لدى المستخدم صلاحية محددة، لا يرى أي أوردر
+        return $query->whereRaw('1 = 0');
     }
 
     /**

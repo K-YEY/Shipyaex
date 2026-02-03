@@ -39,17 +39,7 @@ class OrdersStatusChart extends ApexChartWidget
      */
     public static function canView(): bool
     {
-        try {
-            $user = auth()->user();
-            if (!$user) return false;
-            
-            // Only show for admin users
-            return $user->isAdmin();
-            
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return auth()->user() && auth()->user()->can('View:OrdersStatusChart');
     }
 
     /**
@@ -69,11 +59,19 @@ class OrdersStatusChart extends ApexChartWidget
             // Get orders data
             $query = Order::query();
             
-            // Filter by user role if needed
-            if ($user->isClient()) {
+            // Scoping logic based on behavioral permissions
+            $isClient = $user->can('ViewOwn:Order');
+            $isShipper = $user->can('ViewAssigned:Order');
+            $isAdmin = $user->can('ViewAll:Order');
+
+            if ($isAdmin) {
+                // See all - no filter
+            } elseif ($isClient) {
                 $query->where('client_id', $user->id);
-            } elseif ($user->isShipper()) {
+            } elseif ($isShipper) {
                 $query->where('shipper_id', $user->id);
+            } else {
+                return $this->getEmptyChart();
             }
 
             // Get counts for each status
