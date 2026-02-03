@@ -16,6 +16,8 @@ class SettingForm
                 ->schema([
                     TextInput::make('key')
                         ->label('المفتاح (Key)')
+                        ->visible(fn () => auth()->user()->can('ViewKeyColumn:Setting'))
+                        ->disabled(fn () => !auth()->user()->can('EditKeyField:Setting'))
                         ->required()
                         ->unique(ignoreRecord: true)
                         ->placeholder('مثال: require_shipper_collection_first')
@@ -25,6 +27,8 @@ class SettingForm
                     
                     Textarea::make('value')
                         ->label('القيمة (Value)')
+                        ->visible(fn () => auth()->user()->can('ViewValueColumn:Setting'))
+                        ->disabled(fn () => !auth()->user()->can('EditValueField:Setting'))
                         ->required()
                         ->placeholder('اكتب القيمة هنا')
                         ->rows(2)

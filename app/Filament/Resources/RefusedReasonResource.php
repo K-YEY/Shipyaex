@@ -53,6 +53,8 @@ class RefusedReasonResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('statuses.reason_name'))
+                            ->visible(fn () => auth()->user()->can('ViewNameColumn:RefusedReason'))
+                            ->disabled(fn () => !auth()->user()->can('EditNameField:RefusedReason'))
                             ->required()
                             ->maxLength(255)
                             ->placeholder(__('statuses.placeholder_reason_name'))
@@ -65,6 +67,8 @@ class RefusedReasonResource extends Resource
 
                         Forms\Components\Select::make('color')
                             ->label(__('statuses.badge_color'))
+                            ->visible(fn () => auth()->user()->can('ViewColorColumn:RefusedReason'))
+                            ->disabled(fn () => !auth()->user()->can('EditColorField:RefusedReason'))
                             ->options([
                                 'primary' => __('statuses.color_primary'),
                                 'success' => __('statuses.color_success'),
@@ -80,6 +84,8 @@ class RefusedReasonResource extends Resource
 
                         Forms\Components\TextInput::make('sort_order')
                             ->label(__('statuses.sort_order'))
+                            ->visible(fn () => auth()->user()->can('ViewSortOrderColumn:RefusedReason'))
+                            ->disabled(fn () => !auth()->user()->can('EditSortOrderField:RefusedReason'))
                             ->numeric()
                             ->default(0)
                             ->helperText(__('statuses.sort_order_helper')),
@@ -90,6 +96,8 @@ class RefusedReasonResource extends Resource
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label(__('statuses.active'))
+                            ->visible(fn () => auth()->user()->can('ViewActiveColumn:RefusedReason'))
+                            ->disabled(fn () => !auth()->user()->can('EditActiveField:RefusedReason'))
                             ->helperText(__('statuses.active_helper'))
                             ->default(true),
                     ])
@@ -105,12 +113,14 @@ class RefusedReasonResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label(__('statuses.reason_name'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:RefusedReason'))
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('slug')
                     ->label(__('statuses.slug'))
+                    ->visible(fn () => auth()->user()->can('ViewSlugColumn:RefusedReason'))
                     ->searchable()
                     ->sortable()
                     ->color('gray')
@@ -118,21 +128,25 @@ class RefusedReasonResource extends Resource
 
                 Tables\Columns\TextColumn::make('color')
                     ->label(__('statuses.color'))
+                    ->visible(fn () => auth()->user()->can('ViewColorColumn:RefusedReason'))
                     ->badge()
                     ->color(fn ($record) => $record->color),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('statuses.active'))
+                    ->visible(fn () => auth()->user()->can('ViewActiveColumn:RefusedReason'))
                     ->boolean()
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label(__('statuses.order'))
+                    ->visible(fn () => auth()->user()->can('ViewSortOrderColumn:RefusedReason'))
                     ->sortable()
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('orderStatuses_count')
                     ->label(__('statuses.order_statuses'))
+                    ->visible(fn () => auth()->user()->can('ViewOrderStatusesColumn:RefusedReason'))
                     ->counts('orderStatuses')
                     ->badge()
                     ->color('success')
@@ -140,6 +154,7 @@ class RefusedReasonResource extends Resource
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('statuses.created'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:RefusedReason'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -153,12 +168,15 @@ class RefusedReasonResource extends Resource
                     ->falseLabel(__('statuses.inactive_only')),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->can('Update:RefusedReason')),
+                DeleteAction::make()
+                    ->visible(fn () => auth()->user()->can('Delete:RefusedReason')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('DeleteAny:RefusedReason')),
                 ]),
             ]);
     }

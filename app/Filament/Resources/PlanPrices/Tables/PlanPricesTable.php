@@ -17,23 +17,28 @@ class PlanPricesTable
             ->columns([
                 TextColumn::make('plan.name')
                     ->label(__('app.plan'))
+                    ->visible(fn () => auth()->user()->can('ViewPlanColumn:PlanPrice'))
                     ->searchable(),
                 TextColumn::make('location_id')
                     ->label(__('app.governorate'))
+                    ->visible(fn () => auth()->user()->can('ViewLocationColumn:PlanPrice'))
                     ->formatStateUsing(function ($state, $record) {
-                        return $record->governorate->name;
+                        return $record->governorate?->name;
                     })
                     ->sortable(),
                 TextColumn::make('price')
                     ->label(__('app.price'))
+                    ->visible(fn () => auth()->user()->can('ViewPriceColumn:PlanPrice'))
                     ->numeric(),
                 TextColumn::make('created_at')
                     ->label(__('app.created_at'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:PlanPrice'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label(__('app.date'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:PlanPrice'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -44,11 +49,13 @@ class PlanPricesTable
                     ->relationship('plan', 'name'),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->can('Update:PlanPrice')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('DeleteAny:PlanPrice')),
                 ]),
             ]);
     }

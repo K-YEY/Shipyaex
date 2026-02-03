@@ -53,6 +53,8 @@ class OrderStatusResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('statuses.status_name'))
+                            ->visible(fn () => auth()->user()->can('ViewNameColumn:OrderStatus'))
+                            ->disabled(fn () => !auth()->user()->can('EditNameField:OrderStatus'))
                             ->required()
                             ->maxLength(255)
                             ->placeholder(__('statuses.placeholder_status_name'))
@@ -65,6 +67,8 @@ class OrderStatusResource extends Resource
 
                         Forms\Components\Select::make('color')
                             ->label(__('statuses.badge_color'))
+                            ->visible(fn () => auth()->user()->can('ViewColorColumn:OrderStatus'))
+                            ->disabled(fn () => !auth()->user()->can('EditColorField:OrderStatus'))
                             ->options([
                                 'primary' => __('statuses.color_primary'),
                                 'success' => __('statuses.color_success'),
@@ -80,6 +84,8 @@ class OrderStatusResource extends Resource
 
                         Forms\Components\TextInput::make('sort_order')
                             ->label(__('statuses.sort_order'))
+                            ->visible(fn () => auth()->user()->can('ViewSortOrderColumn:OrderStatus'))
+                            ->disabled(fn () => !auth()->user()->can('EditSortOrderField:OrderStatus'))
                             ->numeric()
                             ->default(0)
                             ->helperText(__('statuses.sort_order_helper')),
@@ -90,11 +96,15 @@ class OrderStatusResource extends Resource
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label(__('statuses.active'))
+                            ->visible(fn () => auth()->user()->can('ViewActiveColumn:OrderStatus'))
+                            ->disabled(fn () => !auth()->user()->can('EditActiveField:OrderStatus'))
                             ->helperText(__('statuses.active_helper'))
                             ->default(true),
 
                         Forms\Components\Toggle::make('clear_refused_reasons')
                             ->label(__('statuses.clear_reasons_label'))
+                            ->visible(fn () => auth()->user()->can('ViewClearReasonsColumn:OrderStatus'))
+                            ->disabled(fn () => !auth()->user()->can('EditClearReasonsField:OrderStatus'))
                             ->helperText(__('statuses.clear_reasons_helper'))
                             ->default(false),
                     ])
@@ -105,6 +115,8 @@ class OrderStatusResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('refusedReasons')
                             ->label(__('statuses.applicable_refused_reasons'))
+                            ->visible(fn () => auth()->user()->can('ViewRefusedReasonsColumn:OrderStatus'))
+                            ->disabled(fn () => !auth()->user()->can('EditRefusedReasonsField:OrderStatus'))
                             ->relationship('refusedReasons', 'name')
                             ->multiple()
                             ->preload()
@@ -120,12 +132,14 @@ class OrderStatusResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label(__('statuses.status_name'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:OrderStatus'))
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('slug')
                     ->label(__('statuses.slug'))
+                    ->visible(fn () => auth()->user()->can('ViewSlugColumn:OrderStatus'))
                     ->searchable()
                     ->sortable()
                     ->color('gray')
@@ -133,27 +147,32 @@ class OrderStatusResource extends Resource
 
                 Tables\Columns\TextColumn::make('color')
                     ->label(__('statuses.color'))
+                    ->visible(fn () => auth()->user()->can('ViewColorColumn:OrderStatus'))
                     ->badge()
                     ->color(fn ($record) => $record->color),
 
                 Tables\Columns\IconColumn::make('clear_refused_reasons')
                     ->label(__('statuses.clear_reasons_label'))
+                    ->visible(fn () => auth()->user()->can('ViewClearReasonsColumn:OrderStatus'))
                     ->boolean()
                     ->alignCenter()
                     ->tooltip(__('statuses.clear_reasons_tooltip')),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('statuses.active'))
+                    ->visible(fn () => auth()->user()->can('ViewActiveColumn:OrderStatus'))
                     ->boolean()
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label(__('statuses.order'))
+                    ->visible(fn () => auth()->user()->can('ViewSortOrderColumn:OrderStatus'))
                     ->sortable()
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('refusedReasons_count')
                     ->label(__('statuses.refused_reasons'))
+                    ->visible(fn () => auth()->user()->can('ViewRefusedReasonsColumn:OrderStatus'))
                     ->counts('refusedReasons')
                     ->badge()
                     ->color('info')
@@ -161,6 +180,7 @@ class OrderStatusResource extends Resource
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('statuses.created'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:OrderStatus'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -180,11 +200,13 @@ class OrderStatusResource extends Resource
                     ->falseLabel(__('statuses.no')),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->can('Update:OrderStatus')),
                 \Filament\Actions\Action::make('manageRefusedReasons')
                     ->label(__('statuses.manage_reasons'))
                     ->icon('heroicon-o-list-bullet')
                     ->color('info')
+                    ->visible(fn () => auth()->user()->can('ManageReasons:OrderStatus'))
                     ->form([
                         Forms\Components\Select::make('refusedReasons')
                             ->label(__('statuses.refused_reasons'))
@@ -204,11 +226,13 @@ class OrderStatusResource extends Resource
                             ->success()
                             ->send();
                     }),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->visible(fn () => auth()->user()->can('Delete:OrderStatus')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('DeleteAny:OrderStatus')),
                 ]),
             ]);
     }

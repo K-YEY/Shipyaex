@@ -13,10 +13,14 @@ class ExpenseForm
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:Expense'))
+                    ->disabled(fn () => !auth()->user()->can('EditNameField:Expense'))
                     ->required()
                     ->maxLength(255)
                     ->label(__('app.name')),
                 TextInput::make('amount')
+                    ->visible(fn () => auth()->user()->can('ViewAmountColumn:Expense'))
+                    ->disabled(fn () => !auth()->user()->can('EditAmountField:Expense'))
                     ->required()
                     ->numeric()
                     ->prefix(__('statuses.currency'))

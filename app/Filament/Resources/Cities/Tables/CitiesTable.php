@@ -16,17 +16,21 @@ class CitiesTable
             ->columns([
                 TextColumn::make('governorate.name')
                     ->label(__('app.governorate'))
+                    ->visible(fn () => auth()->user()->can('ViewGovernorateColumn:City'))
                     ->searchable(),
                 TextColumn::make('name')
                     ->label(__('app.city'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:City'))
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->label(__('app.created_at'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:City'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label(__('app.date'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:City'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -35,11 +39,13 @@ class CitiesTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->can('Update:City')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('DeleteAny:City')),
                 ]),
             ]);
     }

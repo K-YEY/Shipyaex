@@ -46,11 +46,15 @@ class ShipperResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->label(__('app.name'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('EditNameField:Shippers'))
                     ->required()
                     ->maxLength(255),
                     
                 TextInput::make('phone')
                     ->label(__('app.phone'))
+                    ->visible(fn () => auth()->user()->can('ViewPhoneColumn:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('EditPhoneField:Shippers'))
                     ->required()
                     ->tel()
                     ->maxLength(20)
@@ -65,10 +69,14 @@ class ShipperResource extends Resource
                     
                 TextInput::make('address')
                     ->label(__('app.address'))
+                    ->visible(fn () => auth()->user()->can('ViewAddressColumn:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('EditAddressField:Shippers'))
                     ->maxLength(500),
 
                 TextInput::make('username')
                     ->label(__('app.username'))
+                    ->visible(fn () => auth()->user()->can('ViewUsernameField:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('EditUsernameField:Shippers'))
                     ->required()
                     ->alphaDash()
                     ->maxLength(50)
@@ -83,6 +91,8 @@ class ShipperResource extends Resource
                     
                 TextInput::make('password')
                     ->label(__('app.password'))
+                    ->visible(fn () => auth()->user()->can('ViewPasswordField:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('EditPasswordField:Shippers'))
                     ->password()
                     ->revealable()
                     ->required(fn (?object $record) => $record === null)
@@ -95,6 +105,8 @@ class ShipperResource extends Resource
                     
                 TextInput::make('commission')
                     ->label(__('app.total_commission'))
+                    ->visible(fn () => auth()->user()->can('ViewCommissionColumn:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('EditCommissionField:Shippers'))
                     ->required()
                     ->numeric()
                     ->minValue(0)
@@ -103,6 +115,8 @@ class ShipperResource extends Resource
                     
                 Toggle::make('is_blocked')
                     ->label(__('app.is_blocked'))
+                    ->visible(fn () => auth()->user()->can('BlockUser:Shippers'))
+                    ->disabled(fn () => !auth()->user()->can('BlockUser:Shippers'))
                     ->default(false),
             ]);
     }
@@ -114,29 +128,35 @@ class ShipperResource extends Resource
             ->columns([
                 TextColumn::make('id')
                     ->label(__('app.shipper') . ' ID')
+                    ->visible(fn () => auth()->user()->can('ViewIdColumn:Shippers'))
                     ->sortable()
                     ->searchable()
                     ->badge()
                     ->color('primary'),
                 TextColumn::make('name')
                     ->label(__('app.name'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:Shippers'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('phone')
                     ->label(__('app.phone'))
+                    ->visible(fn () => auth()->user()->can('ViewPhoneColumn:Shippers'))
                     ->searchable()
                     ->copyable()
                     ->copyMessage(__('app.copied')),
                 TextColumn::make('commission')
                     ->label(__('app.total_commission'))
+                    ->visible(fn () => auth()->user()->can('ViewCommissionColumn:Shippers'))
                     ->state(fn ($record) => number_format($record->commission, 2) . ' ' . __('statuses.currency'))
                     ->sortable(),
                 TextColumn::make('address')
                     ->label(__('app.address'))
+                    ->visible(fn () => auth()->user()->can('ViewAddressColumn:Shippers'))
                     ->limit(30)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->label(__('app.created_at'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:Shippers'))
                     ->dateTime('Y-m-d')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -145,12 +165,17 @@ class ShipperResource extends Resource
                 //
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make()->label(__('app.edit')),
-                \Filament\Actions\DeleteAction::make()->label(__('app.delete')),
+                \Filament\Actions\EditAction::make()
+                    ->label(__('app.edit'))
+                    ->visible(fn () => auth()->user()->can('Update:Shippers')),
+                \Filament\Actions\DeleteAction::make()
+                    ->label(__('app.delete'))
+                    ->visible(fn () => auth()->user()->can('Delete:Shippers')),
             ])
             ->toolbarActions([
                 \Filament\Actions\CreateAction::make()
                     ->label(__('app.new') . ' ' . __('app.shipper'))
+                    ->visible(fn () => auth()->user()->can('Create:Shippers'))
                     ->after(function ($record) {
                         $record->assignRole('shipper');
                     }),

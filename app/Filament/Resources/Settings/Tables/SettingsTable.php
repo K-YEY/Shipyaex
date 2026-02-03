@@ -17,6 +17,7 @@ class SettingsTable
         return [
             TextColumn::make('key')
                 ->label('المفتاح')
+                ->visible(fn () => auth()->user()->can('ViewKeyColumn:Setting'))
                 ->searchable()
                 ->sortable()
                 ->copyable()
@@ -25,17 +26,21 @@ class SettingsTable
             
             TextInputColumn::make('value')
                 ->label('القيمة')
+                ->visible(fn () => auth()->user()->can('ViewValueColumn:Setting'))
+                ->disabled(fn () => !auth()->user()->can('EditValueField:Setting'))
                 ->searchable()
                 ->rules(['required']),
             
             TextColumn::make('created_at')
                 ->label('تاريخ الإنشاء')
+                ->visible(fn () => auth()->user()->can('ViewDatesColumn:Setting'))
                 ->dateTime('Y-m-d H:i')
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
             
             TextColumn::make('updated_at')
                 ->label('آخر تحديث')
+                ->visible(fn () => auth()->user()->can('ViewDatesColumn:Setting'))
                 ->dateTime('Y-m-d H:i')
                 ->sortable()
                 ->since(),
@@ -53,9 +58,11 @@ class SettingsTable
     {
         return [
             EditAction::make()
-                ->label('تعديل'),
+                ->label('تعديل')
+                ->visible(fn () => auth()->user()->can('Update:Setting')),
             DeleteAction::make()
                 ->label('مسح')
+                ->visible(fn () => auth()->user()->can('Delete:Setting'))
                 ->requiresConfirmation()
                 ->modalHeading('مسح الإعداد')
                 ->modalDescription('متأكد إنك عاوز تمسح الإعداد ده؟ الخطوة دي مش هينفع ترجع فيها.'),
@@ -68,6 +75,7 @@ class SettingsTable
             BulkActionGroup::make([
                 DeleteBulkAction::make()
                     ->label('مسح المختار')
+                    ->visible(fn () => auth()->user()->can('DeleteAny:Setting'))
                     ->requiresConfirmation(),
             ]),
         ];

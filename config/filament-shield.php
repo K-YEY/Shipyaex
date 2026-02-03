@@ -299,6 +299,10 @@ return [
                 'create',
                 'update',
                 'delete',
+                'delete_any',
+                'view_name_column',
+                'edit_name_field',
+                'export_data',
             ],
             \App\Filament\Resources\OrderStatusResource::class => [
                 'view_any',

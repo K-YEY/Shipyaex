@@ -16,18 +16,22 @@ class PlansTable
             ->columns([
                 TextColumn::make('name')
                     ->label(__('app.name'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:Plan'))
                     ->searchable(),
                 TextColumn::make('order_count')
                     ->label(__('orders.orders'))
+                    ->visible(fn () => auth()->user()->can('ViewOrderCountColumn:Plan'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label(__('app.created_at'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:Plan'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label(__('app.date'))
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:Plan'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -36,11 +40,13 @@ class PlansTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->can('Update:Plan')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('DeleteAny:Plan')),
                 ]),
             ]);
     }

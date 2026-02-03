@@ -18,11 +18,15 @@ class UserForm
             ->components([
                 TextInput::make('name')
                     ->label(__('app.name'))
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:User'))
+                    ->disabled(fn () => !auth()->user()->can('EditNameField:User'))
                     ->required()
                     ->maxLength(255),
                     
                 TextInput::make('phone')
                     ->label(__('app.phone'))
+                    ->visible(fn () => auth()->user()->can('ViewPhoneColumn:User'))
+                    ->disabled(fn () => !auth()->user()->can('EditPhoneField:User'))
                     ->required()
                     ->tel()
                     ->maxLength(20)
@@ -37,11 +41,15 @@ class UserForm
                     
                 TextInput::make('address')
                     ->label(__('app.address'))
+                    ->visible(fn () => auth()->user()->can('ViewAddressColumn:User'))
+                    ->disabled(fn () => !auth()->user()->can('EditAddressField:User'))
                     ->required()
                     ->maxLength(500),
 
                 TextInput::make('username')
                     ->label(__('app.username'))
+                    ->visible(fn () => auth()->user()->can('ViewUsernameField:User'))
+                    ->disabled(fn () => !auth()->user()->can('EditUsernameField:User'))
                     ->required()
                     ->alphaDash()
                     ->maxLength(50)
@@ -56,6 +64,8 @@ class UserForm
                     
                 TextInput::make('password')
                     ->label(__('app.password'))
+                    ->visible(fn () => auth()->user()->can('ViewPasswordField:User'))
+                    ->disabled(fn () => !auth()->user()->can('EditPasswordField:User'))
                     ->password()
                     ->revealable()
                     ->required(fn (?object $record) => $record === null)
@@ -68,6 +78,7 @@ class UserForm
                     
                 TextInput::make('commission')
                     ->label(__('orders.shipper_commission'))
+                    ->visible(fn () => auth()->user()->can('ViewCommissionField:User'))
                     ->required()
                     ->numeric()
                     ->minValue(0)
@@ -76,6 +87,7 @@ class UserForm
                     
                 Select::make('shipping_content_id')
                     ->label(__('app.shipping_contents'))
+                    ->visible(fn () => auth()->user()->can('ViewShippingContentField:User'))
                     ->relationship('shippingContents', 'name')
                     ->multiple()
                     ->searchable()
@@ -83,6 +95,7 @@ class UserForm
                     
                 Select::make('plan_id')
                     ->label(__('app.plan'))
+                    ->visible(fn () => auth()->user()->can('ViewPlanField:User'))
                     ->options(
                         Plan::pluck('name', 'id')
                     )
@@ -92,6 +105,7 @@ class UserForm
                     
                 Select::make('roles')
                     ->label(__('filament-shield::filament-shield.resource.label.roles'))
+                    ->visible(fn () => auth()->user()->can('ViewRolesField:User'))
                     ->relationship('roles', 'name', fn ($query) => $query->where('name', '!=', 'super_admin'))
                     ->multiple()
                     ->preload()
@@ -101,6 +115,7 @@ class UserForm
                     
                 Toggle::make('is_blocked')
                     ->label(__('app.is_blocked'))
+                    ->visible(fn () => auth()->user()->can('BlockUser:User'))
                     ->default(false)
                     ->disabled(fn () => !auth()->user()->can('BlockUser:User')),
             ]);

@@ -13,7 +13,11 @@ class ShippingcontentForm
             ->components([
             TextInput::make("name")
                 ->label(__('app.name'))
-                ->required(),
+                ->required()
+                // 1. Field Visibility Permission
+                ->visible(fn () => auth()->user()->can('ViewNameColumn:ShippingContent'))
+                // 2. Field Mutability Permission
+                ->disabled(fn () => !auth()->user()->can('EditNameField:ShippingContent')),
             ]);
     }
 }

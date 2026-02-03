@@ -16,13 +16,16 @@ class ExpensesTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->visible(fn () => auth()->user()->can('ViewNameColumn:Expense'))
                     ->searchable()
                     ->label(__('app.expense')),
                 TextColumn::make('amount')
+                    ->visible(fn () => auth()->user()->can('ViewAmountColumn:Expense'))
                     ->state(fn ($record) => number_format($record->amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->label(__('app.amount')),
                 TextColumn::make('created_at')
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:Expense'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -32,11 +35,13 @@ class ExpensesTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->can('Update:Expense')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('DeleteAny:Expense')),
                 ]),
             ]);
     }
