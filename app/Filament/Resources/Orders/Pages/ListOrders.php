@@ -64,7 +64,7 @@ class ListOrders extends ListRecords
             ->label($this->scannerMode ? 'رجوع للجدول' : 'سكانر الباركود (Barcode)')
             ->icon($this->scannerMode ? 'heroicon-o-table-cells' : 'heroicon-o-qr-code')
             ->color($this->scannerMode ? 'gray' : 'info')
-            ->visible(fn() => auth()->user()->can('BarcodeScanner:Order'))
+            ->visible(fn() => auth()->user()->can('BarcodeScannerAction:Order'))
             ->action(function () {
                 $this->scannerMode = !$this->scannerMode;
                 if (!$this->scannerMode) {
@@ -210,7 +210,7 @@ class ListOrders extends ListRecords
 
         switch ($action) {
             case 'delivered':
-                if (!$user->can('ChangeStatus:Order')) {
+                if (!$user->can('ChangeStatusAction:Order')) {
                     Notification::make()
                         ->title('❌ الحركة دي مش مسموحة ليك')
                         ->danger()
@@ -232,7 +232,7 @@ class ListOrders extends ListRecords
                 break;
 
             case 'collected_shipper':
-                if (!$user->can('ManageCollections:Order')) {
+                if (!$user->can('ManageShipperCollectionAction:Order')) {
                     Notification::make()
                         ->title('❌ Action Not Allowed')
                         ->danger()
@@ -254,7 +254,7 @@ class ListOrders extends ListRecords
                 break;
 
             case 'collected_client':
-                if (!$user->can('ManageCollections:Order')) {
+                if (!$user->can('ManageClientCollectionAction:Order')) {
                     Notification::make()
                         ->title('❌ Action Not Allowed')
                         ->danger()
@@ -288,7 +288,7 @@ class ListOrders extends ListRecords
                 break;
 
             case 'return_shipper':
-                if (!$user->can('ManageReturns:Order')) {
+                if (!$user->can('ManageShipperReturnAction:Order')) {
                     Notification::make()
                         ->title('❌ Action Not Allowed')
                         ->danger()
@@ -358,16 +358,19 @@ class ListOrders extends ListRecords
             'view' => '👁️ عرض فقط (بدون إجراء)',
         ];
 
-        if ($user->can('ChangeStatus:Order')) {
+        if ($user->can('ChangeStatusAction:Order')) {
             $options['delivered'] = '✅ تسليم الأوردر';
         }
 
-        if ($user->can('ManageCollections:Order')) {
+        if ($user->can('ManageShipperCollectionAction:Order')) {
             $options['collected_shipper'] = '📦 تحصيل من الكابتن';
+        }
+        
+        if ($user->can('ManageClientCollectionAction:Order')) {
             $options['collected_client'] = '💰 تسوية مع العميل';
         }
 
-        if ($user->can('ManageReturns:Order')) {
+        if ($user->can('ManageShipperReturnAction:Order')) {
             $options['return_shipper'] = '↩️ مرتجع من الكابتن';
         }
 

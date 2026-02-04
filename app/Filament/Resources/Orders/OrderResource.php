@@ -128,38 +128,82 @@ class OrderResource extends Resource
             'update',
             'delete',
             'delete_any',
-            // Financials
-            'view_shipper_fees',
-            'edit_shipper_fees',
-            'view_cop',
-            'edit_cop',
-            'view_net_fees',
-            'view_financial_summary', // Total, Fees, COD
-            'edit_financial_summary',
-            // Customer Info
-            'view_customer_details', // Name, Phone, Address
-            'edit_customer_details',
-            // Shipper Info
-            'view_shipper_details', // Shipper Name, Phone
-            'assign_shipper',
-            // Order Details
-            'view_dates',
-            'view_external_code',
-            'edit_external_code',
-            'view_order_notes',
-            'edit_order_notes',
-            'view_status_notes',
+            'restore',
+            'restore_any',
+            'force_delete',
+            'force_delete_any',
+
+            // Column Visibility
+            'view_code_column',
+            'view_external_code_column',
+            'view_registration_date_column',
+            'view_shipper_date_column',
+            'view_recipient_name_column',
+            'view_phone_column',
+            'view_address_column',
+            'view_governorate_column',
+            'view_city_column',
+            'view_total_amount_column',
+            'view_shipping_fees_column',
+            'view_shipper_commission_column',
+            'view_net_amount_column',
+            'view_company_share_column',
+            'view_collection_amount_column',
+            'view_status_column',
+            'view_status_notes_column',
+            'view_order_notes_column',
+            'view_shipper_column',
+            'view_client_column',
+            'view_dates_column',
+            
+            // Filters
+            'view_delayed_follow_up_filter',
+            'view_status_filter',
+            'view_collected_from_shipper_filter',
+            'view_returned_from_shipper_filter',
+            'view_has_return_filter',
+            'view_settled_with_client_filter',
+            'view_returned_to_client_filter',
+            
+            // Actions
+            'export_selected_action',
+            'export_external_codes_action',
+            'print_labels_action',
+            'assign_shipper_action',
+            'bulk_change_status_action',
+            'manage_shipper_collection_action',
+            'manage_client_collection_action',
+            'manage_shipper_return_action',
+            'manage_client_return_action',
+            'view_my_orders_action',
+            'barcode_scanner_action',
+            'view_timeline_action',
+            'print_label_action',
+            'change_status_action',
+            
+            // Form Fields & Sections
+            'view_external_code_field',
+            'edit_external_code_field',
+            'edit_client_field',
+            'assign_shipper_field',
+            'change_status_field',
+            'view_order_notes_field',
+            'edit_order_notes_field',
+            'view_customer_details_section',
+            'edit_customer_details_field',
+            'view_financial_summary_section',
+            'edit_financial_summary_field',
+            'view_shipper_fees_field',
+            'edit_shipper_fees_field',
+            'view_cop_field',
+            'edit_cop_field',
+            
+            // Legacy / Scoping
+            'view_all',
+            'view_own',
+            'view_assigned',
             'edit_locked',
             'edit_client',
-            'manage_collections',
-            'cancel_collections',
-            'view_location',
-            'barcode_scanner',
-            // Actions
-            'change_status',
-            'manage_returns',
-            'print_labels',
-            'export_data',
         ];
     }
 }

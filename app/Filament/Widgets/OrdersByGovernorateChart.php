@@ -18,7 +18,7 @@ class OrdersByGovernorateChart extends ChartWidget
 
     public static function canView(): bool
     {
-        return auth()->user()->isAdmin() || auth()->user()->isClient() || auth()->user()->isShipper();
+        return auth()->user() && auth()->user()->can('ViewWidget:OrdersByGovernorate');
     }
 
     protected function getData(): array

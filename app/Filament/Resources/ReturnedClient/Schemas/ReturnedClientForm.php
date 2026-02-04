@@ -39,6 +39,8 @@ class ReturnedClientForm
                             // Client Selection
                             Select::make('client_id')
                                 ->label('العميل')
+                                ->visible(fn () => auth()->user()->can('ViewClientColumn:ReturnedClient'))
+                                ->disabled(fn () => !auth()->user()->can('EditClientField:ReturnedClient'))
                                 ->relationship(
                                     name: 'client',
                                     titleAttribute: 'name',
@@ -48,7 +50,6 @@ class ReturnedClientForm
                                 ->searchable()
                                 ->preload()
                                 ->required()
-                                ->visible($isAdmin)
                                 ->default($isClient ? $user->id : null)
                                 ->live()
                                 ->afterStateUpdated(function (Set $set) {
@@ -59,6 +60,8 @@ class ReturnedClientForm
                             // Return Date
                             DatePicker::make('return_date')
                                 ->label('تاريخ الارتجاع')
+                                ->visible(fn () => auth()->user()->can('ViewReturnDateColumn:ReturnedClient'))
+                                ->disabled(fn () => !auth()->user()->can('EditReturnDateField:ReturnedClient'))
                                 ->required()
                                 ->default(now())
                                 ->native(false)
@@ -67,6 +70,7 @@ class ReturnedClientForm
                             // Status
                             Select::make('status')
                                 ->label('الحالة')
+                                ->visible(fn ($operation) => auth()->user()->can('ViewStatusColumn:ReturnedClient') && $operation === 'edit')
                                 ->options([
                                     'pending' => 'قيد المراجعة',
                                     'completed' => 'تم الاعتماد ✅',
@@ -74,13 +78,12 @@ class ReturnedClientForm
                                 ])
                                 ->default('pending')
                                 ->required()
-                                ->visible(fn ($operation) => $operation === 'edit')
-                                ->disabled(fn ($record) => $record && $record->status !== 'pending'),
+                                ->disabled(fn ($record) => !auth()->user()->can('EditStatusField:ReturnedClient') || ($record && $record->status !== 'pending')),
                         ]),
 
                         Hidden::make('client_id')
                             ->default($user->id)
-                            ->visible($isClient && !$isAdmin),
+                            ->visible(fn() => $isClient && !auth()->user()->can('ViewClientColumn:ReturnedClient')),
                     ]),
 
                 Section::make('الأوردرات المتاحة للمرتجع')
@@ -106,6 +109,8 @@ class ReturnedClientForm
 
                         CheckboxList::make('selected_orders')
                             ->label('الأوردرات')
+                            ->visible(fn () => auth()->user()->can('ViewSelectedOrdersField:ReturnedClient'))
+                            ->disabled(fn () => !auth()->user()->can('EditSelectedOrdersField:ReturnedClient'))
                             ->options(function (Get $get, $record) use ($user, $isClient) {
                                 $clientId = $get('client_id') ?? ($isClient ? $user->id : null);
                                 if (!$clientId) return [];
@@ -150,6 +155,7 @@ class ReturnedClientForm
                 Section::make('الملخص')
                     ->icon('heroicon-o-calculator')
                     ->columnSpanFull()
+                    ->visible(fn () => auth()->user()->can('ViewSummaryField:ReturnedClient'))
                     ->schema([
                         TextInput::make('number_of_orders')
                             ->label('عدد الأوردرات')
@@ -160,6 +166,7 @@ class ReturnedClientForm
                         
                         Textarea::make('notes')
                             ->label('ملاحظات')
+                            ->disabled(fn () => !auth()->user()->can('EditNotesField:ReturnedClient'))
                             ->columnSpanFull(),
                     ]),
             ]);

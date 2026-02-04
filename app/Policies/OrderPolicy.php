@@ -129,32 +129,32 @@ class OrderPolicy
 
     public function viewDates(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ViewDates:Order');
+        return $authUser->can('ViewRegistrationDateColumn:Order') || $authUser->can('ViewShipperDateColumn:Order') || $authUser->can('ViewDatesColumn:Order');
     }
 
     public function viewExternalCode(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ViewExternalCode:Order');
+        return $authUser->can('ViewExternalCodeColumn:Order') || $authUser->can('ViewExternalCodeField:Order');
     }
 
     public function editExternalCode(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('EditExternalCode:Order');
+        return $authUser->can('EditExternalCodeField:Order');
     }
 
     public function viewOrderNotes(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ViewOrderNotes:Order');
+        return $authUser->can('ViewOrderNotesColumn:Order') || $authUser->can('ViewOrderNotesField:Order');
     }
 
     public function editOrderNotes(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('EditOrderNotes:Order');
+        return $authUser->can('EditOrderNotesField:Order');
     }
 
     public function viewStatusNotes(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ViewStatusNotes:Order');
+        return $authUser->can('ViewStatusNotesColumn:Order');
     }
 
     public function editLocked(AuthUser $authUser, Order $order): bool
@@ -169,12 +169,12 @@ class OrderPolicy
 
     public function manageCollections(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ManageCollections:Order');
+        return $authUser->can('ManageShipperCollectionAction:Order') || $authUser->can('ManageClientCollectionAction:Order');
     }
 
     public function cancelCollections(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('CancelCollections:Order');
+        return $authUser->can('ManageShipperCollectionAction:Order') || $authUser->can('ManageClientCollectionAction:Order');
     }
 
     public function viewLocation(AuthUser $authUser, Order $order): bool
@@ -189,12 +189,12 @@ class OrderPolicy
 
     public function changeStatus(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ChangeStatus:Order');
+        return $authUser->can('ChangeStatusAction:Order') || $authUser->can('ChangeStatusField:Order');
     }
 
     public function manageReturns(AuthUser $authUser, Order $order): bool
     {
-        return $authUser->can('ManageReturns:Order');
+        return $authUser->can('ManageShipperReturnAction:Order') || $authUser->can('ManageClientReturnAction:Order');
     }
 
     public function printLabels(AuthUser $authUser, Order $order): bool

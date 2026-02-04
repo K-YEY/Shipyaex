@@ -20,19 +20,7 @@ class OrdersReportWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return false; // Disabled temporarily for cleaner dashboard layout
-        
-        try {
-            $user = auth()->user();
-            if (!$user) return false;
-            
-            // Check if admin
-            return $user->isAdmin();
-            
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return auth()->user() && auth()->user()->can('ViewWidget:OrdersReport');
     }
 
     protected function getStats(): array

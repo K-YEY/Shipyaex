@@ -31,11 +31,13 @@ class CollectedClientsTable
             ->columns([
                 TextColumn::make('id')
                     ->label('#')
+                    ->visible(fn () => auth()->user()->can('ViewIdColumn:CollectedClient'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('client.name')
                     ->label('العميل')
+                    ->visible(fn () => auth()->user()->can('ViewClientColumn:CollectedClient'))
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-o-user')
@@ -43,12 +45,14 @@ class CollectedClientsTable
 
                 TextColumn::make('collection_date')
                     ->label('تاريخ التحصيل')
+                    ->visible(fn () => auth()->user()->can('ViewCollectionDateColumn:CollectedClient'))
                     ->date('Y-m-d')
                     ->sortable()
                     ->icon('heroicon-o-calendar'),
 
                 TextColumn::make('number_of_orders')
                     ->label('عدد الطلبات')
+                    ->visible(fn () => auth()->user()->can('ViewOrdersCountColumn:CollectedClient'))
                     ->sortable()
                     ->alignCenter()
                     ->badge()
@@ -56,22 +60,24 @@ class CollectedClientsTable
 
                 TextColumn::make('total_amount')
                     ->label('الإجمالي')
-                    ->state(fn ($record) => number_format($record->total_amount, 2) . ' ج.م')
+                    ->visible(fn () => auth()->user()->can('ViewTotalAmountColumn:CollectedClient'))
+                    ->state(fn ($record) => number_format($record->total_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
                     ->color('primary'),
 
                 TextColumn::make('fees')
                     ->label('مصاريف الشركة')
-                    ->state(fn ($record) => number_format($record->fees, 2) . ' ج.م')
+                    ->visible(fn () => auth()->user()->can('ViewFeesColumn:CollectedClient'))
+                    ->state(fn ($record) => number_format($record->fees, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
-                    ->color('warning')
-                    ->visible($canManage),
+                    ->color('warning'),
 
                 TextColumn::make('net_amount')
                     ->label('الصافي للعميل')
-                    ->state(fn ($record) => number_format($record->net_amount, 2) . ' ج.م')
+                    ->visible(fn () => auth()->user()->can('ViewNetAmountColumn:CollectedClient'))
+                    ->state(fn ($record) => number_format($record->net_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
                     ->weight('bold')
@@ -79,16 +85,19 @@ class CollectedClientsTable
 
                 TextColumn::make('status')
                     ->label('الحالة')
+                    ->visible(fn () => auth()->user()->can('ViewStatusColumn:CollectedClient'))
                     ->badge(),
 
                 TextColumn::make('created_at')
                     ->label('تاريخ الإنشاء')
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:CollectedClient'))
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->label('آخر تحديث')
+                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:CollectedClient'))
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -101,11 +110,7 @@ class CollectedClientsTable
 
                 SelectFilter::make('client_id')
                     ->label('العميل')
-                    ->options(function () use ($canManage) {
-                        if (!$canManage) {
-                            return [];
-                        }
-                        
+                    ->options(function () {
                         // جلب Clients اللي عندهم أوردرات محصلة فقط
                         return \App\Models\User::role('client')
                             ->whereHas('clientOrders', function ($query) {
@@ -115,7 +120,7 @@ class CollectedClientsTable
                     })
                     ->searchable()
                     ->preload()
-                    ->visible($canManage),
+                    ->visible(fn() => auth()->user()->can('ViewClientColumn:CollectedClient')),
 
                 Filter::make('collection_date')
                     ->schema([
@@ -139,13 +144,14 @@ class CollectedClientsTable
 
                     EditAction::make()
                         ->label('تعديل')
-                        ->visible(fn ($record) => $record->status === 'pending'),
+                        ->visible(fn ($record) => auth()->user()->can('Update:CollectedClient') && $record->status === 'pending'),
 
                     // عرض الطلبات
                     Action::make('viewOrders')
                         ->label('عرض الطلبات')
                         ->icon('heroicon-o-clipboard-document-list')
                         ->color('info')
+                        ->visible(fn () => auth()->user()->can('ViewOrdersAction:CollectedClient'))
                         ->modalHeading(fn ($record) => "طلبات التحصيل رقم #{$record->id}")
                         ->modalContent(fn ($record) => view('filament.collecting.orders-modal', [
                             'orders' => $record->orders,
@@ -157,7 +163,7 @@ class CollectedClientsTable
                         ->label('اعتماد')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn ($record) => $canManage && $record->status === 'pending')
+                        ->visible(fn ($record) => auth()->user()->can('Approve:CollectedClient') && $record->status === 'pending')
                         ->requiresConfirmation()
                         ->modalHeading('اعتماد التحصيل')
                         ->modalDescription('هل أنت متأكد من اعتماد هذا التحصيل؟')
@@ -176,7 +182,7 @@ class CollectedClientsTable
                         ->label('إلغاء')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->visible(fn ($record) => $canManage && $record->status === 'pending')
+                        ->visible(fn ($record) => auth()->user()->can('Cancel:CollectedClient') && $record->status === 'pending')
                         ->requiresConfirmation()
                         ->modalHeading('إلغاء التحصيل')
                         ->modalDescription('هل أنت متأكد من إلغاء هذا التحصيل؟')
@@ -195,7 +201,7 @@ class CollectedClientsTable
                         ->label('طباعة الفاتورة')
                         ->icon('heroicon-o-printer')
                         ->color('gray')
-                        ->visible(fn ($record) => $record->status === 'completed')
+                        ->visible(fn ($record) => auth()->user()->can('PrintInvoice:CollectedClient') && $record->status === 'completed')
                         ->url(fn ($record) => route('collecting.client.invoice', $record->id))
                         ->openUrlInNewTab(),
                 ]),
@@ -207,7 +213,7 @@ class CollectedClientsTable
                         ->label('اعتماد المختار')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible($canManage)
+                        ->visible(fn() => auth()->user()->can('Approve:CollectedClient'))
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
                             $service = new CollectedClientService();
@@ -228,7 +234,7 @@ class CollectedClientsTable
 
                     DeleteBulkAction::make()
                         ->label('حذف المختار')
-                        ->visible($canManage),
+                        ->visible(fn() => auth()->user()->can('DeleteAny:CollectedClient')),
                 ]),
             ])
             ->striped()

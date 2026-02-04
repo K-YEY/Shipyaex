@@ -44,6 +44,8 @@ class CollectedShipperForm
                             // اختيار Shipper
                             Select::make('shipper_id')
                                 ->label('المندوب')
+                                ->visible(fn () => auth()->user()->can('ViewShipperColumn:CollectedShipper'))
+                                ->disabled(fn () => !auth()->user()->can('EditShipperField:CollectedShipper'))
                                 ->relationship(
                                     name: 'shipper',
                                     titleAttribute: 'name',
@@ -53,7 +55,6 @@ class CollectedShipperForm
                                 ->searchable()
                                 ->preload()
                                 ->required()
-                                ->visible($isAdmin)
                                 ->default($isShipper ? $user->id : null)
                                 ->live()
                                 ->afterStateUpdated(function (Set $set, $state) {
@@ -68,6 +69,8 @@ class CollectedShipperForm
                             // تاريخ التحصيل
                             DatePicker::make('collection_date')
                                 ->label('تاريخ التحصيل')
+                                ->visible(fn () => auth()->user()->can('ViewCollectionDateColumn:CollectedShipper'))
+                                ->disabled(fn () => !auth()->user()->can('EditCollectionDateField:CollectedShipper'))
                                 ->required()
                                 ->default(now())
                                 ->native(false)
@@ -76,17 +79,17 @@ class CollectedShipperForm
                             // Status (للEdit فقط)
                             Select::make('status')
                                 ->label('الحالة')
+                                ->visible(fn ($operation) => auth()->user()->can('ViewStatusColumn:CollectedShipper') && $operation === 'edit')
                                 ->options(\App\Enums\CollectingStatus::class)
                                 ->default('pending')
                                 ->required()
-                                ->visible(fn ($operation) => $operation === 'edit')
-                                ->disabled(fn ($record) => $record && $record->status !== 'pending'),
+                                ->disabled(fn ($record) => !auth()->user()->can('EditStatusField:CollectedShipper') || ($record && $record->status !== 'pending')),
                         ]),
 
                         // Hidden للشيبّر إذا كان الUser هو Shipper
                         Hidden::make('shipper_id')
                             ->default($user->id)
-                            ->visible($isShipper && !$isAdmin),
+                            ->visible(fn() => $isShipper && !auth()->user()->can('ViewShipperColumn:CollectedShipper')),
                     ]),
 
                 // قسم Orderات - عرض All مع إمكانية اNoستبعاد
@@ -116,6 +119,8 @@ class CollectedShipperForm
 
                         CheckboxList::make('selected_orders')
                             ->label('الأوردرات (قم بإلغاء تحديد الأوردرات التي لا تريد تحصيلها)')
+                            ->visible(fn () => auth()->user()->can('ViewSelectedOrdersField:CollectedShipper'))
+                            ->disabled(fn () => !auth()->user()->can('EditSelectedOrdersField:CollectedShipper'))
                             ->options(function (Get $get, $record) use ($user, $isAdmin, $isShipper) {
                                 $shipperId = $get('shipper_id');
 
@@ -189,11 +194,13 @@ class CollectedShipperForm
                 Section::make('ملخص التحصيل')
                     ->description('حساب المبالغ تلقائي')
                     ->icon('heroicon-o-calculator')
+                    ->visible(fn () => auth()->user()->can('ViewSummaryField:CollectedShipper'))
                     ->columns(4)
                     ->columnSpanFull()
                     ->schema([
                         TextInput::make('number_of_orders')
                             ->label('عدد الأوردرات')
+                            ->visible(fn () => auth()->user()->can('ViewOrdersCountField:CollectedShipper'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -202,6 +209,7 @@ class CollectedShipperForm
 
                         TextInput::make('total_amount')
                             ->label('إجمالي المبلغ')
+                            ->visible(fn () => auth()->user()->can('ViewTotalAmountField:CollectedShipper'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -210,6 +218,7 @@ class CollectedShipperForm
 
                         TextInput::make('shipper_fees')
                             ->label('عمولة المندوب')
+                            ->visible(fn () => auth()->user()->can('ViewShipperFeesField:CollectedShipper'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -218,6 +227,7 @@ class CollectedShipperForm
 
                         TextInput::make('net_amount')
                             ->label('الصافي')
+                            ->visible(fn () => auth()->user()->can('ViewNetAmountField:CollectedShipper'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -229,9 +239,11 @@ class CollectedShipperForm
                 // مNoحظات
                 Section::make('ملاحظات')
                     ->columnSpanFull()
+                    ->visible(fn () => auth()->user()->can('ViewNotesField:CollectedShipper'))
                     ->schema([
                         Textarea::make('notes')
                             ->label('ملاحظات')
+                            ->disabled(fn () => !auth()->user()->can('EditNotesField:CollectedShipper'))
                             ->placeholder('أي ملاحظات إضافية...')
                             ->rows(3)
                             ->columnSpanFull(),

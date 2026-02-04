@@ -14,7 +14,7 @@ class ClientStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user() && auth()->user()->can('View:ClientStats');
+        return auth()->user() && auth()->user()->can('ViewWidget:ClientStats');
     }
 
     protected function getStats(): array

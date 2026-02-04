@@ -39,6 +39,8 @@ class ReturnedShipperForm
                             // اختيار Shipper
                             Select::make('shipper_id')
                                 ->label('المندوب')
+                                ->visible(fn () => auth()->user()->can('ViewShipperColumn:ReturnedShipper'))
+                                ->disabled(fn () => !auth()->user()->can('EditShipperField:ReturnedShipper'))
                                 ->relationship(
                                     name: 'shipper',
                                     titleAttribute: 'name',
@@ -48,7 +50,6 @@ class ReturnedShipperForm
                                 ->searchable()
                                 ->preload()
                                 ->required()
-                                ->visible($isAdmin)
                                 ->default($isShipper ? $user->id : null)
                                 ->live()
                                 ->afterStateUpdated(function (Set $set) {
@@ -59,6 +60,8 @@ class ReturnedShipperForm
                             // تاريخ المرتجع
                             DatePicker::make('return_date')
                                 ->label('تاريخ المرتجع')
+                                ->visible(fn () => auth()->user()->can('ViewReturnDateColumn:ReturnedShipper'))
+                                ->disabled(fn () => !auth()->user()->can('EditReturnDateField:ReturnedShipper'))
                                 ->required()
                                 ->default(now())
                                 ->native(false)
@@ -67,6 +70,7 @@ class ReturnedShipperForm
                             // Status
                             Select::make('status')
                                 ->label('الحالة')
+                                ->visible(fn ($operation) => auth()->user()->can('ViewStatusColumn:ReturnedShipper') && $operation === 'edit')
                                 ->options([
                                     'pending' => 'قيد المراجعة',
                                     'completed' => 'تم الاعتماد ✅',
@@ -74,13 +78,12 @@ class ReturnedShipperForm
                                 ])
                                 ->default('pending')
                                 ->required()
-                                ->visible(fn ($operation) => $operation === 'edit')
-                                ->disabled(fn ($record) => $record && $record->status !== 'pending'),
+                                ->disabled(fn ($record) => !auth()->user()->can('EditStatusField:ReturnedShipper') || ($record && $record->status !== 'pending')),
                         ]),
 
                         Hidden::make('shipper_id')
                             ->default($user->id)
-                            ->visible($isShipper && !$isAdmin),
+                            ->visible(fn() => $isShipper && !auth()->user()->can('ViewShipperColumn:ReturnedShipper')),
                     ]),
 
                 Section::make('الأوردرات المتاحة للمرتجع')
@@ -104,6 +107,8 @@ class ReturnedShipperForm
 
                         CheckboxList::make('selected_orders')
                             ->label('الأوردرات')
+                            ->visible(fn () => auth()->user()->can('ViewSelectedOrdersField:ReturnedShipper'))
+                            ->disabled(fn () => !auth()->user()->can('EditSelectedOrdersField:ReturnedShipper'))
                             ->options(function (Get $get, $record) use ($user, $isShipper) {
                                 $shipperId = $get('shipper_id') ?? ($isShipper ? $user->id : null);
                                 if (!$shipperId) return [];
@@ -144,6 +149,7 @@ class ReturnedShipperForm
                 Section::make('ملخص')
                     ->icon('heroicon-o-calculator')
                     ->columnSpanFull()
+                    ->visible(fn () => auth()->user()->can('ViewSummaryField:ReturnedShipper'))
                     ->schema([
                         TextInput::make('number_of_orders')
                             ->label('عدد الأوردرات')
@@ -154,6 +160,7 @@ class ReturnedShipperForm
                         
                         Textarea::make('notes')
                             ->label('ملاحظات')
+                            ->disabled(fn () => !auth()->user()->can('EditNotesField:ReturnedShipper'))
                             ->columnSpanFull(),
                     ]),
             ]);

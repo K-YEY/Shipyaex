@@ -40,17 +40,7 @@ class MonthlyRevenueChart extends ApexChartWidget
      */
     public static function canView(): bool
     {
-        try {
-            $user = auth()->user();
-            if (!$user) return false;
-            
-            // Only show for admin users
-            return $user->isAdmin();
-            
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return auth()->user() && auth()->user()->can('ViewWidget:MonthlyRevenue');
     }
 
     /**

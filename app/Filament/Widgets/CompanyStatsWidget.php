@@ -14,7 +14,7 @@ class CompanyStatsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user() && auth()->user()->can('View:CompanyStats');
+        return auth()->user() && auth()->user()->can('ViewWidget:CompanyStats');
     }
 
     protected function getStats(): array

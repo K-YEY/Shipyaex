@@ -39,7 +39,7 @@ class OrdersStatusChart extends ApexChartWidget
      */
     public static function canView(): bool
     {
-        return auth()->user() && auth()->user()->can('View:OrdersStatusChart');
+        return auth()->user() && auth()->user()->can('ViewWidget:OrdersStatusChart');
     }
 
     /**
