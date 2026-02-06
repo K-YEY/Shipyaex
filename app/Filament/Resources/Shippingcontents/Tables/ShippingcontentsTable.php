@@ -26,15 +26,15 @@ class ShippingcontentsTable
                 // 2. Row Action Permission (Shield handles Edit/Delete usually via policy, but we can be explicit)
                 EditAction::make()
                     ->visible(fn () => auth()->user()->can('Update:ShippingContent')),
-                \Filament\Tables\Actions\DeleteAction::make()
+                \Filament\Actions\DeleteAction::make()
                     ->visible(fn () => auth()->user()->can('Delete:ShippingContent')),
             ])
             ->bulkActions([
-                \Filament\Tables\Actions\BulkActionGroup::make([
-                    \Filament\Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                     
                     // 3. Custom Action Permission
-                    \Filament\Tables\Actions\BulkAction::make('export_selected')
+                    \Filament\Actions\BulkAction::make('export_selected')
                         ->label('Export Selected')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->action(fn() => null) // Logic goes here
