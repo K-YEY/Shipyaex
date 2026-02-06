@@ -293,6 +293,11 @@ return [
                 'edit_plan',
                 'edit_roles',
                 'block_user',
+                'view_id_column',
+                'view_username_column',
+                'view_name_column',
+                'view_roles_column',
+                'view_dates_column',
             ],
             \App\Filament\Resources\Cities\CityResource::class => [
                 'view_any',
@@ -335,6 +340,10 @@ return [
                 'create',
                 'update',
                 'delete',
+                'view_key_column',
+                'view_value_column',
+                'view_dates_column',
+                'edit_value_field',
             ],
             \App\Filament\Resources\Shippingcontents\ShippingContentResource::class => [
                 'view_any',

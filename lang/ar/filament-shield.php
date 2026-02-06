@@ -139,6 +139,14 @@ return [
         'view_assigned' => 'عرض الموكل لي',
         'edit_locked' => 'تعديل المقفل',
         'edit_client' => 'تعديل العميل',
+
+        // Additional Column/Field Permissions
+        'view_id_column' => 'عرض عمود المعرف (ID)',
+        'view_username_column' => 'عرض عمود اسم المستخدم',
+        'view_roles_column' => 'عرض عمود الصلاحيات/الأدوار',
+        'view_key_column' => 'عرض عمود المفتاح',
+        'view_value_column' => 'عرض عمود القيمة',
+        'edit_value_field' => 'تعديل حقل القيمة',
     ],
 
     'navigation' => [
