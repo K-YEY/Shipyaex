@@ -38,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
         // Register Policies
         Gate::policy(CollectedShipper::class, CollectedShipperPolicy::class);
         Gate::policy(CollectedClient::class, CollectedClientPolicy::class);
+        Gate::policy(\App\Models\User::class, \App\Policies\UserPolicy::class);
+        Gate::policy(\App\Models\Setting::class, \App\Policies\SettingPolicy::class);
+        Gate::policy(\App\Models\ShippingContent::class, \App\Policies\ShippingContentPolicy::class);
 
         // Register Observers
         \App\Models\Order::observe(\App\Observers\OrderObserver::class);

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Setting;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SettingPolicy
@@ -37,9 +37,19 @@ class SettingPolicy
         return $authUser->can('Delete:Setting');
     }
 
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:Setting');
+    }
+
     public function restore(AuthUser $authUser, Setting $setting): bool
     {
         return $authUser->can('Restore:Setting');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:Setting');
     }
 
     public function forceDelete(AuthUser $authUser, Setting $setting): bool
@@ -52,11 +62,6 @@ class SettingPolicy
         return $authUser->can('ForceDeleteAny:Setting');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Setting');
-    }
-
     public function replicate(AuthUser $authUser, Setting $setting): bool
     {
         return $authUser->can('Replicate:Setting');
@@ -66,5 +71,4 @@ class SettingPolicy
     {
         return $authUser->can('Reorder:Setting');
     }
-
 }
