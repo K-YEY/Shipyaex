@@ -67,7 +67,7 @@ class SyncShieldPermissions extends Command
 
         // Combine with standard CRUD for problematic resources
         $crud = ['ViewAny', 'View', 'Create', 'Update', 'Delete', 'DeleteAny', 'Restore', 'RestoreAny', 'ForceDelete', 'ForceDeleteAny', 'Replicate', 'Reorder'];
-        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers'];
+        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order'];
 
         foreach ($models as $model) {
             foreach ($crud as $action) {

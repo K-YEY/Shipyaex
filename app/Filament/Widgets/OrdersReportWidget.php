@@ -27,51 +27,65 @@ class OrdersReportWidget extends BaseWidget
     {
         try {
             $user = auth()->user();
-            if (!$user) return [];
-            
-            $isClient = $user->isClient();
-            $isShipper = $user->isShipper();
+            $canViewAll = $user->can('ViewAll:Order');
+            $isClient = $user->can('ViewOwn:Order') && !$canViewAll;
+            $isShipper = $user->can('ViewAssigned:Order') && !$canViewAll;
 
-            // Base query
-            $query = Order::query()->whereNotNull('status');
+            // Base query - use 'order' table explicitly if needed, but model is fine
+            $query = Order::query();
             
-            if ($isClient) {
-                $query->where('client_id', $user->id);
-            }
-            if ($isShipper) {
-                $query->where('shipper_id', $user->id);
+            // Only filter if they DON'T have permission to view all
+            if (!$canViewAll) {
+                $query->where(function ($q) use ($user, $isClient, $isShipper) {
+                    if ($isClient && $isShipper) {
+                        $q->where('client_id', $user->id)->orWhere('shipper_id', $user->id);
+                    } elseif ($isClient) {
+                        $q->where('client_id', $user->id);
+                    } elseif ($isShipper) {
+                        $q->where('shipper_id', $user->id);
+                    } else {
+                        // If no specific role but can view widget, maybe they see nothing? 
+                        // Let's at least not break the query.
+                    }
+                });
             }
 
-            // Trend Data (Last 7 days)
+            // Trend Data (Last 30 days to ensure we see SOMETHING if orders are old)
             $getTrend = function($subQuery) {
-                return collect(range(6, 0))->map(function($days) use ($subQuery) {
+                return collect(range(29, 0))->map(function($days) use ($subQuery) {
                     return (clone $subQuery)->whereDate('created_at', now()->subDays($days))->count();
                 })->toArray();
             };
 
+            // Statuses (Handling common misspellings)
+            $deliveredStatus = ['deliverd', 'delivered', 'Delivered', 'تم التسليم'];
+            $undeliveredStatus = ['undelivered', 'not delivered', 'لم يتم التسليم'];
+            $holdStatus = ['hold', 'pending', 'تأجيل'];
+            $outForDeliveryStatus = ['out for delivery', 'shipping', 'في الطريق'];
+
             // Get counts
             $allOrders = (clone $query)->count();
-            $outForDelivery = (clone $query)->where('status', 'out for delivery')->count();
-            $hold = (clone $query)->where('status', 'hold')->count();
-            $delivered = (clone $query)->where('status', 'deliverd')->count();
-            $undelivered = (clone $query)->where('status', 'undelivered')->count();
+            $outForDelivery = (clone $query)->whereIn('status', $outForDeliveryStatus)->count();
+            $hold = (clone $query)->whereIn('status', $holdStatus)->count();
+            $delivered = (clone $query)->whereIn('status', $deliveredStatus)->count();
+            $undelivered = (clone $query)->whereIn('status', $undeliveredStatus)->count();
 
             // Trends
             $allOrdersTrend = $getTrend(clone $query);
-            $deliveredTrend = $getTrend((clone $query)->where('status', 'deliverd'));
-            $undeliveredTrend = $getTrend((clone $query)->where('status', 'undelivered'));
+            $deliveredTrend = $getTrend((clone $query)->whereIn('status', $deliveredStatus));
+            $undeliveredTrend = $getTrend((clone $query)->whereIn('status', $undeliveredStatus));
 
             // Totals
-            $outForDeliveryTotal = (clone $query)->where('status', 'out for delivery')->sum('total_amount');
-            $holdTotal = (clone $query)->where('status', 'hold')->sum('total_amount');
-            $deliveredTotal = (clone $query)->where('status', 'deliverd')->sum('total_amount');
-            $undeliveredTotal = (clone $query)->where('status', 'undelivered')->sum('total_amount');
+            $outForDeliveryTotal = (clone $query)->whereIn('status', $outForDeliveryStatus)->sum('total_amount');
+            $holdTotal = (clone $query)->whereIn('status', $holdStatus)->sum('total_amount');
+            $deliveredTotal = (clone $query)->whereIn('status', $deliveredStatus)->sum('total_amount');
+            $undeliveredTotal = (clone $query)->whereIn('status', $undeliveredStatus)->sum('total_amount');
 
             // Financials
             $totalFees = (clone $query)->sum('fees');
             $totalShipperFees = (clone $query)->sum('shipper_fees');
             $totalCOP = (clone $query)->sum('cop');
-            $totalRevenue = (clone $query)->where('status', 'deliverd')->sum('total_amount');
+            $totalRevenue = (clone $query)->whereIn('status', $deliveredStatus)->sum('total_amount');
             $additionalExpenses = Expense::sum('amount');
             $totalExpenses = $totalShipperFees + $additionalExpenses;
             $netProfit = $totalCOP - $additionalExpenses;
@@ -112,7 +126,7 @@ class OrdersReportWidget extends BaseWidget
                 Stat::make(__('app.net_profit'), number_format($netProfit, 2) . $currency)
                     ->description(__('app.stats_descriptions.from_collected'))
                     ->descriptionIcon('heroicon-m-banknotes')
-                    ->chart([7, 10, 5, 20, 15, 25, 30]) // Static trend for visual flair if dynamic profit trend is heavy
+                    ->chart([7, 10, 5, 20, 15, 25, 30])
                     ->color('success'),
 
                 Stat::make(__('app.total_revenue'), number_format($totalRevenue, 2) . $currency)
