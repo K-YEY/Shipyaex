@@ -147,6 +147,19 @@ return [
         'view_key_column' => 'عرض عمود المفتاح',
         'view_value_column' => 'عرض عمود القيمة',
         'edit_value_field' => 'تعديل حقل القيمة',
+
+        // Clients/Shippers specific
+        'view_phone_column' => 'عرض عمود الهاتف',
+        'view_commission_column' => 'عرض عمود العمولة',
+        'view_plan_column' => 'عرض عمود الباقة',
+        'view_username_field' => 'عرض حقل اسم المستخدم',
+        'view_password_field' => 'عرض حقل كلمة المرور',
+        'edit_phone_field' => 'تعديل حقل الهاتف',
+        'edit_username_field' => 'تعديل حقل اسم المستخدم',
+        'edit_password_field' => 'تعديل حقل كلمة المرور',
+        'edit_plan_field' => 'تعديل حقل الباقة',
+        'edit_commission_field' => 'تعديل حقل العمولة',
+        'block_user' => 'حظر/إلغاء حظر المستخدم',
     ],
 
     'navigation' => [

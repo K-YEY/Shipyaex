@@ -53,8 +53,12 @@ class SyncShieldPermissions extends Command
             'BlockUser:User', 'EditCommission:User', 'EditPlan:User', 'EditRoles:User',
             // Settings
             'ViewKeyColumn:Setting', 'ViewValueColumn:Setting', 'ViewDatesColumn:Setting', 'EditValueField:Setting',
-            // ShippingContent
-            'ViewNameColumn:ShippingContent', 'EditNameField:ShippingContent', 'ExportData:ShippingContent',
+            // Clients/Shippers specific
+            'ViewPhoneColumn:Clients', 'ViewPlanColumn:Clients', 'EditPhoneField:Clients', 'EditPlanField:Clients', 'BlockUser:Clients',
+            'ViewPhoneColumn:Shippers', 'ViewCommissionColumn:Shippers', 'EditPhoneField:Shippers', 'EditCommissionField:Shippers', 'BlockUser:Shippers',
+            'ViewUsernameField:Clients', 'EditUsernameField:Clients', 'ViewPasswordField:Clients', 'EditPasswordField:Clients',
+            'ViewUsernameField:Shippers', 'EditUsernameField:Shippers', 'ViewPasswordField:Shippers', 'EditPasswordField:Shippers',
+
             // Widgets
             'ViewWidget:OrdersStatsOverview', 'ViewWidget:OrdersStatusChart', 'ViewWidget:OrdersReport',
             'ViewWidget:CompanyStats', 'ViewWidget:ClientStats', 'ViewWidget:ShipperStats',
@@ -63,7 +67,7 @@ class SyncShieldPermissions extends Command
 
         // Combine with standard CRUD for problematic resources
         $crud = ['ViewAny', 'View', 'Create', 'Update', 'Delete', 'DeleteAny', 'Restore', 'RestoreAny', 'ForceDelete', 'ForceDeleteAny', 'Replicate', 'Reorder'];
-        $models = ['User', 'Setting', 'ShippingContent', 'Role'];
+        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers'];
 
         foreach ($models as $model) {
             foreach ($crud as $action) {
