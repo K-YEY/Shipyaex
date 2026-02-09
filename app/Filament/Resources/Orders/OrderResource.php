@@ -73,7 +73,6 @@ class OrderResource extends Resource
         $query = parent::getEloquentQuery()->whereNotNull('status');
         
         // ⚡ PERFORMANCE OPTIMIZATION: Eager load all relationships to prevent N+1 queries
-        // This reduces database queries from 100+ to ~10 for large datasets
         $query->with([
             'client:id,name,phone,email',
             'shipper:id,name,phone,commission',
@@ -86,23 +85,26 @@ class OrderResource extends Resource
         
         $user = auth()->user();
 
-        // ViewAll:Order يرى All
-        if ($user->can('ViewAll:Order')) {
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // ✅ 1. Admin: Sees ALL orders
+        if ($user->isAdmin() || $user->can('ViewAll:Order')) {
             return $query;
         }
 
-        // ViewOwn:Order يرى أوردراته فقط (للعملاء)
-        if ($user->can('ViewOwn:Order')) {
+        // ✅ 2. Client: Sees only THEIR orders (where they are the owner)
+        if ($user->isClient() || $user->can('ViewOwn:Order')) {
             return $query->where('client_id', $user->id);
         }
 
-        // ViewAssigned:Order يرى الأوردرات الموكلة له فقط (للمناديب)
-        if ($user->can('ViewAssigned:Order')) {
+        // ✅ 3. Shipper: Sees only ASSIGNED orders (where they are the delivery person)
+        if ($user->isShipper() || $user->can('ViewAssigned:Order')) {
             return $query->where('shipper_id', $user->id);
         }
 
-        // Default: لا تظهر شيئاً (Fail Closed)
-        // إذا لم يكن لدى المستخدم صلاحية محددة، لا يرى أي أوردر
+        // Default: Fail Closed (User sees nothing if no role/permission matches)
         return $query->whereRaw('1 = 0');
     }
 

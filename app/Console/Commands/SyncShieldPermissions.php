@@ -63,11 +63,59 @@ class SyncShieldPermissions extends Command
             'ViewWidget:OrdersStatsOverview', 'ViewWidget:OrdersStatusChart', 'ViewWidget:OrdersReport',
             'ViewWidget:CompanyStats', 'ViewWidget:ClientStats', 'ViewWidget:ShipperStats',
             'ViewWidget:MonthlyRevenue', 'ViewWidget:OrdersByGovernorate',
+
+            // OrderStatus Custom
+            'ViewNameColumn:OrderStatus', 'EditNameField:OrderStatus', 
+            'ViewColorColumn:OrderStatus', 'EditColorField:OrderStatus',
+            'ViewSortOrderColumn:OrderStatus', 'EditSortOrderField:OrderStatus',
+            'ViewActiveColumn:OrderStatus', 'EditActiveField:OrderStatus',
+            'ViewClearReasonsColumn:OrderStatus', 'EditClearReasonsField:OrderStatus',
+            'ViewRefusedReasonsColumn:OrderStatus', 'EditRefusedReasonsField:OrderStatus',
+            'ViewSlugColumn:OrderStatus', 'ManageReasons:OrderStatus',
+
+            // RefusedReason Custom
+            'ViewNameColumn:RefusedReason', 'EditNameField:RefusedReason',
+            'ViewColorColumn:RefusedReason', 'EditColorField:RefusedReason',
+            'ViewSortOrderColumn:RefusedReason', 'EditSortOrderField:RefusedReason',
+            'ViewActiveColumn:RefusedReason', 'EditActiveField:RefusedReason',
+            'ViewSlugColumn:RefusedReason', 'ViewOrderStatusesColumn:RefusedReason',
+
+            // CollectedClient Visibility
+            'ViewClientColumn:CollectedClient', 'EditClientField:CollectedClient',
+            'ViewCollectionDateColumn:CollectedClient', 'EditCollectionDateField:CollectedClient',
+            'ViewStatusColumn:CollectedClient', 'EditStatusField:CollectedClient',
+            'ViewSelectedOrdersField:CollectedClient', 'EditSelectedOrdersField:CollectedClient',
+            'ViewSummaryField:CollectedClient', 'ViewOrdersCountField:CollectedClient',
+            'ViewTotalAmountField:CollectedClient', 'ViewFeesField:CollectedClient',
+            'ViewNetAmountField:CollectedClient', 'ViewNotesField:CollectedClient', 'EditNotesField:CollectedClient',
+
+            // CollectedShipper Visibility
+            'ViewShipperColumn:CollectedShipper', 'EditShipperField:CollectedShipper',
+            'ViewCollectionDateColumn:CollectedShipper', 'EditCollectionDateField:CollectedShipper',
+            'ViewStatusColumn:CollectedShipper', 'EditStatusField:CollectedShipper',
+            'ViewSelectedOrdersField:CollectedShipper', 'EditSelectedOrdersField:CollectedShipper',
+            'ViewSummaryField:CollectedShipper', 'ViewOrdersCountField:CollectedShipper',
+            'ViewTotalAmountField:CollectedShipper', 'ViewShipperFeesField:CollectedShipper',
+            'ViewNetAmountField:CollectedShipper', 'ViewNotesField:CollectedShipper', 'EditNotesField:CollectedShipper',
+
+            // ReturnedClient Visibility
+            'ViewClientColumn:ReturnedClient', 'EditClientField:ReturnedClient',
+            'ViewReturnDateColumn:ReturnedClient', 'EditReturnDateField:ReturnedClient',
+            'ViewStatusColumn:ReturnedClient', 'EditStatusField:ReturnedClient',
+            'ViewSelectedOrdersField:ReturnedClient', 'EditSelectedOrdersField:ReturnedClient',
+            'ViewSummaryField:ReturnedClient', 'ViewNotesField:ReturnedClient', 'EditNotesField:ReturnedClient',
+
+            // ReturnedShipper Visibility
+            'ViewShipperColumn:ReturnedShipper', 'EditShipperField:ReturnedShipper',
+            'ViewReturnDateColumn:ReturnedShipper', 'EditReturnDateField:ReturnedShipper',
+            'ViewStatusColumn:ReturnedShipper', 'EditStatusField:ReturnedShipper',
+            'ViewSelectedOrdersField:ReturnedShipper', 'EditSelectedOrdersField:ReturnedShipper',
+            'ViewSummaryField:ReturnedShipper', 'ViewNotesField:ReturnedShipper', 'EditNotesField:ReturnedShipper',
         ];
 
         // Combine with standard CRUD for problematic resources
         $crud = ['ViewAny', 'View', 'Create', 'Update', 'Delete', 'DeleteAny', 'Restore', 'RestoreAny', 'ForceDelete', 'ForceDeleteAny', 'Replicate', 'Reorder'];
-        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order'];
+        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order', 'OrderStatus', 'RefusedReason', 'CollectedClient', 'CollectedShipper', 'ReturnedClient', 'ReturnedShipper'];
 
         foreach ($models as $model) {
             foreach ($crud as $action) {

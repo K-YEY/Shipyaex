@@ -42,12 +42,14 @@ class CollectedClientForm
                                 ->label('اسم العميل')
                                 ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient'))
                                 ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:CollectedClient'))
-                                ->relationship(
-                                    name: 'client',
-                                    titleAttribute: 'name',
-                                    modifyQueryUsing: fn (Builder $query) =>
-                                        $query->role('client')->where('is_blocked', false)
-                                )
+                                    ->relationship(
+                                        name: 'client',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn (Builder $query) =>
+                                            $query->whereHas('permissions', fn($q) => $q->where('name', 'Access:Client'))
+                                                ->orWhereHas('roles', fn($q) => $q->where('name', 'client'))
+                                                ->where('is_blocked', false)
+                                    )
                                 ->searchable()
                                 ->preload()
                                 ->required()

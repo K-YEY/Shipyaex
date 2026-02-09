@@ -45,7 +45,10 @@ class ReturnedClientForm
                                     name: 'client',
                                     titleAttribute: 'name',
                                     modifyQueryUsing: fn (Builder $query) =>
-                                        $query->role('client')->where('is_blocked', false)
+                                        $query->where(fn($q) => 
+                                            $q->whereHas('permissions', fn($p) => $p->where('name', 'Access:Client'))
+                                              ->orWhereHas('roles', fn($r) => $r->where('name', 'client'))
+                                        )->where('is_blocked', false)
                                 )
                                 ->searchable()
                                 ->preload()

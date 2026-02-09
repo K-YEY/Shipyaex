@@ -45,7 +45,10 @@ class ReturnedShipperForm
                                     name: 'shipper',
                                     titleAttribute: 'name',
                                     modifyQueryUsing: fn (Builder $query) =>
-                                        $query->role('shipper')->where('is_blocked', false)
+                                        $query->where(fn($q) => 
+                                            $q->whereHas('permissions', fn($p) => $p->where('name', 'Access:Shipper'))
+                                              ->orWhereHas('roles', fn($r) => $r->where('name', 'shipper'))
+                                        )->where('is_blocked', false)
                                 )
                                 ->searchable()
                                 ->preload()
