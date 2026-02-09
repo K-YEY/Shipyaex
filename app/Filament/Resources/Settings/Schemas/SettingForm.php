@@ -61,6 +61,7 @@ class SettingForm
                 'collection_min_orders' => 'الحد الأدنى لأوردرات التحصيل',
                 'collection_fee' => 'رسوم التحصيل',
                 'order_follow_up_hours' => 'مدة متابعة الأوردر (بالساعات)',
+                'welcome_plans' => 'الباقات المعروضة ف الصفحة الرئيسية (all أو أرقام الباقات بفاصله)',
             ])
             ->reactive()
             ->afterStateUpdated(function ($state, callable $set) {
@@ -77,6 +78,7 @@ class SettingForm
                     'collection_min_orders' => '15',
                     'collection_fee' => '75.00',
                     'order_follow_up_hours' => '48',
+                    'welcome_plans' => 'all',
                 ];
                 
                 $set('key', $state);

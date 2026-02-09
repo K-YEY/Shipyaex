@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 use App\Models\OrderStatus;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -12,59 +12,59 @@ class OrderStatusPolicy
 {
     use HandlesAuthorization;
     
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:OrderStatus');
+        return $user->isAdmin() || $user->can('ViewAny:OrderStatus');
     }
 
-    public function view(AuthUser $authUser, OrderStatus $orderStatus): bool
+    public function view(User $user, OrderStatus $orderStatus): bool
     {
-        return $authUser->can('View:OrderStatus');
+        return $user->isAdmin() || $user->can('View:OrderStatus');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:OrderStatus');
+        return $user->isAdmin() || $user->can('Create:OrderStatus');
     }
 
-    public function update(AuthUser $authUser, OrderStatus $orderStatus): bool
+    public function update(User $user, OrderStatus $orderStatus): bool
     {
-        return $authUser->can('Update:OrderStatus');
+        return $user->isAdmin() || $user->can('Update:OrderStatus');
     }
 
-    public function delete(AuthUser $authUser, OrderStatus $orderStatus): bool
+    public function delete(User $user, OrderStatus $orderStatus): bool
     {
-        return $authUser->can('Delete:OrderStatus');
+        return $user->isAdmin() || $user->can('Delete:OrderStatus');
     }
 
-    public function restore(AuthUser $authUser, OrderStatus $orderStatus): bool
+    public function restore(User $user, OrderStatus $orderStatus): bool
     {
-        return $authUser->can('Restore:OrderStatus');
+        return $user->isAdmin() || $user->can('Restore:OrderStatus');
     }
 
-    public function forceDelete(AuthUser $authUser, OrderStatus $orderStatus): bool
+    public function forceDelete(User $user, OrderStatus $orderStatus): bool
     {
-        return $authUser->can('ForceDelete:OrderStatus');
+        return $user->isAdmin() || $user->can('ForceDelete:OrderStatus');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:OrderStatus');
+        return $user->isAdmin() || $user->can('ForceDeleteAny:OrderStatus');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('RestoreAny:OrderStatus');
+        return $user->isAdmin() || $user->can('RestoreAny:OrderStatus');
     }
 
-    public function replicate(AuthUser $authUser, OrderStatus $orderStatus): bool
+    public function replicate(User $user, OrderStatus $orderStatus): bool
     {
-        return $authUser->can('Replicate:OrderStatus');
+        return $user->isAdmin() || $user->can('Replicate:OrderStatus');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function reorder(User $user): bool
     {
-        return $authUser->can('Reorder:OrderStatus');
+        return $user->isAdmin() || $user->can('Reorder:OrderStatus');
     }
 
 }

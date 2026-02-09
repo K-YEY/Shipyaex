@@ -5,7 +5,16 @@ use App\Http\Controllers\ShippingLabelController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $plans = \App\Models\Plan::with(['planPrices.governorate'])->get();
+    $welcomePlansSetting = \App\Models\Setting::get('welcome_plans', 'all');
+    
+    $query = \App\Models\Plan::with(['planPrices.governorate']);
+    
+    if ($welcomePlansSetting !== 'all') {
+        $planIds = array_map('trim', explode(',', $welcomePlansSetting));
+        $query->whereIn('id', $planIds);
+    }
+    
+    $plans = $query->get();
     
     // تجهيز الداتا عشان تظهر مجمعة حسب السعر
     $preparedPlans = $plans->map(function($plan) {

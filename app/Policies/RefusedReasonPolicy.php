@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 use App\Models\RefusedReason;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -12,59 +12,59 @@ class RefusedReasonPolicy
 {
     use HandlesAuthorization;
     
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:RefusedReason');
+        return $user->isAdmin() || $user->can('ViewAny:RefusedReason');
     }
 
-    public function view(AuthUser $authUser, RefusedReason $refusedReason): bool
+    public function view(User $user, RefusedReason $refusedReason): bool
     {
-        return $authUser->can('View:RefusedReason');
+        return $user->isAdmin() || $user->can('View:RefusedReason');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:RefusedReason');
+        return $user->isAdmin() || $user->can('Create:RefusedReason');
     }
 
-    public function update(AuthUser $authUser, RefusedReason $refusedReason): bool
+    public function update(User $user, RefusedReason $refusedReason): bool
     {
-        return $authUser->can('Update:RefusedReason');
+        return $user->isAdmin() || $user->can('Update:RefusedReason');
     }
 
-    public function delete(AuthUser $authUser, RefusedReason $refusedReason): bool
+    public function delete(User $user, RefusedReason $refusedReason): bool
     {
-        return $authUser->can('Delete:RefusedReason');
+        return $user->isAdmin() || $user->can('Delete:RefusedReason');
     }
 
-    public function restore(AuthUser $authUser, RefusedReason $refusedReason): bool
+    public function restore(User $user, RefusedReason $refusedReason): bool
     {
-        return $authUser->can('Restore:RefusedReason');
+        return $user->isAdmin() || $user->can('Restore:RefusedReason');
     }
 
-    public function forceDelete(AuthUser $authUser, RefusedReason $refusedReason): bool
+    public function forceDelete(User $user, RefusedReason $refusedReason): bool
     {
-        return $authUser->can('ForceDelete:RefusedReason');
+        return $user->isAdmin() || $user->can('ForceDelete:RefusedReason');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:RefusedReason');
+        return $user->isAdmin() || $user->can('ForceDeleteAny:RefusedReason');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('RestoreAny:RefusedReason');
+        return $user->isAdmin() || $user->can('RestoreAny:RefusedReason');
     }
 
-    public function replicate(AuthUser $authUser, RefusedReason $refusedReason): bool
+    public function replicate(User $user, RefusedReason $refusedReason): bool
     {
-        return $authUser->can('Replicate:RefusedReason');
+        return $user->isAdmin() || $user->can('Replicate:RefusedReason');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function reorder(User $user): bool
     {
-        return $authUser->can('Reorder:RefusedReason');
+        return $user->isAdmin() || $user->can('Reorder:RefusedReason');
     }
 
 }

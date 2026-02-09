@@ -96,6 +96,7 @@ class Setting extends Model
             // هل يجب تحصيل Shipper أوNoً قبل تحصيل Client؟
             'require_shipper_collection_first' => 'yes', // yes أو no
             'order_follow_up_hours' => '48',
+            'welcome_plans' => 'all', // all or IDs separated by comma
         ];
     }
 
