@@ -41,15 +41,18 @@ class ReturnedShipperForm
                                 ->label('المندوب')
                                 ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:ReturnedShipper'))
                                 ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditShipperField:ReturnedShipper'))
-                                ->relationship(
-                                    name: 'shipper',
-                                    titleAttribute: 'name',
-                                    modifyQueryUsing: fn ($query) => 
-                                        $query->where(fn($q) => 
+                                ->options(function () use ($user, $isShipper) {
+                                    if ($isShipper && !auth()->user()->isAdmin()) {
+                                        return [$user->id => $user->name];
+                                    }
+                                    return User::query()
+                                        ->where(fn($q) => 
                                             $q->permission('Access:Shipper')
                                               ->orWhereHas('roles', fn($r) => $r->where('name', 'shipper'))
-                                        )->where('is_blocked', false)
-                                )
+                                        )
+                                        ->where('is_blocked', false)
+                                        ->pluck('name', 'id');
+                                })
                                 ->searchable()
                                 ->preload()
                                 ->required()

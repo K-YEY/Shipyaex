@@ -42,15 +42,18 @@ class CollectedClientForm
                                 ->label('اسم العميل')
                                 ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient'))
                                 ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:CollectedClient'))
-                                    ->relationship(
-                                        name: 'client',
-                                        titleAttribute: 'name',
-                                        modifyQueryUsing: fn ($query) => 
-                                            $query->where(fn($q) => 
-                                                $q->permission('Access:Client')
-                                                  ->orWhereHas('roles', fn($r) => $r->where('name', 'client'))
-                                            )->where('is_blocked', false)
-                                    )
+                                ->options(function () use ($user, $isClient) {
+                                    if ($isClient && !auth()->user()->isAdmin()) {
+                                        return [$user->id => $user->name];
+                                    }
+                                    return User::query()
+                                        ->where(fn($q) => 
+                                            $q->permission('Access:Client')
+                                              ->orWhereHas('roles', fn($r) => $r->where('name', 'client'))
+                                        )
+                                        ->where('is_blocked', false)
+                                        ->pluck('name', 'id');
+                                })
                                 ->searchable()
                                 ->preload()
                                 ->required()
