@@ -99,7 +99,7 @@ class CollectedClientService
         return [
             'total_amount' => $totalAmount,
             'fees' => $fees,
-            'net_amount' => $totalAmount,
+            'net_amount' => $totalAmount - $fees,
             'number_of_orders' => $numberOfOrders,
         ];
     }

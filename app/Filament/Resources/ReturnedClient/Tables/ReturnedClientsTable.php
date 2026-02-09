@@ -24,29 +24,29 @@ class ReturnedClientsTable
             ->columns([
                 TextColumn::make('id')
                     ->label('رقم الكشف')
-                    ->visible(fn () => auth()->user()->can('ViewIdColumn:ReturnedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewIdColumn:ReturnedClient'))
                     ->sortable(),
                 
                 TextColumn::make('client.name')
                     ->label('العميل')
-                    ->visible(fn () => auth()->user()->can('ViewClientColumn:ReturnedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:ReturnedClient'))
                     ->searchable()
                     ->sortable(),
                 
                 TextColumn::make('return_date')
                     ->label('تاريخ الارتجاع')
-                    ->visible(fn () => auth()->user()->can('ViewReturnDateColumn:ReturnedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewReturnDateColumn:ReturnedClient'))
                     ->date()
                     ->sortable(),
                 
                 TextColumn::make('number_of_orders')
                     ->label('عدد المرتجعات')
-                    ->visible(fn () => auth()->user()->can('ViewOrdersCountColumn:ReturnedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:ReturnedClient'))
                     ->badge(),
                 
                 TextColumn::make('status')
                     ->label('الحالة')
-                    ->visible(fn () => auth()->user()->can('ViewStatusColumn:ReturnedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:ReturnedClient'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => \App\Enums\CollectingStatus::tryFrom($state)?->label() ?? $state)
                     ->color(fn ($state) => \App\Enums\CollectingStatus::tryFrom($state)?->color() ?? 'gray'),
@@ -55,7 +55,7 @@ class ReturnedClientsTable
                 SelectFilter::make('client_id')
                     ->label('العميل')
                     ->relationship('client', 'name', fn ($query) => $query->role('client'))
-                    ->visible(fn() => auth()->user()->can('ViewClientColumn:ReturnedClient')),
+                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:ReturnedClient')),
                 
                 SelectFilter::make('status')
                     ->label('الحالة')
@@ -66,14 +66,14 @@ class ReturnedClientsTable
                     ->label('عرض'),
                 EditAction::make()
                     ->label('تعديل')
-                    ->visible(fn ($record) => auth()->user()->can('Update:ReturnedClient') && $record->status === 'pending'),
+                    ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Update:ReturnedClient') && $record->status === 'pending'),
                 
                 Action::make('approve')
                     ->label('اعتماد التسليم للعميل')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn ($record) => auth()->user()->can('Approve:ReturnedClient') && $record->status === 'pending')
+                    ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Approve:ReturnedClient') && $record->status === 'pending')
                     ->action(function ($record) {
                         $service = new ReturnedClientService();
                         $service->approveReturn($record);
@@ -88,7 +88,7 @@ class ReturnedClientsTable
                     ->label('طباعة الفاتورة')
                     ->icon('heroicon-o-printer')
                     ->color('info')
-                    ->visible(fn ($record) => auth()->user()->can('PrintInvoice:ReturnedClient') && $record->status === 'completed')
+                    ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('PrintInvoice:ReturnedClient') && $record->status === 'completed')
                     ->url(fn ($record) => route('returns.client.invoice', $record->id))
                     ->openUrlInNewTab(),
             ])

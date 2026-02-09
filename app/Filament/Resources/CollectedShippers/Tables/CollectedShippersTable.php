@@ -33,13 +33,13 @@ class CollectedShippersTable
             ->columns([
                 TextColumn::make('id')
                     ->label('#')
-                    ->visible(fn () => auth()->user()->can('ViewIdColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewIdColumn:CollectedShipper'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('shipper.name')
                     ->label('المندوب')
-                    ->visible(fn () => auth()->user()->can('ViewShipperColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:CollectedShipper'))
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-o-truck')
@@ -47,14 +47,14 @@ class CollectedShippersTable
 
                 TextColumn::make('collection_date')
                     ->label('تاريخ التحصيل')
-                    ->visible(fn () => auth()->user()->can('ViewCollectionDateColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectionDateColumn:CollectedShipper'))
                     ->date('Y-m-d')
                     ->sortable()
                     ->icon('heroicon-o-calendar'),
 
                 TextColumn::make('number_of_orders')
                     ->label('عدد الطلبات')
-                    ->visible(fn () => auth()->user()->can('ViewOrdersCountColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:CollectedShipper'))
                     ->sortable()
                     ->alignCenter()
                     ->badge()
@@ -62,7 +62,7 @@ class CollectedShippersTable
 
                 TextColumn::make('total_amount')
                     ->label('الإجمالي')
-                    ->visible(fn () => auth()->user()->can('ViewTotalAmountColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountColumn:CollectedShipper'))
                     ->state(fn ($record) => number_format($record->total_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
@@ -70,7 +70,7 @@ class CollectedShippersTable
 
                 TextColumn::make('shipper_fees')
                     ->label('عمولة المندوب')
-                    ->visible(fn () => auth()->user()->can('ViewFeesColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewFeesColumn:CollectedShipper'))
                     ->state(fn ($record) => number_format($record->shipper_fees, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
@@ -78,7 +78,7 @@ class CollectedShippersTable
 
                 TextColumn::make('net_amount')
                     ->label('صافي المندوب')
-                    ->visible(fn () => auth()->user()->can('ViewNetAmountColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountColumn:CollectedShipper'))
                     ->state(fn ($record) => number_format($record->net_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
@@ -87,19 +87,19 @@ class CollectedShippersTable
 
                 TextColumn::make('status')
                     ->label('الحالة')
-                    ->visible(fn () => auth()->user()->can('ViewStatusColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:CollectedShipper'))
                     ->badge(),
 
                 TextColumn::make('created_at')
                     ->label('تاريخ الإنشاء')
-                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewDatesColumn:CollectedShipper'))
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->label('آخر تحديث')
-                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:CollectedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewDatesColumn:CollectedShipper'))
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -122,7 +122,7 @@ class CollectedShippersTable
                     })
                     ->searchable()
                     ->preload()
-                    ->visible(fn() => auth()->user()->can('ViewShipperColumn:CollectedShipper')),
+                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:CollectedShipper')),
 
                 Filter::make('collection_date')
                     ->schema([
@@ -146,14 +146,14 @@ class CollectedShippersTable
 
                     EditAction::make()
                         ->label('تعديل')
-                        ->visible(fn ($record) => auth()->user()->can('Update:CollectedShipper') && $record->status === 'pending'),
+                        ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Update:CollectedShipper') && $record->status === 'pending'),
 
                     // عرض الطلبات
                     Action::make('viewOrders')
                         ->label('عرض الطلبات')
                         ->icon('heroicon-o-clipboard-document-list')
                         ->color('info')
-                        ->visible(fn () => auth()->user()->can('ViewOrdersAction:CollectedShipper'))
+                        ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersAction:CollectedShipper'))
                         ->modalHeading(fn ($record) => "طلبات التحصيل رقم #{$record->id}")
                         ->modalContent(fn ($record) => view('filament.collecting.orders-modal', [
                             'orders' => $record->orders,
@@ -165,7 +165,7 @@ class CollectedShippersTable
                         ->label('اعتماد')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn ($record) => auth()->user()->can('Approve:CollectedShipper') && $record->status === 'pending')
+                        ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Approve:CollectedShipper') && $record->status === 'pending')
                         ->requiresConfirmation()
                         ->modalHeading('اعتماد التحصيل')
                         ->modalDescription('هل أنت متأكد من اعتماد هذا التحصيل؟ سيتم تأكيد استلام المبالغ لجميع الأوردرات المرتبطة.')
@@ -184,7 +184,7 @@ class CollectedShippersTable
                         ->label('إلغاء')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->visible(fn ($record) => auth()->user()->can('Cancel:CollectedShipper') && $record->status === 'pending')
+                        ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Cancel:CollectedShipper') && $record->status === 'pending')
                         ->requiresConfirmation()
                         ->modalHeading('إلغاء التحصيل')
                         ->modalDescription('هل أنت متأكد من إلغاء هذا التحصيل؟ سيتم فك ارتباط جميع الأوردرات.')
@@ -203,7 +203,7 @@ class CollectedShippersTable
                         ->label('طباعة الفاتورة')
                         ->icon('heroicon-o-printer')
                         ->color('gray')
-                        ->visible(fn ($record) => auth()->user()->can('PrintInvoice:CollectedShipper') && $record->status === 'completed')
+                        ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('PrintInvoice:CollectedShipper') && $record->status === 'completed')
                         ->url(fn ($record) => route('collecting.shipper.invoice', $record->id))
                         ->openUrlInNewTab(),
                 ]),
@@ -215,7 +215,7 @@ class CollectedShippersTable
                         ->label('اعتماد المختار')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn() => auth()->user()->can('Approve:CollectedShipper'))
+                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('Approve:CollectedShipper'))
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
                             $service = new CollectedShipperService();
@@ -236,7 +236,7 @@ class CollectedShippersTable
 
                     DeleteBulkAction::make()
                         ->label('حذف المختار')
-                        ->visible(fn() => auth()->user()->can('DeleteAny:CollectedShipper')),
+                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:CollectedShipper')),
                 ]),
             ])
             ->striped()

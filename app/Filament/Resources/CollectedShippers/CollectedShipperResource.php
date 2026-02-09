@@ -20,6 +20,13 @@ class CollectedShipperResource extends Resource
 {
     protected static ?string $model = CollectedShipper::class;
 
+    protected static ?string $recordTitleAttribute = 'id';
+
+    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    {
+        return "توريدة #{$record->id} - " . ($record->shipper?->name ?? 'بدون مندوب');
+    }
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
     protected static ?int $navigationSort = 1;
@@ -87,7 +94,7 @@ class CollectedShipperResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user->can('ViewAll:CollectedShipper')) {
+        if ($user->isAdmin() || $user->can('ViewAll:CollectedShipper')) {
             return $query;
         }
 
@@ -105,7 +112,7 @@ class CollectedShipperResource extends Resource
     {
         $user = auth()->user();
 
-        if ($user->can('ViewAll:CollectedShipper')) {
+        if ($user->isAdmin() || $user->can('ViewAll:CollectedShipper')) {
             return static::getModel()::where('status', 'pending')->count() ?: null;
         }
 

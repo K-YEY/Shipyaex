@@ -17,6 +17,13 @@ class ReturnedShipperResource extends Resource
 {
     protected static ?string $model = ReturnedShipper::class;
 
+    protected static ?string $recordTitleAttribute = 'id';
+
+    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    {
+        return "مرتجع مندوب #{$record->id} - " . ($record->shipper?->name ?? 'بدون مندوب');
+    }
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path-rounded-square';
 
     public static function getNavigationLabel(): string
@@ -68,7 +75,7 @@ class ReturnedShipperResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user->can('ViewAll:ReturnedShipper')) {
+        if ($user->isAdmin() || $user->can('ViewAll:ReturnedShipper')) {
             return $query;
         }
 

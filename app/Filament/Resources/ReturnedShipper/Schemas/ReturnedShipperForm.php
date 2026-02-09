@@ -39,8 +39,8 @@ class ReturnedShipperForm
                             // اختيار Shipper
                             Select::make('shipper_id')
                                 ->label('المندوب')
-                                ->visible(fn () => auth()->user()->can('ViewShipperColumn:ReturnedShipper'))
-                                ->disabled(fn () => !auth()->user()->can('EditShipperField:ReturnedShipper'))
+                                ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:ReturnedShipper'))
+                                ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditShipperField:ReturnedShipper'))
                                 ->relationship(
                                     name: 'shipper',
                                     titleAttribute: 'name',
@@ -60,8 +60,8 @@ class ReturnedShipperForm
                             // تاريخ المرتجع
                             DatePicker::make('return_date')
                                 ->label('تاريخ المرتجع')
-                                ->visible(fn () => auth()->user()->can('ViewReturnDateColumn:ReturnedShipper'))
-                                ->disabled(fn () => !auth()->user()->can('EditReturnDateField:ReturnedShipper'))
+                                ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewReturnDateColumn:ReturnedShipper'))
+                                ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditReturnDateField:ReturnedShipper'))
                                 ->required()
                                 ->default(now())
                                 ->native(false)
@@ -70,7 +70,7 @@ class ReturnedShipperForm
                             // Status
                             Select::make('status')
                                 ->label('الحالة')
-                                ->visible(fn ($operation) => auth()->user()->can('ViewStatusColumn:ReturnedShipper') && $operation === 'edit')
+                                ->visible(fn ($operation) => (auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:ReturnedShipper')) && $operation === 'edit')
                                 ->options([
                                     'pending' => 'قيد المراجعة',
                                     'completed' => 'تم الاعتماد ✅',
@@ -78,7 +78,7 @@ class ReturnedShipperForm
                                 ])
                                 ->default('pending')
                                 ->required()
-                                ->disabled(fn ($record) => !auth()->user()->can('EditStatusField:ReturnedShipper') || ($record && $record->status !== 'pending')),
+                                ->disabled(fn ($record) => (!auth()->user()->isAdmin() && !auth()->user()->can('EditStatusField:ReturnedShipper')) || ($record && $record->status !== 'pending')),
                         ]),
 
                         Hidden::make('shipper_id')
@@ -107,8 +107,8 @@ class ReturnedShipperForm
 
                         CheckboxList::make('selected_orders')
                             ->label('الأوردرات')
-                            ->visible(fn () => auth()->user()->can('ViewSelectedOrdersField:ReturnedShipper'))
-                            ->disabled(fn () => !auth()->user()->can('EditSelectedOrdersField:ReturnedShipper'))
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewSelectedOrdersField:ReturnedShipper'))
+                            ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditSelectedOrdersField:ReturnedShipper'))
                             ->options(function (Get $get, $record) use ($user, $isShipper) {
                                 $shipperId = $get('shipper_id') ?? ($isShipper ? $user->id : null);
                                 if (!$shipperId) return [];
@@ -123,7 +123,7 @@ class ReturnedShipperForm
 
                                 return $query->get()
                                     ->mapWithKeys(fn ($order) => [
-                                        $order->id => "#{$order->code} | {$order->name} | {$order->status}"
+                                        $order->id => "#{$order->code} | " . ($order->client?->name ?? 'بدون عميل') . " | {$order->name} | {$order->status}"
                                     ]);
                             })
                             ->columns(1)
@@ -149,7 +149,7 @@ class ReturnedShipperForm
                 Section::make('ملخص')
                     ->icon('heroicon-o-calculator')
                     ->columnSpanFull()
-                    ->visible(fn () => auth()->user()->can('ViewSummaryField:ReturnedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewSummaryField:ReturnedShipper'))
                     ->schema([
                         TextInput::make('number_of_orders')
                             ->label('عدد الأوردرات')
@@ -160,7 +160,7 @@ class ReturnedShipperForm
                         
                         Textarea::make('notes')
                             ->label('ملاحظات')
-                            ->disabled(fn () => !auth()->user()->can('EditNotesField:ReturnedShipper'))
+                            ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditNotesField:ReturnedShipper'))
                             ->columnSpanFull(),
                     ]),
             ]);

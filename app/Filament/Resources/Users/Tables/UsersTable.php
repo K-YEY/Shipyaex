@@ -22,7 +22,7 @@ class UsersTable
             ->columns([
                 TextColumn::make('id')
                     ->label(__('app.users') . ' ID')
-                    ->visible(fn () => auth()->user()->can('ViewIdColumn:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewIdColumn:User'))
                     ->sortable()
                     ->searchable()
                     ->copyable()
@@ -32,7 +32,7 @@ class UsersTable
                     ->color('primary'),
                 TextColumn::make('username')
                     ->label(__('app.username'))
-                    ->visible(fn () => auth()->user()->can('ViewUsernameColumn:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewUsernameColumn:User'))
                     ->searchable()->icon('heroicon-o-hashtag')
                     ->copyable()
                     ->copyMessage(__('app.copied'))
@@ -40,29 +40,29 @@ class UsersTable
                     ->iconPosition(IconPosition::Before)->color('warning')->iconColor('warning'),
                 TextColumn::make('name')
                     ->label(__('app.name'))
-                    ->visible(fn () => auth()->user()->can('ViewNameColumn:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNameColumn:User'))
                     ->searchable(),
                 TextColumn::make('roles.name')->color('info')
                     ->label(__('app.status'))
-                    ->visible(fn () => auth()->user()->can('ViewRolesColumn:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewRolesColumn:User'))
                     ->toggleable()->badge(),
             
                 ToggleColumn::make('is_blocked')
                     ->label(__('app.is_blocked'))
-                    ->visible(fn () => auth()->user()->can('BlockUser:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('BlockUser:User'))
                     ->onColor('danger')    // Color when status is 1 (Blocked)
                     ->offColor('success')  // Color when status is 0 (Unblocked)
                     ->onIcon('heroicon-s-lock-closed')   // icon for blocking
                     ->offIcon('heroicon-s-lock-open'),
                 TextColumn::make('deleted_at')
                     ->label(__('orders.filters.deleted_orders'))
-                    ->visible(fn () => auth()->user()->can('RestoreAny:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('RestoreAny:User'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->label(__('app.created_at'))
-                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:User'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewDatesColumn:User'))
                     ->dateTime('d M, Y H:i')
                     ->since()
                     ->toggleable()
@@ -84,16 +84,16 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make()
-                    ->visible(fn () => auth()->user()->can('Update:User')),
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('Update:User')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()->can('DeleteAny:User')),
+                        ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:User')),
                     ForceDeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()->can('ForceDeleteAny:User')),
+                        ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ForceDeleteAny:User')),
                     RestoreBulkAction::make()
-                        ->visible(fn () => auth()->user()->can('RestoreAny:User')),
+                        ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('RestoreAny:User')),
                 ]),
             ]);
     }

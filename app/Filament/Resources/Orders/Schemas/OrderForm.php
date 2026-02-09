@@ -66,8 +66,8 @@ class OrderForm
                                         
                                         TextInput::make('external_code')
                                             ->label(__('orders.external_code'))
-                                            ->visible(fn() => auth()->user()->can('ViewExternalCodeField:Order'))
-                                            ->disabled(fn() => !auth()->user()->can('EditExternalCodeField:Order'))
+                                            ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewExternalCodeField:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditExternalCodeField:Order'))
                                             ->placeholder(__('orders.external_code_input_placeholder'))
                                             ->helperText(__('orders.external_code_modal_description')),
 
@@ -81,7 +81,7 @@ class OrderForm
                                                     ->pluck('name', 'id');
                                             })
                                             ->default(fn () => !auth()->user()->can('EditClientField:Order') ? $user->id : null)
-                                            ->disabled(fn () => !auth()->user()->can('EditClientField:Order'))
+                                            ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:Order'))
                                             ->dehydrated()
                                             ->searchable()
                                             ->preload()
@@ -111,7 +111,7 @@ class OrderForm
                                                     $set('shipper_fees', null);
                                                 }
                                             })
-                                            ->visible(fn () => auth()->user()->can('AssignShipperField:Order')),
+                                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('AssignShipperField:Order')),
 
                                         Select::make('status')
                                             ->label(__('orders.status'))
@@ -132,8 +132,8 @@ class OrderForm
 
                                 Textarea::make('order_note')
                                     ->label(__('orders.order_notes'))
-                                    ->visible(fn() => auth()->user()->can('ViewOrderNotesField:Order'))
-                                    ->disabled(fn() => !auth()->user()->can('EditOrderNotesField:Order'))
+                                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewOrderNotesField:Order'))
+                                    ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditOrderNotesField:Order'))
                                     ->placeholder(__('orders.order_notes_input_placeholder'))
                                     ->rows(3)
                                     ->maxLength(500)
@@ -143,27 +143,27 @@ class OrderForm
 
                         Tab::make(__('app.customer_info'))
                             ->icon('heroicon-m-user')
-                            ->visible(fn() => auth()->user()->can('ViewCustomerDetailsSection:Order'))
+                            ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCustomerDetailsSection:Order'))
                             ->schema([
                                 Grid::make(2)
                                     ->schema([
                                         TextInput::make('name')
                                             ->label(__('orders.recipient_name'))
                                             ->required()
-                                            ->disabled(fn() => !auth()->user()->can('EditCustomerDetails:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditCustomerDetails:Order'))
                                             ->datalist(Order::query()->distinct()->pluck('name')->filter()->values()->toArray()),
                                         
                                         TextInput::make('phone')
                                             ->label(__('orders.phone'))
                                             ->required()
                                             ->tel()
-                                            ->disabled(fn() => !auth()->user()->can('EditCustomerDetails:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditCustomerDetails:Order'))
                                             ->datalist(Order::query()->distinct()->pluck('phone')->filter()->values()->toArray()),
                                         
                                         TextInput::make('phone_2')
                                             ->label(__('orders.phone') . ' 2')
                                             ->tel()
-                                            ->disabled(fn() => !auth()->user()->can('EditCustomerDetails:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditCustomerDetails:Order'))
                                             ->datalist(Order::query()->distinct()->pluck('phone_2')->filter()->values()->toArray()),
 
                                         Select::make('shipping_content')
@@ -225,13 +225,13 @@ class OrderForm
                                 Textarea::make('address')
                                     ->label(__('orders.address'))
                                     ->required()
-                                    ->disabled(fn() => !auth()->user()->can('EditCustomerDetailsField:Order'))
+                                    ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditCustomerDetailsField:Order'))
                                     ->columnSpanFull(),
                             ]),
 
                         Tab::make(__('app.financial_summary'))
                             ->icon('heroicon-m-banknotes')
-                            ->visible(fn() => auth()->user()->can('ViewFinancialSummarySection:Order'))
+                            ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewFinancialSummarySection:Order'))
                             ->schema([
                                 Grid::make(2)
                                     ->schema([
@@ -240,7 +240,7 @@ class OrderForm
                                             ->numeric()
                                             ->prefix(__('statuses.currency'))
                                             ->live(onBlur: true)
-                                            ->disabled(fn() => !auth()->user()->can('EditFinancialSummaryField:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditFinancialSummaryField:Order'))
                                             ->afterStateUpdated(fn (Get $get, callable $set) => $recalculate($get, $set)),
 
                                         TextInput::make('fees')
@@ -248,7 +248,7 @@ class OrderForm
                                             ->numeric()
                                             ->prefix(__('statuses.currency'))
                                             ->live(onBlur: true)
-                                            ->disabled(fn() => !auth()->user()->can('EditFinancialSummaryField:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditFinancialSummaryField:Order'))
                                             ->afterStateUpdated(fn (Get $get, callable $set) => $recalculate($get, $set)),
 
                                         TextInput::make('shipper_fees')
@@ -256,16 +256,16 @@ class OrderForm
                                             ->numeric()
                                             ->prefix(__('statuses.currency'))
                                             ->live(onBlur: true)
-                                            ->visible(fn () => auth()->user()->can('ViewShipperFeesField:Order'))
-                                            ->disabled(fn() => !auth()->user()->can('EditShipperFeesField:Order'))
+                                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperFeesField:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditShipperFeesField:Order'))
                                             ->afterStateUpdated(fn (Get $get, callable $set) => $recalculate($get, $set)),
 
                                         TextInput::make('cop')
                                             ->label(__('orders.company_share'))
                                             ->numeric()
                                             ->readonly()
-                                            ->visible(fn () => auth()->user()->can('ViewCopField:Order'))
-                                            ->disabled(fn() => !auth()->user()->can('EditCopField:Order')),
+                                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewCopField:Order'))
+                                            ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditCopField:Order')),
 
                                         TextInput::make('cod')
                                             ->label(__('orders.collection_amount'))

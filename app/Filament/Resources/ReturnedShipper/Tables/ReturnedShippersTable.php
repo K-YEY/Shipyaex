@@ -24,29 +24,29 @@ class ReturnedShippersTable
             ->columns([
                 TextColumn::make('id')
                     ->label('رقم الكشف')
-                    ->visible(fn () => auth()->user()->can('ViewIdColumn:ReturnedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewIdColumn:ReturnedShipper'))
                     ->sortable(),
                 
                 TextColumn::make('shipper.name')
                     ->label('المندوب')
-                    ->visible(fn () => auth()->user()->can('ViewShipperColumn:ReturnedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:ReturnedShipper'))
                     ->searchable()
                     ->sortable(),
                 
                 TextColumn::make('return_date')
                     ->label('تاريخ الارتجاع')
-                    ->visible(fn () => auth()->user()->can('ViewReturnDateColumn:ReturnedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewReturnDateColumn:ReturnedShipper'))
                     ->date()
                     ->sortable(),
                 
                 TextColumn::make('number_of_orders')
                     ->label('عدد الطلبات')
-                    ->visible(fn () => auth()->user()->can('ViewOrdersCountColumn:ReturnedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:ReturnedShipper'))
                     ->badge(),
                 
                 TextColumn::make('status')
                     ->label('الحالة')
-                    ->visible(fn () => auth()->user()->can('ViewStatusColumn:ReturnedShipper'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:ReturnedShipper'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => \App\Enums\CollectingStatus::tryFrom($state)?->label() ?? $state)
                     ->color(fn ($state) => \App\Enums\CollectingStatus::tryFrom($state)?->color() ?? 'gray'),
@@ -55,7 +55,7 @@ class ReturnedShippersTable
                 SelectFilter::make('shipper_id')
                     ->label('المندوب')
                     ->relationship('shipper', 'name', fn ($query) => $query->role('shipper'))
-                    ->visible(fn() => auth()->user()->can('ViewShipperColumn:ReturnedShipper')),
+                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:ReturnedShipper')),
                 
                 SelectFilter::make('status')
                     ->label('الحالة')
@@ -66,14 +66,14 @@ class ReturnedShippersTable
                     ->label('عرض'),
                 EditAction::make()
                     ->label('تعديل')
-                    ->visible(fn ($record) => auth()->user()->can('Update:ReturnedShipper') && $record->status === 'pending'),
+                    ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Update:ReturnedShipper') && $record->status === 'pending'),
                 
                 Action::make('approve')
                     ->label('اعتماد الاستلام')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn ($record) => auth()->user()->can('Approve:ReturnedShipper') && $record->status === 'pending')
+                    ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('Approve:ReturnedShipper') && $record->status === 'pending')
                     ->action(function ($record) {
                         $service = new ReturnedShipperService();
                         $service->approveReturn($record);
@@ -88,7 +88,7 @@ class ReturnedShippersTable
                     ->label('طباعة الفاتورة')
                     ->icon('heroicon-o-printer')
                     ->color('info')
-                    ->visible(fn ($record) => auth()->user()->can('PrintInvoice:ReturnedShipper') && $record->status === 'completed')
+                    ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('PrintInvoice:ReturnedShipper') && $record->status === 'completed')
                     ->url(fn ($record) => route('returns.shipper.invoice', $record->id))
                     ->openUrlInNewTab(),
             ])

@@ -17,6 +17,13 @@ class ReturnedClientResource extends Resource
 {
     protected static ?string $model = ReturnedClient::class;
 
+    protected static ?string $recordTitleAttribute = 'id';
+
+    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    {
+        return "مرتجع عميل #{$record->id} - " . ($record->client?->name ?? 'بدون عميل');
+    }
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-uturn-left';
 
     public static function getNavigationLabel(): string
@@ -68,7 +75,7 @@ class ReturnedClientResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user->can('ViewAll:ReturnedClient')) {
+        if ($user->isAdmin() || $user->can('ViewAll:ReturnedClient')) {
             return $query;
         }
 

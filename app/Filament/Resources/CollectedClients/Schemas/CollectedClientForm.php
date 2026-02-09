@@ -40,8 +40,8 @@ class CollectedClientForm
                             // اختيار Client
                             Select::make('client_id')
                                 ->label('اسم العميل')
-                                ->visible(fn () => auth()->user()->can('ViewClientColumn:CollectedClient'))
-                                ->disabled(fn () => !auth()->user()->can('EditClientField:CollectedClient'))
+                                ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient'))
+                                ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:CollectedClient'))
                                 ->relationship(
                                     name: 'client',
                                     titleAttribute: 'name',
@@ -65,8 +65,8 @@ class CollectedClientForm
                             // تاريخ التحصيل
                             DatePicker::make('collection_date')
                                 ->label('تاريخ التحصيل')
-                                ->visible(fn () => auth()->user()->can('ViewCollectionDateColumn:CollectedClient'))
-                                ->disabled(fn () => !auth()->user()->can('EditCollectionDateField:CollectedClient'))
+                                ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectionDateColumn:CollectedClient'))
+                                ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditCollectionDateField:CollectedClient'))
                                 ->required()
                                 ->default(now())
                                 ->native(false)
@@ -75,17 +75,17 @@ class CollectedClientForm
                             // Status (للEdit فقط)
                             Select::make('status')
                                 ->label('الحالة')
-                                ->visible(fn ($operation) => auth()->user()->can('ViewStatusColumn:CollectedClient') && $operation === 'edit')
+                                ->visible(fn ($operation) => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:CollectedClient') && $operation === 'edit')
                                 ->options(\App\Enums\CollectingStatus::class)
                                 ->default('pending')
                                 ->required()
-                                ->disabled(fn ($record) => !auth()->user()->can('EditStatusField:CollectedClient') || ($record && $record->status !== 'pending')),
+                                ->disabled(fn ($record) => !auth()->user()->isAdmin() || auth()->user()->can('EditStatusField:CollectedClient') || ($record && $record->status !== 'pending')),
                         ]),
 
                         // Hidden للعميل إذا كان الUser هو Client
                         Hidden::make('client_id')
                             ->default($user->id)
-                            ->visible(fn() => $isClient && !auth()->user()->can('ViewClientColumn:CollectedClient')),
+                            ->visible(fn() => $isClient && !auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient')),
                     ]),
 
                 // قسم Orderات - عرض All مع إمكانية اNoستبعاد
@@ -115,8 +115,8 @@ class CollectedClientForm
 
                         CheckboxList::make('selected_orders')
                             ->label('الأوردرات (قم بإلغاء تحديد الأوردرات التي لا تريد تحصيلها)')
-                            ->visible(fn () => auth()->user()->can('ViewSelectedOrdersField:CollectedClient'))
-                            ->disabled(fn () => !auth()->user()->can('EditSelectedOrdersField:CollectedClient'))
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewSelectedOrdersField:CollectedClient'))
+                            ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditSelectedOrdersField:CollectedClient'))
                             ->options(function (Get $get, $record) use ($user, $isAdmin, $isClient) {
                                 $clientId = $get('client_id');
 
@@ -190,13 +190,13 @@ class CollectedClientForm
                 Section::make('ملخص التحصيل')
                     ->description('حساب المبالغ تلقائي')
                     ->icon('heroicon-o-calculator')
-                    ->visible(fn () => auth()->user()->can('ViewSummaryField:CollectedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewSummaryField:CollectedClient'))
                     ->columns(4)
                     ->columnSpanFull()
                     ->schema([
                         TextInput::make('number_of_orders')
                             ->label('عدد الأوردرات')
-                            ->visible(fn () => auth()->user()->can('ViewOrdersCountField:CollectedClient'))
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountField:CollectedClient'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -205,7 +205,7 @@ class CollectedClientForm
 
                         TextInput::make('total_amount')
                             ->label('إجمالي المبلغ')
-                            ->visible(fn () => auth()->user()->can('ViewTotalAmountField:CollectedClient'))
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountField:CollectedClient'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -214,7 +214,7 @@ class CollectedClientForm
 
                         TextInput::make('fees')
                             ->label('مصاريف الشركة')
-                            ->visible(fn () => auth()->user()->can('ViewFeesField:CollectedClient'))
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewFeesField:CollectedClient'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -223,7 +223,7 @@ class CollectedClientForm
 
                         TextInput::make('net_amount')
                             ->label('الصافي للعميل')
-                            ->visible(fn () => auth()->user()->can('ViewNetAmountField:CollectedClient'))
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountField:CollectedClient'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
@@ -235,11 +235,11 @@ class CollectedClientForm
                 // مNoحظات
                 Section::make('ملاحظات')
                     ->columnSpanFull()
-                    ->visible(fn () => auth()->user()->can('ViewNotesField:CollectedClient'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNotesField:CollectedClient'))
                     ->schema([
                         Textarea::make('notes')
                             ->label('ملاحظات')
-                            ->disabled(fn () => !auth()->user()->can('EditNotesField:CollectedClient'))
+                            ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditNotesField:CollectedClient'))
                             ->placeholder('أي ملاحظات إضافية...')
                             ->rows(3)
                             ->columnSpanFull(),

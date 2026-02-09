@@ -20,6 +20,13 @@ class CollectedClientResource extends Resource
 {
     protected static ?string $model = CollectedClient::class;
 
+    protected static ?string $recordTitleAttribute = 'id';
+
+    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    {
+        return "تسوية #{$record->id} - " . ($record->client?->name ?? 'بدون عميل');
+    }
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCurrencyDollar;
 
     protected static ?int $navigationSort = 2;
@@ -87,7 +94,7 @@ class CollectedClientResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user->can('ViewAll:CollectedClient')) {
+        if ($user->isAdmin() || $user->can('ViewAll:CollectedClient')) {
             return $query;
         }
 
@@ -105,7 +112,7 @@ class CollectedClientResource extends Resource
     {
         $user = auth()->user();
 
-        if ($user->can('ViewAll:CollectedClient')) {
+        if ($user->isAdmin() || $user->can('ViewAll:CollectedClient')) {
             return static::getModel()::where('status', 'pending')->count() ?: null;
         }
 
