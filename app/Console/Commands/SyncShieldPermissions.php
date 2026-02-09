@@ -15,7 +15,7 @@ class SyncShieldPermissions extends Command
      * @var string
      */
     protected $signature = 'shield:sync-custom';
-
+ 
     /**
      * The console command description.
      *

@@ -49,9 +49,9 @@ class CollectedShipperForm
                                 ->relationship(
                                     name: 'shipper',
                                     titleAttribute: 'name',
-                                    modifyQueryUsing: fn (Builder $query) =>
+                                    modifyQueryUsing: fn ($query) => 
                                         $query->where(fn($q) => 
-                                            $q->whereHas('permissions', fn($p) => $p->where('name', 'Access:Shipper'))
+                                            $q->permission('Access:Shipper')
                                               ->orWhereHas('roles', fn($r) => $r->where('name', 'shipper'))
                                         )->where('is_blocked', false)
                                 )

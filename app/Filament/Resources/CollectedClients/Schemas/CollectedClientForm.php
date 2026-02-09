@@ -45,10 +45,11 @@ class CollectedClientForm
                                     ->relationship(
                                         name: 'client',
                                         titleAttribute: 'name',
-                                        modifyQueryUsing: fn (Builder $query) =>
-                                            $query->whereHas('permissions', fn($q) => $q->where('name', 'Access:Client'))
-                                                ->orWhereHas('roles', fn($q) => $q->where('name', 'client'))
-                                                ->where('is_blocked', false)
+                                        modifyQueryUsing: fn ($query) => 
+                                            $query->where(fn($q) => 
+                                                $q->permission('Access:Client')
+                                                  ->orWhereHas('roles', fn($r) => $r->where('name', 'client'))
+                                            )->where('is_blocked', false)
                                     )
                                 ->searchable()
                                 ->preload()

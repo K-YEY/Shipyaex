@@ -44,9 +44,9 @@ class ReturnedClientForm
                                 ->relationship(
                                     name: 'client',
                                     titleAttribute: 'name',
-                                    modifyQueryUsing: fn (Builder $query) =>
+                                    modifyQueryUsing: fn ($query) => 
                                         $query->where(fn($q) => 
-                                            $q->whereHas('permissions', fn($p) => $p->where('name', 'Access:Client'))
+                                            $q->permission('Access:Client')
                                               ->orWhereHas('roles', fn($r) => $r->where('name', 'client'))
                                         )->where('is_blocked', false)
                                 )
