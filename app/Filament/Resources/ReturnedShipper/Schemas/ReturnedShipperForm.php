@@ -89,7 +89,7 @@ class ReturnedShipperForm
 
                         Hidden::make('shipper_id')
                             ->default($user->id)
-                            ->visible(fn() => $isShipper && !auth()->user()->can('ViewShipperColumn:ReturnedShipper')),
+                            ->visible(fn() => $isShipper && !$isAdmin && !auth()->user()->can('ViewShipperColumn:ReturnedShipper')),
                     ]),
 
                 Section::make('الأوردرات المتاحة للمرتجع')

@@ -89,7 +89,7 @@ class ReturnedClientForm
 
                         Hidden::make('client_id')
                             ->default($user->id)
-                            ->visible(fn() => $isClient && !auth()->user()->can('ViewClientColumn:ReturnedClient')),
+                            ->visible(fn() => $isClient && !$isAdmin && !auth()->user()->can('ViewClientColumn:ReturnedClient')),
                     ]),
 
                 Section::make('الأوردرات المتاحة للمرتجع')

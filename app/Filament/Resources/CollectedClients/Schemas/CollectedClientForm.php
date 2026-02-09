@@ -88,10 +88,10 @@ class CollectedClientForm
                                 ->disabled(fn ($record) => !auth()->user()->isAdmin() || auth()->user()->can('EditStatusField:CollectedClient') || ($record && $record->status !== 'pending')),
                         ]),
 
-                        // Hidden للعميل إذا كان الUser هو Client
+                        // Hidden للعميل إذا كان الUser هو Client ولا يرى حقل الاختيار
                         Hidden::make('client_id')
                             ->default($user->id)
-                            ->visible(fn() => $isClient && !auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient')),
+                            ->visible(fn() => $isClient && !$isAdmin && !auth()->user()->can('ViewClientColumn:CollectedClient')),
                     ]),
 
                 // قسم Orderات - عرض All مع إمكانية اNoستبعاد

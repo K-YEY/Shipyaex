@@ -92,10 +92,10 @@ class CollectedShipperForm
                                 ->disabled(fn ($record) => (!auth()->user()->isAdmin() && !auth()->user()->can('EditStatusField:CollectedShipper')) || ($record && $record->status !== 'pending')),
                         ]),
 
-                        // Hidden للشيبّر إذا كان الUser هو Shipper
+                        // Hidden للشيبّر إذا كان الUser هو Shipper ولا يرى حقل الاختيار
                         Hidden::make('shipper_id')
                             ->default($user->id)
-                            ->visible(fn() => $isShipper && !auth()->user()->can('ViewShipperColumn:CollectedShipper')),
+                            ->visible(fn() => $isShipper && !$isAdmin && !auth()->user()->can('ViewShipperColumn:CollectedShipper')),
                     ]),
 
                 // قسم Orderات - عرض All مع إمكانية اNoستبعاد
