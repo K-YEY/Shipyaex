@@ -50,12 +50,8 @@ class CollectedShipperForm
                                     if ($isShipper && !auth()->user()->isAdmin()) {
                                         return [$user->id => $user->name];
                                     }
-                                    return User::query()
-                                        ->where(fn($q) => 
-                                            $q->permission('Access:Shipper')
-                                              ->orWhereHas('roles', fn($r) => $r->where('name', 'shipper'))
-                                        )
-                                        ->where('is_blocked', false)
+                                    return User::permission('Access:Shipper')
+                                        ->where('is_blocked', '!=', true)
                                         ->pluck('name', 'id');
                                 })
                                 ->searchable()

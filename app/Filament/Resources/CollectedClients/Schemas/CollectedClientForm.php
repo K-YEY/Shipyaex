@@ -46,12 +46,8 @@ class CollectedClientForm
                                     if ($isClient && !auth()->user()->isAdmin()) {
                                         return [$user->id => $user->name];
                                     }
-                                    return User::query()
-                                        ->where(fn($q) => 
-                                            $q->permission('Access:Client')
-                                              ->orWhereHas('roles', fn($r) => $r->where('name', 'client'))
-                                        )
-                                        ->where('is_blocked', false)
+                                    return User::permission('Access:Client')
+                                        ->where('is_blocked', '!=', true)
                                         ->pluck('name', 'id');
                                 })
                                 ->searchable()
