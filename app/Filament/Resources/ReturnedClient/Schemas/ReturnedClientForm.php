@@ -45,7 +45,7 @@ class ReturnedClientForm
                                     if ($isClient && !auth()->user()->isAdmin()) {
                                         return [$user->id => $user->name];
                                     }
-                                    return User::permission('Access:Client')
+                                    return User::role('client')
                                         ->where('is_blocked', '!=', true)
                                         ->pluck('name', 'id');
                                 })

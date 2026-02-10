@@ -45,7 +45,7 @@ class ReturnedShipperForm
                                     if ($isShipper && !auth()->user()->isAdmin()) {
                                         return [$user->id => $user->name];
                                     }
-                                    return User::permission('Access:Shipper')
+                                    return User::role('shipper')
                                         ->where('is_blocked', '!=', true)
                                         ->pluck('name', 'id');
                                 })

@@ -111,11 +111,28 @@ class SyncShieldPermissions extends Command
             'ViewStatusColumn:ReturnedShipper', 'EditStatusField:ReturnedShipper',
             'ViewSelectedOrdersField:ReturnedShipper', 'EditSelectedOrdersField:ReturnedShipper',
             'ViewSummaryField:ReturnedShipper', 'ViewNotesField:ReturnedShipper', 'EditNotesField:ReturnedShipper',
+
+            // Governorate Custom
+            'ViewNameColumn:Governorate', 'ViewFollowUpHoursColumn:Governorate', 'ViewShipperColumn:Governorate', 'ViewDatesColumn:Governorate',
+            'EditNameField:Governorate', 'EditFollowUpHoursField:Governorate', 'EditShipperField:Governorate',
+
+            // City Custom
+            'ViewGovernorateColumn:City', 'ViewNameColumn:City', 'ViewDatesColumn:City',
+            'EditGovernorateField:City', 'EditNameField:City',
+
+            // ShippingContent Custom
+            'ViewNameColumn:ShippingContent', 'EditNameField:ShippingContent', 'ExportData:ShippingContent',
+
+            // Order Custom Fields/Sections
+            'ViewExternalCodeField:Order', 'EditExternalCodeField:Order', 'EditClientField:Order', 'AssignShipperField:Order', 
+            'ChangeStatusField:Order', 'ViewOrderNotesField:Order', 'EditOrderNotesField:Order', 'ViewCustomerDetailsSection:Order', 
+            'EditCustomerDetails:Order', 'EditCustomerDetailsField:Order', 'ViewFinancialSummarySection:Order', 'EditFinancialSummaryField:Order', 
+            'ViewShipperFeesField:Order', 'EditShipperFeesField:Order', 'ViewCopField:Order', 'EditCopField:Order',
         ];
 
         // Combine with standard CRUD for problematic resources
         $crud = ['ViewAny', 'View', 'Create', 'Update', 'Delete', 'DeleteAny', 'Restore', 'RestoreAny', 'ForceDelete', 'ForceDeleteAny', 'Replicate', 'Reorder'];
-        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order', 'OrderStatus', 'RefusedReason', 'CollectedClient', 'CollectedShipper', 'ReturnedClient', 'ReturnedShipper'];
+        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order', 'OrderStatus', 'RefusedReason', 'CollectedClient', 'CollectedShipper', 'ReturnedClient', 'ReturnedShipper', 'Governorate', 'City'];
 
         foreach ($models as $model) {
             foreach ($crud as $action) {
