@@ -6,8 +6,10 @@
 /* ========== Table Borders ========== */
 
 /* Body Rows - Vertical Borders */
-.fi-ta-row {
-    @apply divide-x divide-gray-200 dark:divide-gray-700;
+/* Body Rows - Vertical Borders */
+.fi-ta-table td,
+.fi-ta-table th {
+    @apply border-x border-gray-200 dark:border-gray-700;
 }
 
 /* Body Rows - Horizontal Borders */
@@ -20,10 +22,19 @@
     @apply border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden;
 }
 
+/* Sticky Header & Scrollable Container for ALL Tables */
+.fi-ta-ctn {
+    @apply relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-auto;
+    max-height: calc(100vh - 200px);
+}
+
 /* ========== RTL Support ========== */
-[dir="rtl"] .fi-ta-table,
-[dir="rtl"] .fi-ta-row {
+[dir="rtl"] .fi-ta-table {
     direction: rtl;
+}
+
+[dir="rtl"] .fi-ta-row {
+    @apply divide-x-reverse;
 }
 
 /* ========== Striped Rows Enhancement ========== */
