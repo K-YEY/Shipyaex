@@ -17,7 +17,7 @@ class ScannerMode extends Page
 {
     protected static string $resource = OrderResource::class;
 
-    protected static string $view = 'filament.resources.orders.pages.scanner-mode';
+    protected string $view = 'filament.resources.orders.pages.scanner-mode';
 
     protected static ?string $title = 'ماسح الباركود (Barcode)';
 
