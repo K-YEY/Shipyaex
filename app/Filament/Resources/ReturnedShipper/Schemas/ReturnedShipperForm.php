@@ -46,7 +46,6 @@ class ReturnedShipperForm
                                         return [$user->id => $user->name];
                                     }
                                     return User::role('shipper')
-                                        ->where('is_blocked', '!=', true)
                                         ->pluck('name', 'id');
                                 })
                                 ->searchable()

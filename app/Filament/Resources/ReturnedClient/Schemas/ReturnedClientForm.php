@@ -46,7 +46,6 @@ class ReturnedClientForm
                                         return [$user->id => $user->name];
                                     }
                                     return User::role('client')
-                                        ->where('is_blocked', '!=', true)
                                         ->pluck('name', 'id');
                                 })
                                 ->searchable()
