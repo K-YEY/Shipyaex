@@ -1347,7 +1347,29 @@ class OrdersTable
             ->persistColumnSearchesInSession()
             ->filtersFormColumns(3)
             ->poll('20s')
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->extraAttributes([
+                'id' => 'orders-table-wrapper',
+            ])
+            ->description(new \Illuminate\Support\HtmlString('
+                <style>
+                    #orders-table-wrapper .fi-ta-ctn {
+                        max-height: calc(100vh - 190px);
+                        overflow: auto !important;
+                        position: relative;
+                        border: 1px solid rgb(var(--gray-200));
+                        border-radius: 0.5rem;
+                    }
+                    .dark #orders-table-wrapper .fi-ta-ctn {
+                        border-color: rgb(var(--gray-700));
+                    }
+                    /* Fix for Toggle Columns Dropdown to prevent screen overflow */
+                    .fi-dropdown-panel {
+                        max-height: 45vh !important;
+                        overflow-y: auto !important;
+                    }
+                </style>
+            '));
     }
 
     private static function getHeaderActions(): array
