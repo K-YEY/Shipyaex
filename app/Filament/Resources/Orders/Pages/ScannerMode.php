@@ -11,17 +11,20 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\View\View;
-use Livewire\Attributes\Url;
 
 class ScannerMode extends Page
 {
     protected static string $resource = OrderResource::class;
 
-    protected string $view = 'filament.resources.orders.pages.scanner-mode';
-
     protected static ?string $title = 'ماسح الباركود (Barcode)';
 
+    protected static ?string $navigationLabel = 'ماسح الباركود';
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-qr-code';
+
+    protected static ?int $navigationSort = 2;
+
+    protected string $view = 'filament.resources.orders.pages.scanner-mode';
 
     public array $scannedOrders = [];
     public bool $autoProcess = true;

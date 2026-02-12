@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Navigation\NavigationItem;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
@@ -58,8 +59,21 @@ class OrderResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListOrders::route('/'),
+            'index' => Pages\ListOrders::route('/'),
             'scanner' => Pages\ScannerMode::route('/scanner'),
+        ];
+    }
+
+    public static function getNavigationItems(): array
+    {
+        return [
+            ...parent::getNavigationItems(),
+            NavigationItem::make(__('app.scanner'))
+                ->label('ماسح الباركود')
+                ->icon('heroicon-o-qr-code')
+                ->activeRule('orders/scanner')
+                ->url(static::getUrl('scanner'))
+                ->sort(2),
         ];
     }
 
