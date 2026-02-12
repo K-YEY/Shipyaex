@@ -10,9 +10,9 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\Action as TableAction;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Actions\Action as TableAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Illuminate\Contracts\View\View;
 
@@ -78,14 +78,14 @@ class ListScanners extends ListRecords
                 TextColumn::make('shipper.name')
                     ->label('المندوب'),
             ])
-            ->actions([
+            ->recordActions([
                 TableAction::make('remove')
                     ->label('إزالة')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
                     ->action(fn ($record) => $this->removeOrder($record->id)),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('changeStatus')
                         ->label('تغيير الحالة')
