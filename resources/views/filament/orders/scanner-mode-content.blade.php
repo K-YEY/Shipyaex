@@ -1,5 +1,5 @@
 {{-- Scanner Mode Content --}}
-<div class="space-y-6">
+<div class="space-y-6" wire:key="scanner-mode-container">
     {{-- Scanner Section --}}
     <x-filament::section>
         <x-slot name="heading">
@@ -55,7 +55,12 @@
                                 x-model="scannedCode"
                                 x-on:input="handleInput()"
                                 x-on:keydown.enter.prevent="submitManual()"
-                                x-on:blur="setTimeout(() => focusInput(), 100)"
+                                x-on:blur="
+                                    // Only refocus if focus didn't move to another interactive element in the container
+                                    if (!$event.relatedTarget || !$el.closest('[wire:key=scanner-mode-container]').contains($event.relatedTarget)) {
+                                        setTimeout(() => focusInput(), 100)
+                                    }
+                                "
                                 placeholder="📷 امسح Barcode (تلقائي)..."
                                 autocomplete="off"
                                 autofocus
@@ -106,6 +111,7 @@
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">الإجراء التلقائي:</label>
                     <select 
                         wire:model.live="selectedAction"
+                        wire:key="scanner-selected-action"
                         class="fi-input block w-auto rounded-lg border-gray-300 bg-white text-sm shadow-sm transition duration-75 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     >
                         @foreach($this->getActionOptions() as $value => $label)
@@ -119,6 +125,7 @@
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">اختر المندوب:</label>
                         <select 
                             wire:model.live="targetShipperId"
+                            wire:key="scanner-target-shipper-id"
                             class="fi-input block w-auto rounded-lg border-gray-300 bg-white text-sm shadow-sm transition duration-75 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         >
                             <option value="">-- اختر مندوب --</option>

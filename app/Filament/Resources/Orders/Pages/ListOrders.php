@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Url;
 
 class ListOrders extends ListRecords
 {
@@ -22,6 +23,7 @@ class ListOrders extends ListRecords
     }
 
     // Scanner Mode Properties
+    #[Url]
     public bool $scannerMode = false;
     public array $scannedOrders = [];
     public bool $autoProcess = true;
