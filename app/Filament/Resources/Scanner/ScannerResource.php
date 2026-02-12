@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Scanner;
 
 use App\Filament\Resources\Scanner\Pages\ListScanners;
 use App\Models\Order;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 
@@ -11,7 +12,7 @@ class ScannerResource extends Resource
 {
     protected static ?string $model = Order::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-qr-code';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-qr-code';
 
     protected static ?string $navigationLabel = 'ماسح الباركود';
 
