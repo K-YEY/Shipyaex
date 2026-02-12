@@ -11,7 +11,6 @@ use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -34,11 +33,6 @@ class OrderForm
 
         return $schema
             ->components([
-                Placeholder::make('general_info_header')
-                    ->label('')
-                    ->content(__('app.general_info'))
-                    ->extraAttributes(['class' => 'text-xl font-bold text-primary-600 border-b pb-2 mb-4 mt-4']),
-
                 TextInput::make('code')
                     ->label(__('orders.code'))
                     ->required()
@@ -133,12 +127,6 @@ class OrderForm
                     ->maxLength(500)
                     ->default(null),
 
-                Placeholder::make('customer_info_header')
-                    ->label('')
-                    ->content(__('app.customer_info'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCustomerDetailsSection:Order'))
-                    ->extraAttributes(['class' => 'text-xl font-bold text-primary-600 border-b pb-2 mb-4 mt-8']),
-
                 TextInput::make('name')
                     ->label(__('orders.recipient_name'))
                     ->required()
@@ -224,12 +212,6 @@ class OrderForm
                     ->required()
                     ->disabled(fn() => !auth()->user()->isAdmin() && !auth()->user()->can('EditCustomerDetailsField:Order'))
                     ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCustomerDetailsSection:Order')),
-
-                Placeholder::make('financial_summary_header')
-                    ->label('')
-                    ->content(__('app.financial_summary'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewFinancialSummarySection:Order'))
-                    ->extraAttributes(['class' => 'text-xl font-bold text-primary-600 border-b pb-2 mb-4 mt-8']),
 
                 TextInput::make('total_amount')
                     ->label(__('orders.total_amount'))
