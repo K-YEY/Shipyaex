@@ -6,6 +6,7 @@ use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Setting;
+use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
@@ -19,7 +20,7 @@ class ScannerMode extends Page
 
     protected static ?string $title = 'ماسح الباركود (Barcode)';
 
-    protected static ?string $navigationIcon = 'heroicon-o-qr-code';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-qr-code';
 
     public array $scannedOrders = [];
     public bool $autoProcess = true;
