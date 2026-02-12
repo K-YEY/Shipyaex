@@ -26,35 +26,18 @@ class ListOrders extends ListRecords
     public array $scannedOrders = [];
     public bool $autoProcess = true;
     public string $selectedAction = 'view';
+    public ?int $targetShipperId = null;
 
     protected function getHeaderActions(): array
     {
         $user = auth()->user();
-
-        // ✅ تحقق فقط لو الUser عميل
-        if ($user->can('Access:Client')) {
-            $start = Setting::get('working_hours_orders_start', '05:00');
-            $end   = Setting::get('working_hours_orders_end', '17:00');
-
-            $now = Carbon::now()->format('H:i');
-
-            // ⏰ لو خارج الوقت المسموح به
-            if (!($now >= $start && $now <= $end)) {
-                Notification::make()
-                    ->title('إضافة أوردر!')
-                    ->body("مش مسموح بإضافة أوردرات دلوقتي يا ريس (المواعيد من {$start} لحد {$end} بس).")
-                    ->danger()
-                    ->persistent()
-                    ->send();
-            }
-        }
 
         return [
             $this->getScannerToggleAction(),
             CreateAction::make()
                 ->label('إضافة أوردر جديد')
                 ->icon('heroicon-o-plus')
-                ->visible(fn() => !$this->scannerMode && $user->can('Create:Order')),
+                ->visible(fn() => !$this->scannerMode && $user->can('create', Order::class)),
         ];
     }
 
@@ -308,6 +291,42 @@ class ListOrders extends ListRecords
                     ->success()
                     ->send();
                 break;
+
+            case 'assign_shipper':
+                if (!$user->can('AssignShipper:Order')) {
+                    Notification::make()
+                        ->title('❌ Action Not Allowed')
+                        ->danger()
+                        ->send();
+                    return;
+                }
+
+                if (!$this->targetShipperId) {
+                    Notification::make()
+                        ->title('⚠️ عفواً')
+                        ->body('لازم تختار مندوب الأول يا ريس')
+                        ->warning()
+                        ->send();
+                    return;
+                }
+
+                $shipper = \App\Models\User::find($this->targetShipperId);
+                
+                $order->update([
+                    'shipper_id' => $this->targetShipperId,
+                    'status' => 'out for delivery', // Change status to out for delivery when assigned
+                ]);
+                
+                $this->updateOrderInList($orderId, [
+                    'shipper' => $shipper?->name ?? 'غير معروف',
+                    'status' => 'out for delivery'
+                ]);
+                
+                Notification::make()
+                    ->title("🚚 تم إسناد أوردر #{$order->code} للمندوب {$shipper?->name}")
+                    ->success()
+                    ->send();
+                break;
         }
     }
 
@@ -374,6 +393,18 @@ class ListOrders extends ListRecords
             $options['return_shipper'] = '↩️ مرتجع من الكابتن';
         }
 
+        if ($user->can('AssignShipper:Order')) {
+            $options['assign_shipper'] = '🚚 إسناد / تحويل لمندوب';
+        }
+
         return $options;
+    }
+
+    public function getShippers(): array
+    {
+        return \App\Models\User::role('shipper')
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
     }
 }

@@ -128,6 +128,7 @@ class SyncShieldPermissions extends Command
             'ChangeStatusField:Order', 'ViewOrderNotesField:Order', 'EditOrderNotesField:Order', 'ViewCustomerDetailsSection:Order', 
             'EditCustomerDetails:Order', 'EditCustomerDetailsField:Order', 'ViewFinancialSummarySection:Order', 'EditFinancialSummaryField:Order', 
             'ViewShipperFeesField:Order', 'EditShipperFeesField:Order', 'ViewCopField:Order', 'EditCopField:Order',
+            'BypassWorkingHours:Order', 'AssignShipper:Order', 'BarcodeScannerAction:Order',
         ];
 
         // Combine with standard CRUD for problematic resources

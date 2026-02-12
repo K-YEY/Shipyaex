@@ -24,7 +24,22 @@ class OrderPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:Order');
+        // Check if user has basic create permission
+        if (!$authUser->can('Create:Order')) {
+            return false;
+        }
+
+        // Check if user has bypass permission
+        if ($authUser->can('BypassWorkingHours:Order')) {
+            return true;
+        }
+
+        // Enforce working hours
+        $start = \App\Models\Setting::get('working_hours_orders_start', '08:00');
+        $end   = \App\Models\Setting::get('working_hours_orders_end', '22:00');
+        $now   = \Carbon\Carbon::now()->format('H:i');
+
+        return $now >= $start && $now <= $end;
     }
 
     public function update(AuthUser $authUser, Order $order): bool

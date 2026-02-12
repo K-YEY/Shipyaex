@@ -15,8 +15,31 @@
                 x-data="{
                     scannedCode: '',
                     lastScan: null,
+                    autoSubmit: true,
+                    timeout: null,
                     focusInput() {
                         this.$refs.scanInput.focus();
+                    },
+                    handleInput() {
+                        if (!this.autoSubmit) return;
+                        
+                        clearTimeout(this.timeout);
+                        if (this.scannedCode.trim().length >= 3) {
+                            this.timeout = setTimeout(() => {
+                                if (this.scannedCode.trim()) {
+                                    $wire.processScannedCode(this.scannedCode.trim());
+                                    this.lastScan = this.scannedCode.trim();
+                                    this.scannedCode = '';
+                                }
+                            }, 500); // 500ms delay after typing finishes
+                        }
+                    },
+                    submitManual() {
+                        if (this.scannedCode.trim()) {
+                            $wire.processScannedCode(this.scannedCode.trim());
+                            this.lastScan = this.scannedCode.trim();
+                            this.scannedCode = '';
+                        }
                     }
                 }"
                 x-init="focusInput()"
@@ -30,15 +53,10 @@
                                 x-ref="scanInput"
                                 type="text"
                                 x-model="scannedCode"
-                                x-on:keydown.enter.prevent="
-                                    if (scannedCode.trim()) {
-                                        $wire.processScannedCode(scannedCode.trim());
-                                        lastScan = scannedCode.trim();
-                                        scannedCode = '';
-                                    }
-                                "
+                                x-on:input="handleInput()"
+                                x-on:keydown.enter.prevent="submitManual()"
                                 x-on:blur="setTimeout(() => focusInput(), 100)"
-                                placeholder="📷 امسح Barcode هنا أو اكتب الكود..."
+                                placeholder="📷 امسح Barcode (تلقائي)..."
                                 autocomplete="off"
                                 autofocus
                             />
@@ -66,9 +84,19 @@
                     @endif
                 </div>
                 
-                {{-- Last Scanned Code --}}
-                <div x-show="lastScan" x-cloak class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    آخر كود تم مسحه: <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400" x-text="lastScan"></span>
+                {{-- Auto-submit toggle --}}
+                <div class="mt-2 flex items-center justify-between">
+                    <div x-show="lastScan" x-cloak class="text-sm text-gray-500 dark:text-gray-400">
+                        آخر كود تم مسحه: <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400" x-text="lastScan"></span>
+                    </div>
+                    <label class="inline-flex items-center gap-2 cursor-pointer bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <input 
+                            type="checkbox" 
+                            x-model="autoSubmit"
+                            class="fi-checkbox-input rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                        />
+                        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">إدخال تلقائي بعد المسح</span>
+                    </label>
                 </div>
             </div>
 
@@ -85,6 +113,21 @@
                         @endforeach
                     </select>
                 </div>
+
+                @if($selectedAction === 'assign_shipper')
+                    <div class="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
+                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">اختر المندوب:</label>
+                        <select 
+                            wire:model.live="targetShipperId"
+                            class="fi-input block w-auto rounded-lg border-gray-300 bg-white text-sm shadow-sm transition duration-75 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        >
+                            <option value="">-- اختر مندوب --</option>
+                            @foreach($this->getShippers() as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 
                 <label class="inline-flex items-center gap-2 cursor-pointer">
                     <input 
@@ -200,6 +243,15 @@
                                                 size="sm"
                                                 tooltip="تسليم"
                                                 :disabled="$order['status'] === 'deliverd'"
+                                            />
+                                        @endif
+                                        @if(auth()->user()->can('AssignShipper:Order'))
+                                            <x-filament::icon-button
+                                                wire:click="quickAction({{ $order['id'] }}, 'assign_shipper')"
+                                                icon="heroicon-o-truck"
+                                                color="primary"
+                                                size="sm"
+                                                tooltip="إسناد / تحويل لمندوب"
                                             />
                                         @endif
                                         @if(auth()->user()->can('ManageCollections:Order'))
