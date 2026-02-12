@@ -9,6 +9,7 @@ use App\Models\Setting;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Url;
 
@@ -20,14 +21,14 @@ class ScannerMode extends Page
 
     protected static ?string $title = 'ماسح الباركود (Barcode)';
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-qr-code';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-qr-code';
 
     public array $scannedOrders = [];
     public bool $autoProcess = true;
     public string $selectedAction = 'view';
     public ?int $targetShipperId = null;
 
-    public function getHeaderActions(): array
+    protected function getHeaderActions(): array
     {
         return [];
     }
