@@ -39,20 +39,22 @@
             </div>
 
             <div class="flex gap-4 items-center flex-wrap md:flex-nowrap">
-                <div class="flex flex-col gap-1 min-w-[180px]">
-                    <label class="text-sm font-medium">🚀 الإجراء التلقائي</label>
-                    <select wire:model.live="selectedAction" class="fi-input block w-full rounded-lg border-none bg-white shadow-sm ring-1 ring-gray-950/10 focus:ring-2 focus:ring-primary-600 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-primary-500">
-                        <option value="view">👁️ عرض فقط</option>
+                <div class="flex flex-col gap-1 min-w-[200px]">
+                    <label class="text-sm font-bold text-gray-700 dark:text-gray-300">🚀 الإجراء التلقائي</label>
+                    <select wire:model.live="selectedAction" class="block w-full rounded-lg border-none bg-slate-900 text-white font-semibold shadow-lg ring-1 ring-slate-700 focus:ring-2 focus:ring-primary-500 cursor-pointer transition-all duration-200 hover:bg-slate-800">
+                        <option value="view">👁️ عرض فقط (بدون إجراء)</option>
+                        <option value="return_shipper">↩️ مرتجع مندوب</option>
+                        <option value="return_client">⏪ مرتجع عميل</option>
                         <option value="delivered">✅ تسليم</option>
                         <option value="assign_shipper">🚚 إسناد لمندوب</option>
                     </select>
                 </div>
 
                 @if($selectedAction === 'assign_shipper')
-                <div class="flex flex-col gap-1 min-w-[180px] animate-in fade-in slide-in-from-right-2 duration-300">
-                    <label class="text-sm font-medium">👤 المندوب المستهدف</label>
-                    <select wire:model.live="targetShipperId" class="fi-input block w-full rounded-lg border-none bg-white shadow-sm ring-1 ring-gray-950/10 focus:ring-2 focus:ring-primary-600 dark:bg-white/5 dark:ring-white/10 dark:focus:ring-primary-500">
-                        <option value="">-- اختر مندوب --</option>
+                <div class="flex flex-col gap-1 min-w-[200px] animate-in fade-in slide-in-from-right-2 duration-300">
+                    <label class="text-sm font-bold text-gray-700 dark:text-gray-300">👤 كابتن التوصيل</label>
+                    <select wire:model.live="targetShipperId" class="block w-full rounded-lg border-none bg-indigo-900 text-white font-semibold shadow-lg ring-1 ring-indigo-700 focus:ring-2 focus:ring-primary-500 cursor-pointer transition-all duration-200 hover:bg-indigo-800">
+                        <option value="">-- اختر المندوب --</option>
                         @foreach($this->getShippers() as $id => $name)
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach

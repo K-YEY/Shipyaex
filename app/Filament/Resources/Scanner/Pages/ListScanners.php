@@ -6,16 +6,14 @@ use App\Filament\Resources\Scanner\ScannerResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Setting;
-use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\Action as TableAction;
-use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
+use Filament\Tables\Actions\Action as TableAction;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Illuminate\Contracts\View\View;
 
 class ListScanners extends ListRecords
@@ -80,14 +78,14 @@ class ListScanners extends ListRecords
                 TextColumn::make('shipper.name')
                     ->label('المندوب'),
             ])
-            ->recordActions([
+            ->actions([
                 TableAction::make('remove')
                     ->label('إزالة')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
                     ->action(fn ($record) => $this->removeOrder($record->id)),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     BulkAction::make('changeStatus')
                         ->label('تغيير الحالة')
@@ -127,7 +125,7 @@ class ListScanners extends ListRecords
                         }),
 
                     BulkAction::make('clearFromList')
-                        ->label('إزالة من هذه القائمة')
+                        ->label('إزالة من القائمة')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
                         ->action(function ($records) {
@@ -194,8 +192,28 @@ class ListScanners extends ListRecords
 
         switch ($action) {
             case 'delivered':
-                if ($user->can('ChangeStatusAction:Order')) {
+                if ($user->can('ChangeStatus:Order')) {
                     $order->update(['status' => 'deliverd', 'deliverd_at' => now()]);
+                }
+                break;
+            case 'return_shipper':
+                if ($user->can('ManageShipperReturnAtction:Order') || $user->isAdmin()) {
+                    $order->update([
+                        'return_shipper' => true,
+                        'return_shipper_date' => now(),
+                        'status' => 'undelivered'
+                    ]);
+                    Notification::make()->title('✅ تم تسجيل مرتجع المندوب')->success()->send();
+                }
+                break;
+            case 'return_client':
+                if ($user->can('ManageClientReturnAction:Order') || $user->isAdmin()) {
+                    $order->update([
+                        'return_client' => true,
+                        'return_client_date' => now(),
+                        'status' => 'undelivered'
+                    ]);
+                    Notification::make()->title('✅ تم تسجيل مرتجع العميل')->success()->send();
                 }
                 break;
             case 'assign_shipper':
