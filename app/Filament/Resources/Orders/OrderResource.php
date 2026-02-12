@@ -59,6 +59,7 @@ class OrderResource extends Resource
     {
         return [
             'index' => ListOrders::route('/'),
+            'scanner' => Pages\ScannerMode::route('/scanner'),
         ];
     }
 
