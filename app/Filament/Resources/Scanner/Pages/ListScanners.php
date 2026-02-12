@@ -11,8 +11,9 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Actions\Action as TableAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Contracts\View\View;
@@ -23,19 +24,16 @@ class ListScanners extends ListRecords
 
     public array $scannedOrders = [];
     public bool $autoProcess = true;
+    public bool $autoSubmit = true;
     public string $selectedAction = 'view';
     public ?int $targetShipperId = null;
-
-    protected function getHeaderWidgets(): array
-    {
-        return [];
-    }
 
     public function getHeader(): ?View
     {
         return view('filament.resources.scanner.header', [
             'scannedOrders' => $this->scannedOrders,
             'autoProcess' => $this->autoProcess,
+            'autoSubmit' => $this->autoSubmit,
             'selectedAction' => $this->selectedAction,
             'targetShipperId' => $this->targetShipperId,
         ]);
@@ -43,7 +41,6 @@ class ListScanners extends ListRecords
 
     protected function getTableQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        // We only want to show orders that were scanned in this session
         $ids = collect($this->scannedOrders)->pluck('id')->toArray();
         
         if (empty($ids)) {
@@ -60,9 +57,11 @@ class ListScanners extends ListRecords
                 TextColumn::make('code')
                     ->label('الكود')
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->searchable(),
                 TextColumn::make('name')
-                    ->label('الاسم'),
+                    ->label('الاسم')
+                    ->searchable(),
                 TextColumn::make('phone')
                     ->label('الهاتف'),
                 TextColumn::make('status')
@@ -81,12 +80,64 @@ class ListScanners extends ListRecords
                 TextColumn::make('shipper.name')
                     ->label('المندوب'),
             ])
-            ->actions([
+            ->recordActions([
                 TableAction::make('remove')
                     ->label('إزالة')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
                     ->action(fn ($record) => $this->removeOrder($record->id)),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('changeStatus')
+                        ->label('تغيير الحالة')
+                        ->icon('heroicon-o-arrow-path')
+                        ->form([
+                            Select::make('status')
+                                ->label('الحالة الجديدة')
+                                ->options([
+                                    'out for delivery' => '🚚 جاري التوصيل',
+                                    'deliverd' => '✅ تم التسليم',
+                                    'undelivered' => '❌ مرتجع',
+                                    'hold' => '⏸️ معلق',
+                                ])
+                                ->required(),
+                        ])
+                        ->action(function ($records, array $data) {
+                            $records->each->update(['status' => $data['status']]);
+                            Notification::make()->title('تم تحديث الحالات بنجاح')->success()->send();
+                        }),
+
+                    BulkAction::make('assignShipper')
+                        ->label('إسناد لمندوب')
+                        ->icon('heroicon-o-truck')
+                        ->form([
+                            Select::make('shipper_id')
+                                ->label('المندوب')
+                                ->options(User::role('shipper')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required(),
+                        ])
+                        ->action(function ($records, array $data) {
+                            $records->each->update([
+                                'shipper_id' => $data['shipper_id'],
+                                'status' => 'out for delivery'
+                            ]);
+                            Notification::make()->title('تم إسناد الطلبات للمندوب')->success()->send();
+                        }),
+
+                    BulkAction::make('clearFromList')
+                        ->label('إزالة من هذه القائمة')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->action(function ($records) {
+                            $idsToRemove = $records->pluck('id')->toArray();
+                            $this->scannedOrders = array_values(
+                                array_filter($this->scannedOrders, fn($o) => !in_array($o['id'], $idsToRemove))
+                            );
+                            Notification::make()->title('تمت الإزالة من القائمة')->success()->send();
+                        }),
+                ]),
             ])
             ->emptyStateHeading('لا توجد طلبات ممسوحة')
             ->emptyStateDescription('ابدأ بمسح الباركود لإضافة الطلبات للقائمة')
@@ -155,7 +206,6 @@ class ListScanners extends ListRecords
                     ]);
                 }
                 break;
-            // ... other actions can be added here
         }
     }
 
