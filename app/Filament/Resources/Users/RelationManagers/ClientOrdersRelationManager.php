@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Users\RelationManagers;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
-use Filament\Tables;
+use Filament\Tables\Actions\ViewAction;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientOrdersRelationManager extends RelationManager
@@ -26,7 +26,7 @@ class ClientOrdersRelationManager extends RelationManager
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                ViewAction::make(),
             ])
             ->bulkActions([
                 //
