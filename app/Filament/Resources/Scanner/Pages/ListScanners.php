@@ -197,7 +197,7 @@ class ListScanners extends ListRecords
                 }
                 break;
             case 'return_shipper':
-                if ($user->can('ManageShipperReturnAtction:Order') || $user->isAdmin()) {
+                if ($user->can('ManageShipperReturnAction:Order') || $user->isAdmin()) {
                     $order->update([
                         'return_shipper' => true,
                         'return_shipper_date' => now(),

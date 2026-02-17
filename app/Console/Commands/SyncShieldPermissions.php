@@ -129,11 +129,12 @@ class SyncShieldPermissions extends Command
             'EditCustomerDetails:Order', 'EditCustomerDetailsField:Order', 'ViewFinancialSummarySection:Order', 'EditFinancialSummaryField:Order', 
             'ViewShipperFeesField:Order', 'EditShipperFeesField:Order', 'ViewCopField:Order', 'EditCopField:Order',
             'BypassWorkingHours:Order', 'AssignShipper:Order', 'BarcodeScannerAction:Order',
+            'ManageShipperReturnAction:Order', 'ManageClientReturnAction:Order',
         ];
 
         // Combine with standard CRUD for problematic resources
         $crud = ['ViewAny', 'View', 'Create', 'Update', 'Delete', 'DeleteAny', 'Restore', 'RestoreAny', 'ForceDelete', 'ForceDeleteAny', 'Replicate', 'Reorder'];
-        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order', 'OrderStatus', 'RefusedReason', 'CollectedClient', 'CollectedShipper', 'ReturnedClient', 'ReturnedShipper', 'Governorate', 'City'];
+        $models = ['User', 'Setting', 'ShippingContent', 'Role', 'Clients', 'Shippers', 'Order', 'OrderStatus', 'RefusedReason', 'CollectedClient', 'CollectedShipper', 'ReturnedClient', 'ReturnedShipper', 'Governorate', 'City', 'Scanner'];
 
         foreach ($models as $model) {
             foreach ($crud as $action) {
