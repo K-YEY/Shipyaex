@@ -5,6 +5,9 @@ namespace App\Filament\Resources\Users;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\RelationManagers\ClientOrdersRelationManager;
+use App\Filament\Resources\Users\RelationManagers\ShipperOrdersRelationManager;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
@@ -52,7 +55,8 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ClientOrdersRelationManager::class,
+            ShipperOrdersRelationManager::class,
         ];
     }
 
@@ -61,6 +65,7 @@ class UserResource extends Resource
         return [
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
+            'view' => ViewUser::route('/{record}'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }

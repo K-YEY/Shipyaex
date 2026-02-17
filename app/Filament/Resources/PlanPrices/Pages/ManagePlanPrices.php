@@ -38,11 +38,11 @@ class ManagePlanPrices extends Page implements HasForms
             ->schema([
                 Section::make('اختيار الباقة')
                     ->schema([
-                        Select::make('plan_id')
-                            ->label('الباقة')
-                            ->options(Plan::pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
+                            Select::make('plan_id')
+                                ->label('الباقة')
+                                ->relationship('plan', 'name')
+                                ->searchable()
+                                ->preload()
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 $this->loadPrices($state);

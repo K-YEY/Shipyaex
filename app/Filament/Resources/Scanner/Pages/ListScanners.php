@@ -112,7 +112,11 @@ class ListScanners extends ListRecords
                         ->form([
                             Select::make('shipper_id')
                                 ->label('المندوب')
-                                ->options(User::role('shipper')->pluck('name', 'id'))
+                                ->relationship(
+                                    name: 'shipper',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: fn ($query) => $query->role('shipper')
+                                )
                                 ->searchable()
                                 ->required(),
                         ])

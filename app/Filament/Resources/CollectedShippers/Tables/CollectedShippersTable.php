@@ -13,6 +13,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CollectedShippersExport;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -230,7 +232,25 @@ class CollectedShippersTable
                     DeleteBulkAction::make()
                         ->label('حذف المختار')
                         ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:CollectedShipper')),
+
+                    BulkAction::make('exportExcel')
+                        ->label('استخراج Excel')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('success')
+                        ->action(fn (Collection $records) => Excel::download(
+                            new CollectedShippersExport(null, $records->pluck('id')->toArray()),
+                            'collected-shippers-' . now()->format('Y-m-d') . '.xlsx'
+                        )),
                 ]),
+
+                Action::make('exportAllExcel')
+                    ->label('استخراج الكل Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(fn ($livewire) => Excel::download(
+                        new CollectedShippersExport($livewire->getFilteredTableQuery()),
+                        'all-collected-shippers-' . now()->format('Y-m-d') . '.xlsx'
+                    )),
             ])
             ->striped()
             ->poll('30s');

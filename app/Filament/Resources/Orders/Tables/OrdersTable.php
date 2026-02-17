@@ -1758,18 +1758,20 @@ class OrdersTable
 
                     Select::make('client_id')
                         ->label('Client (Optional)')
-                        ->options(
-                            User::whereHas('roles', fn($q) => $q->where('name', 'client'))
-                                ->pluck('name', 'id')
+                        ->relationship(
+                            name: 'client',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn ($query) => $query->role('client')
                         )
                         ->searchable()
                         ->placeholder('Select Client or leave empty'),
 
                     Select::make('shipper_id')
                         ->label('Shipper (Optional)')
-                        ->options(
-                            User::whereHas('roles', fn($q) => $q->where('name', 'shipper'))
-                                ->pluck('name', 'id')
+                        ->relationship(
+                            name: 'shipper',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn ($query) => $query->role('shipper')
                         )
                         ->searchable()
                         ->placeholder('Select Shipper or leave empty'),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Support\Enums\IconPosition;
@@ -19,6 +20,7 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordUrl(fn ($record) => \App\Filament\Resources\Users\Pages\ViewUser::getUrl(['record' => $record]))
             ->columns([
                 TextColumn::make('id')
                     ->label(__('app.users') . ' ID')
@@ -83,6 +85,7 @@ class UsersTable
 
             ])
             ->recordActions([
+                ViewAction::make()->label('عرض'),
                 EditAction::make()
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('Update:User')),
             ])

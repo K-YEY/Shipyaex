@@ -11,6 +11,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CollectedClientsExport;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -228,7 +230,25 @@ class CollectedClientsTable
                     DeleteBulkAction::make()
                         ->label('حذف المختار')
                         ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:CollectedClient')),
+
+                    BulkAction::make('exportExcel')
+                        ->label('استخراج Excel')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('success')
+                        ->action(fn (Collection $records) => Excel::download(
+                            new CollectedClientsExport(null, $records->pluck('id')->toArray()),
+                            'collected-clients-' . now()->format('Y-m-d') . '.xlsx'
+                        )),
                 ]),
+
+                Action::make('exportAllExcel')
+                    ->label('استخراج الكل Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(fn ($livewire) => Excel::download(
+                        new CollectedClientsExport($livewire->getFilteredTableQuery()),
+                        'all-collected-clients-' . now()->format('Y-m-d') . '.xlsx'
+                    )),
             ])
             ->striped()
             ->poll('30s');

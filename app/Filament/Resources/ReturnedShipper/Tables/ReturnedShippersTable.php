@@ -11,6 +11,11 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use App\Services\ReturnedShipperService;
 use Filament\Notifications\Notification;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReturnedShippersExport;
+use Illuminate\Database\Eloquent\Collection;
 
 class ReturnedShippersTable
 {
@@ -91,6 +96,27 @@ class ReturnedShippersTable
                     ->visible(fn ($record) => auth()->user()->isAdmin() || auth()->user()->can('PrintInvoice:ReturnedShipper') && $record->status === 'completed')
                     ->url(fn ($record) => route('returns.shipper.invoice', $record->id))
                     ->openUrlInNewTab(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('exportExcel')
+                        ->label('استخراج Excel')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('success')
+                        ->action(fn (Collection $records) => Excel::download(
+                            new ReturnedShippersExport(null, $records->pluck('id')->toArray()),
+                            'returned-shippers-' . now()->format('Y-m-d') . '.xlsx'
+                        )),
+                ]),
+
+                Action::make('exportAllExcel')
+                    ->label('استخراج الكل Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(fn ($livewire) => Excel::download(
+                        new ReturnedShippersExport($livewire->getFilteredTableQuery()),
+                        'all-returned-shippers-' . now()->format('Y-m-d') . '.xlsx'
+                    )),
             ])
             ->defaultSort('created_at', 'desc');
     }

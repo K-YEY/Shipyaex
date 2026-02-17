@@ -154,11 +154,15 @@ class OrderForm
 
                 Select::make('shipping_content')
                     ->label(__('app.shipping_content'))
-                    ->options(function (Get $get) {
-                        $clientId = $get('client_id');
-                        if (! $clientId) return [];
-                        return ShippingContent::whereHas('clients', fn($q) => $q->where('client_id', $clientId))->pluck('name', 'id');
-                    })
+                    ->relationship(
+                        name: 'shippingContent',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function ($query, Get $get) {
+                            $clientId = $get('client_id');
+                            if (! $clientId) return $query;
+                            return $query->whereHas('clients', fn($q) => $q->where('client_id', $clientId));
+                        }
+                    )
                     ->searchable()
                     ->reactive()
                     ->disabled(fn (Get $get) => ! $get('client_id') || !auth()->user()->can('EditCustomerDetails:Order'))
@@ -200,11 +204,15 @@ class OrderForm
 
                 Select::make('city_id')
                     ->label(__('orders.city'))
-                    ->options(function (Get $get) {
-                        $areaId = $get('governorate_id');
-                        if (! $areaId) return [];
-                        return City::where('governorate_id', $areaId)->pluck('name', 'id');
-                    })
+                    ->relationship(
+                        name: 'city',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function ($query, Get $get) {
+                            $areaId = $get('governorate_id');
+                            if (! $areaId) return $query;
+                            return $query->where('governorate_id', $areaId);
+                        }
+                    )
                     ->required()
                     ->reactive()
                     ->disabled(fn (Get $get) => ! $get('governorate_id') || !auth()->user()->can('EditCustomerDetailsField:Order'))
