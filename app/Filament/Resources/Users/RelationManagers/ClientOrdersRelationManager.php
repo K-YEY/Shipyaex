@@ -26,7 +26,7 @@ class ClientOrdersRelationManager extends RelationManager
                 //
             ])
             ->actions([
-                Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 //
