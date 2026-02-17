@@ -536,9 +536,10 @@ class OrdersTable
                             ->form([
                                 Select::make('shipper_id')
                                     ->label('اختار الكابتن')
-                                    ->options(
-                                        User::permission('Access:Shipper')
-                                            ->pluck('name', 'id')
+                                    ->relationship(
+                                        name: 'shipper',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn ($query) => $query->role('shipper')
                                     )
                                     ->searchable()
                                     ->preload()
@@ -761,9 +762,10 @@ class OrdersTable
                         ->form([
                             Select::make('shipper_id')
                                 ->label(__('orders.shipper_select_label'))
-                                ->options(
-                                    User::whereHas('roles', fn($q) => $q->where('name', 'shipper'))
-                                        ->pluck('name', 'id')
+                                ->relationship(
+                                    name: 'shipper',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: fn ($query) => $query->role('shipper')
                                 )
                                 ->searchable()
                                 ->preload()
