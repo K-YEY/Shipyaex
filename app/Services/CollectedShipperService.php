@@ -115,7 +115,7 @@ class CollectedShipperService
         foreach ($orders as $order) {
             // Delivered (كامل أو partial) - we collect the full amount
             if ($order->status === 'deliverd') {
-                $totalAmount += $order->cod ?? 0;
+                $totalAmount += $order->total_amount ?? 0;
             }
             // Undelivered - no amount to collect
             // لكن نحسب رسوم Shipper

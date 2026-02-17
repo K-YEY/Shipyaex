@@ -105,9 +105,9 @@ class ViewCollectedShipper extends ViewRecord
                             ->label('Status')
                             ->badge()
                             ->formatStateUsing(fn ($state) => match($state) {
-                                'pending' => 'قيد اNoنتظار',
-                                'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
+                                'pending' => 'قيد انتظار',
+                                'completed' => 'تم',
+                                'cancelled' => 'تم الالغاء',
                                 default => $state,
                             })
                             ->color(fn ($state) => match($state) {
@@ -124,13 +124,13 @@ class ViewCollectedShipper extends ViewRecord
                     ->columnSpanFull()
                     ->schema([
                         TextEntry::make('number_of_orders')
-                            ->label('عدد Orderات')
+                            ->label('عدد الطلبات')
                             ->badge()
                             ->color('info')
                             ->suffix(' طلب'),
 
                         TextEntry::make('total_amount')
-                            ->label('Total Amount')
+                            ->label('المبلغ الإجمالي')
                             ->money('EGP')
                             ->color('primary'),
 
@@ -146,7 +146,7 @@ class ViewCollectedShipper extends ViewRecord
                             ->color('success'),
                     ]),
 
-                Section::make('Orderات المرتبطة')
+                Section::make('الطلبات المرتبطة')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->collapsible()
                     ->columnSpanFull()
@@ -169,8 +169,8 @@ class ViewCollectedShipper extends ViewRecord
                                     ->label('Status')
                                     ->badge()
                                     ->formatStateUsing(fn ($state) => match($state) {
-                                        'deliverd' => 'Delivered',
-                                        'undelivered' => 'لم يDelivered',
+                                        'deliverd' => 'تم التسليم',
+                                        'undelivered' => 'لم يسلم',
                                         default => $state,
                                     })
                                     ->color(fn ($state) => match($state) {
@@ -185,13 +185,25 @@ class ViewCollectedShipper extends ViewRecord
                                     ->formatStateUsing(fn ($state) => $state ? 'Yes' : 'No')
                                     ->color(fn ($state) => $state ? 'warning' : 'gray'),
 
-                                TextEntry::make('cod')
-                                    ->label('COD')
+                                TextEntry::make('total_amount')
+                                    ->label('الإجمالي')
+                                    ->formatStateUsing(fn ($state, $record) => $record->status === 'deliverd' ? $state : 0)
                                     ->money('EGP'),
 
                                 TextEntry::make('shipper_fees')
-                                    ->label('رسوم Shipper')
+                                    ->label('عمولة المندوب')
                                     ->money('EGP'),
+
+                                TextEntry::make('net_total')
+                                    ->label('الصافي')
+                                    ->getStateUsing(function ($record) {
+                                        $total = $record->status === 'deliverd' ? ($record->total_amount ?? 0) : 0;
+                                        $commission = $record->shipper_fees ?? 0;
+                                        return $total - $commission;
+                                    })
+                                    ->money('EGP')
+                                    ->weight(FontWeight::Bold)
+                                    ->color(fn ($state) => $state >= 0 ? 'success' : 'danger'),
                             ])
                             ->columns(7),
                     ]),

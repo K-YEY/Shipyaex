@@ -96,9 +96,7 @@ class UserForm
                 Select::make('plan_id')
                     ->label(__('app.plan'))
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewPlanField:User'))
-                    ->options(
-                        Plan::pluck('name', 'id')
-                    )
+                    ->relationship('plan', 'name')
                     ->searchable()
                     ->preload()
                     ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditPlan:User')),

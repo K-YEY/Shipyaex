@@ -146,9 +146,9 @@ class CollectedClient extends Model
     public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
-            'pending' => 'قيد اNoنتظار',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
+         'pending' => 'قيد انتظار',
+            'completed' => 'تم',
+            'cancelled' => 'تم الالغاء',
             default => 'غير معروف',
         };
     }

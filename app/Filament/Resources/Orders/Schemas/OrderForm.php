@@ -62,13 +62,16 @@ class OrderForm
 
                 Select::make('client_id')
                     ->label(__('orders.client'))
-                    ->options(function () use ($user) {
-                        if (!auth()->user()->can('EditClientField:Order')) {
-                            return [$user->id => $user->name];
+                    ->relationship(
+                        name: 'client',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function ($query) use ($user) {
+                            if (!auth()->user()->can('EditClientField:Order')) {
+                                return $query->where('id', $user->id);
+                            }
+                            return $query->role('Client');
                         }
-                        return User::role('Client')
-                            ->pluck('name', 'id');
-                    })
+                    )
                     ->default(fn () => !auth()->user()->can('EditClientField:Order') ? $user->id : null)
                     ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:Order'))
                     ->dehydrated()

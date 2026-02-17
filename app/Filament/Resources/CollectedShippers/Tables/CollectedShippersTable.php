@@ -110,16 +110,9 @@ class CollectedShippersTable
                     ->label('الحالة')
                     ->options(\App\Enums\CollectingStatus::class),
 
-                SelectFilter::make('shipper_id')
+                SelectFilter::make('shipper')
                     ->label('المندوب')
-                    ->options(function () {
-                        // جلب Shippers اللي عندهم أوردرات محصلة فقط
-                        return User::role('shipper')
-                            ->whereHas('shipperOrders', function ($query) {
-                                $query->where('collected_shipper', true);
-                            })
-                            ->pluck('name', 'id');
-                    })
+                    ->relationship('shipper', 'name', fn($query) => $query->role('shipper'))
                     ->searchable()
                     ->preload()
                     ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:CollectedShipper')),

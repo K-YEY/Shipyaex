@@ -41,18 +41,20 @@ class CollectedShipperForm
                     ->columnSpanFull()
                     ->schema([
                         Grid::make(3)->schema([
-                            // اختيار Shipper
                             Select::make('shipper_id')
                                 ->label('المندوب')
                                 ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:CollectedShipper'))
                                 ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditShipperField:CollectedShipper'))
-                                ->options(function () use ($user, $isShipper) {
-                                    if ($isShipper && !auth()->user()->isAdmin()) {
-                                        return [$user->id => $user->name];
+                                ->relationship(
+                                    name: 'shipper',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: function ($query) use ($user, $isShipper) {
+                                        if ($isShipper && !auth()->user()->isAdmin()) {
+                                            return $query->where('id', $user->id);
+                                        }
+                                        return $query->role('shipper');
                                     }
-                                    return User::role('shipper')
-                                        ->pluck('name', 'id');
-                                })
+                                )
                                 ->searchable()
                                 ->preload()
                                 ->required()
@@ -143,9 +145,19 @@ class CollectedShipperForm
                                 }
 
                                 return $query->get()
-                                    ->mapWithKeys(fn ($order) => [
-                                        $order->id => "#{$order->code} | " . ($order->client?->name ?? 'بدون عميل') . " | {$order->name} | {$order->cod} ج.م | {$order->status}"
-                                    ]);
+                                    ->mapWithKeys(function ($order) {
+                                        $total = $order->status === 'deliverd' ? ($order->total_amount ?? 0) : 0;
+                                        $commission = $order->shipper_fees ?? 0;
+                                        $net = $total - $commission;
+                                        
+                                        $label = "#{$order->code} | " . ($order->client?->name ?? 'بدون عميل') . " | " .
+                                                "إجمالي: {$total} | " .
+                                                "عمولة: {$commission} | " .
+                                                "صافي: {$net} | " .
+                                                "الحالة: {$order->status}";
+                                                
+                                        return [$order->id => $label];
+                                    });
                             })
                             ->columns(1)
                             ->bulkToggleable()

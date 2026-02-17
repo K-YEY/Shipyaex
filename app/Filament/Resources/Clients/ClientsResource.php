@@ -110,7 +110,7 @@ class ClientsResource extends Resource
                     ->label(__('app.plan_id'))
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewPlanColumn:Clients'))
                     ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditPlanField:Clients'))
-                    ->options(Plan::pluck('name', 'id'))
+                    ->relationship('plan', 'name')
                     ->searchable()
                     ->preload(),
                     

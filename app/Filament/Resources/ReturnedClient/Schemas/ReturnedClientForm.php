@@ -41,13 +41,16 @@ class ReturnedClientForm
                                 ->label('العميل')
                                 ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:ReturnedClient'))
                                 ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:ReturnedClient'))
-                                ->options(function () use ($user, $isClient) {
-                                    if ($isClient && !auth()->user()->isAdmin()) {
-                                        return [$user->id => $user->name];
+                                ->relationship(
+                                    name: 'client',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: function ($query) use ($user, $isClient) {
+                                        if ($isClient && !auth()->user()->isAdmin()) {
+                                            return $query->where('id', $user->id);
+                                        }
+                                        return $query->role('client');
                                     }
-                                    return User::role('client')
-                                        ->pluck('name', 'id');
-                                })
+                                )
                                 ->searchable()
                                 ->preload()
                                 ->required()

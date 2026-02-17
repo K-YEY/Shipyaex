@@ -37,18 +37,20 @@ class CollectedClientForm
                     ->columnSpanFull()
                     ->schema([
                         Grid::make(3)->schema([
-                            // اختيار Client
                             Select::make('client_id')
                                 ->label('اسم العميل')
                                 ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient'))
                                 ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditClientField:CollectedClient'))
-                                ->options(function () use ($user, $isClient) {
-                                    if ($isClient && !auth()->user()->isAdmin()) {
-                                        return [$user->id => $user->name];
+                                ->relationship(
+                                    name: 'client',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: function ($query) use ($user, $isClient) {
+                                        if ($isClient && !auth()->user()->isAdmin()) {
+                                            return $query->where('id', $user->id);
+                                        }
+                                        return $query->role('client');
                                     }
-                                    return User::role('client')
-                                        ->pluck('name', 'id');
-                                })
+                                )
                                 ->searchable()
                                 ->preload()
                                 ->required()

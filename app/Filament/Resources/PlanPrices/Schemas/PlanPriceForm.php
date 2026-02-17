@@ -19,13 +19,7 @@ class PlanPriceForm
                     ->disabled(fn () => !auth()->user()->can('EditPlanField:PlanPrice'))
                     ->relationship('plan', 'name')
                     ->required(),
-                Select::make('location_id')
-                    ->label(__('app.governorate'))
-                    ->visible(fn () => auth()->user()->can('ViewLocationColumn:PlanPrice'))
-                    ->disabled(fn () => !auth()->user()->can('EditLocationField:PlanPrice'))
-                    ->options(function () {
-                        return Governorate::pluck('name', 'id')->toArray();
-                    })
+                    ->relationship('governorate', 'name')
                     ->required(),
                 TextInput::make('price')
                     ->label(__('app.price'))

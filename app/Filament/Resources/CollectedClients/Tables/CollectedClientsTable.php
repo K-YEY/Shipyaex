@@ -108,16 +108,9 @@ class CollectedClientsTable
                     ->label('الحالة')
                     ->options(\App\Enums\CollectingStatus::class),
 
-                SelectFilter::make('client_id')
+                SelectFilter::make('client')
                     ->label('العميل')
-                    ->options(function () {
-                        // جلب Clients اللي عندهم أوردرات محصلة فقط
-                        return \App\Models\User::role('client')
-                            ->whereHas('clientOrders', function ($query) {
-                                $query->where('collected_client', true);
-                            })
-                            ->pluck('name', 'id');
-                    })
+                    ->relationship('client', 'name', fn($query) => $query->role('client'))
                     ->searchable()
                     ->preload()
                     ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:CollectedClient')),

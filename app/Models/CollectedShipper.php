@@ -146,9 +146,9 @@ class CollectedShipper extends Model
     public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
-            'pending' => 'قيد اNoنتظار',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
+            'pending' => 'قيد انتظار',
+            'completed' => 'تم',
+            'cancelled' => 'تم الالغاء',
             default => 'غير معروف',
         };
     }
@@ -211,7 +211,7 @@ class CollectedShipper extends Model
 
         foreach ($orders as $order) {
             if ($order->status === 'deliverd') {
-                $totalAmount += $order->cod ?? 0;
+                $totalAmount += $order->total_amount ?? 0;
             }
             $shipperFees += $order->shipper_fees ?? 0;
         }
