@@ -26,7 +26,7 @@ class ShipperOrdersRelationManager extends RelationManager
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 //
