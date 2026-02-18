@@ -146,7 +146,7 @@ class CollectedShipperService
                 'collection_date' => $collectionDate ?? Carbon::now()->toDateString(),
                 'total_amount' => $amounts['total_amount'],
                 'shipper_fees' => $amounts['shipper_fees'],
-                'net_amount' => $amounts['net_amount'],
+                'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
                 'number_of_orders' => $amounts['number_of_orders'],
                 'status' => CollectingStatus::PENDING->value,
             ]);
@@ -184,7 +184,7 @@ class CollectedShipperService
             $collection->update([
                 'total_amount' => $amounts['total_amount'],
                 'shipper_fees' => $amounts['shipper_fees'],
-                'net_amount' => $amounts['net_amount'],
+                'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
                 'number_of_orders' => $amounts['number_of_orders'],
             ]);
 
@@ -283,7 +283,7 @@ class CollectedShipperService
         $collection->update([
             'total_amount' => $amounts['total_amount'],
             'shipper_fees' => $amounts['shipper_fees'],
-            'net_amount' => $amounts['net_amount'],
+            'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
             'number_of_orders' => $amounts['number_of_orders'],
         ]);
 
