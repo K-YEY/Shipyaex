@@ -132,7 +132,7 @@ class CollectedShipperService
     }
 
     /**
-     * إنشاء تحصيل جديد للShipper
+     * إنشاء تحصيل جديد للShipper (فاتورة واحدة لكل الأوردرات)
      */
     public function createCollection(int $shipperId, array $orderIds, ?string $collectionDate = null): CollectedShipper
     {
@@ -161,6 +161,53 @@ class CollectedShipperService
             return $collection;
         });
     }
+
+    /**
+     * إنشاء تحصيل مقسم حسب العميل
+     * كل عميل ينزل في فاتورة (سجل CollectedShipper) منفصلة
+     * 
+     * @return CollectedShipper[] مصفوفة بكل السجلات التي تم إنشاؤها
+     */
+    public function createCollectionSplitByClient(int $shipperId, array $orderIds, ?string $collectionDate = null): array
+    {
+        return DB::transaction(function () use ($shipperId, $orderIds, $collectionDate) {
+            $orders = Order::whereIn('id', $orderIds)->get();
+
+            // تجميع الأوردرات حسب العميل (client_id)
+            $groupedByClient = $orders->groupBy('client_id');
+
+            $collections = [];
+
+            foreach ($groupedByClient as $clientId => $clientOrders) {
+                $clientOrderIds = $clientOrders->pluck('id')->toArray();
+                $amounts = $this->calculateAmounts($clientOrderIds);
+
+                // إنشاء فاتورة منفصلة لكل عميل
+                $collection = CollectedShipper::create([
+                    'shipper_id' => $shipperId,
+                    'collection_date' => $collectionDate ?? Carbon::now()->toDateString(),
+                    'total_amount' => $amounts['total_amount'],
+                    'shipper_fees' => $amounts['shipper_fees'],
+                    'net_amount' => $amounts['total_amount'] - $amounts['shipper_fees'],
+                    'number_of_orders' => $amounts['number_of_orders'],
+                    'status' => CollectingStatus::PENDING->value,
+                    'notes' => 'عميل: ' . ($clientOrders->first()->client?->name ?? 'بدون عميل'),
+                ]);
+
+                // ربط أوردرات هذا العميل بالتحصيل
+                foreach ($clientOrders as $order) {
+                    $order->update([
+                        'collected_shipper_id' => $collection->id,
+                    ]);
+                }
+
+                $collections[] = $collection;
+            }
+
+            return $collections;
+        });
+    }
+
 
     /**
      * Update existing collection

@@ -97,7 +97,7 @@ class CollectedShipperForm
 
                 // قسم Orderات - عرض All مع إمكانية اNoستبعاد
                 Section::make('الأوردرات المتاحة للتحصيل')
-                    ->description('جميع الأوردرات محددة افتراضياً - قم بإلغاء تحديد الأوردرات التي لا تريد تحصيلها')
+                    ->description('⚡ سيتم إنشاء فاتورة منفصلة لكل عميل تلقائياً — حدّد الأوردرات المطلوبة')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->collapsible()
                     ->columnSpanFull()
@@ -145,12 +145,14 @@ class CollectedShipperForm
                                 }
 
                                 return $query->get()
+                                    ->sortBy(fn($order) => $order->client?->name ?? 'zzz_بدون عميل')
                                     ->mapWithKeys(function ($order) {
                                         $total = $order->status === 'deliverd' ? ($order->total_amount ?? 0) : 0;
                                         $commission = $order->shipper_fees ?? 0;
                                         $net = $total - $commission;
+                                        $clientName = $order->client?->name ?? 'بدون عميل';
                                         
-                                        $label = "#{$order->code} | " . ($order->client?->name ?? 'بدون عميل') . " | " .
+                                        $label = "【{$clientName}】 #{$order->code} | " .
                                                 "إجمالي: {$total} | " .
                                                 "عمولة: {$commission} | " .
                                                 "صافي: {$net} | " .
@@ -200,7 +202,7 @@ class CollectedShipperForm
                                     ->pluck('id')
                                     ->toArray();
                             })
-                            ->helperText('✅ كل الأوردرات محددة افتراضياً - قم بإلغاء تحديد الأوردرات التي لا تريد تحصيلها'),
+                            ->helperText('✅ كل الأوردرات محددة افتراضياً — عند الحفظ سيتم فصل كل عميل في فاتورة مستقلة'),
                     ]),
 
                 // قسم ملخص المبالغ

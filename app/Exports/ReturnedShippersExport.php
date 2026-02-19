@@ -3,15 +3,17 @@
 namespace App\Exports;
 
 use App\Models\ReturnedShipper;
-use Maatwebsite\Excel\Concerns\FromQuery;
+use App\Models\Order;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Illuminate\Support\Collection;
 
-class ReturnedShippersExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class ReturnedShippersExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
     use Exportable;
 
@@ -24,39 +26,108 @@ class ReturnedShippersExport implements FromQuery, WithHeadings, WithMapping, Wi
         $this->ids = $ids;
     }
 
-    public function query()
+    public function collection(): Collection
     {
+        $query = null;
+
         if ($this->ids && count($this->ids) > 0) {
-            return ReturnedShipper::query()
-                ->with(['shipper'])
+            $query = ReturnedShipper::query()
+                ->with(['shipper', 'orders.client', 'orders.shipper', 'orders.governorate', 'orders.city'])
                 ->whereIn('id', $this->ids)
                 ->latest();
+        } else {
+            $query = $this->query
+                ? $this->query->with(['shipper', 'orders.client', 'orders.shipper', 'orders.governorate', 'orders.city'])
+                : ReturnedShipper::query()
+                    ->with(['shipper', 'orders.client', 'orders.shipper', 'orders.governorate', 'orders.city'])
+                    ->latest();
         }
 
-        return $this->query ?: ReturnedShipper::query()->with(['shipper'])->latest();
+        $returns = $query->get();
+
+        $rows = collect();
+        foreach ($returns as $return) {
+            foreach ($return->orders as $order) {
+                $rows->push((object) [
+                    'return_id' => $return->id,
+                    'return_date' => $return->return_date?->format('Y-m-d'),
+                    'return_status' => $return->status,
+                    'shipper_name' => $return->shipper?->name,
+                    'order_code' => $order->code,
+                    'external_code' => $order->external_code,
+                    'client_name' => $order->client?->name,
+                    'customer_name' => $order->name,
+                    'phone' => $order->phone,
+                    'phone_2' => $order->phone_2,
+                    'address' => $order->address,
+                    'governorate' => $order->governorate?->name,
+                    'city' => $order->city?->name,
+                    'order_status' => $order->status,
+                    'total_amount' => $order->total_amount,
+                    'fees' => $order->fees,
+                    'shipper_fees' => $order->shipper_fees,
+                    'cod' => $order->cod,
+                    'cop' => $order->cop,
+                    'has_return' => $order->has_return ? 'نعم' : 'لا',
+                    'order_note' => $order->order_note,
+                ]);
+            }
+        }
+
+        return $rows;
     }
 
     public function headings(): array
     {
         return [
-            'رقم الكشف',
-            'المندوب',
+            'رقم كشف المرتجع',
             'تاريخ الارتجاع',
-            'عدد الطلبات',
-            'الحالة',
-            'تاريخ الإنشاء',
+            'حالة الكشف',
+            'المندوب',
+            'كود الأوردر',
+            'الكود الخارجي',
+            'العميل',
+            'اسم الزبون',
+            'الهاتف',
+            'هاتف 2',
+            'العنوان',
+            'المحافظة',
+            'المدينة',
+            'حالة الأوردر',
+            'المبلغ الإجمالي',
+            'المصاريف',
+            'عمولة المندوب',
+            'COD',
+            'COP',
+            'مرتجع',
+            'ملاحظات',
         ];
     }
 
-    public function map($record): array
+    public function map($row): array
     {
         return [
-            $record->id,
-            $record->shipper?->name,
-            $record->return_date,
-            $record->number_of_orders,
-            $record->status,
-            $record->created_at?->format('Y-m-d H:i'),
+            $row->return_id,
+            $row->return_date,
+            $row->return_status,
+            $row->shipper_name,
+            $row->order_code,
+            $row->external_code,
+            $row->client_name,
+            $row->customer_name,
+            $row->phone,
+            $row->phone_2,
+            $row->address,
+            $row->governorate,
+            $row->city,
+            $row->order_status,
+            $row->total_amount,
+            $row->fees,
+            $row->shipper_fees,
+            $row->cod,
+            $row->cop,
+            $row->has_return,
+            $row->order_note,
         ];
     }
 
@@ -67,7 +138,7 @@ class ReturnedShippersExport implements FromQuery, WithHeadings, WithMapping, Wi
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '4F46E5'],
+                    'startColor' => ['rgb' => 'DC2626'],
                 ],
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
             ],

@@ -67,7 +67,7 @@ class CreateCollectedShipper extends CreateRecord
             $this->halt();
         }
 
-        // التحقق من صNoحية Orderات
+        // التحقق من صلاحية Orderات
         $errors = $service->validateOrdersForCollection($orderIds, $data['shipper_id']);
         
         if (!empty($errors)) {
@@ -80,12 +80,26 @@ class CreateCollectedShipper extends CreateRecord
             $this->halt();
         }
 
-        // إنشاء التحصيل
-        return $service->createCollection(
+        // إنشاء تحصيل مقسم حسب العميل (كل عميل فاتورة منفصلة)
+        $collections = $service->createCollectionSplitByClient(
             $data['shipper_id'],
             $orderIds,
             $data['collection_date']
         );
+
+        // إشعار بعدد الفواتير المنشأة
+        $clientCount = count($collections);
+        $totalOrders = array_sum(array_map(fn($c) => $c->number_of_orders, $collections));
+
+        Notification::make()
+            ->title("✅ تم إنشاء {$clientCount} فاتورة تحصيل")
+            ->body("تم تقسيم {$totalOrders} طلب على {$clientCount} عميل/فاتورة منفصلة")
+            ->success()
+            ->persistent()
+            ->send();
+
+        // نرجّع أول سجل لأن Filament يتوقع Model واحد
+        return $collections[0];
     }
 
     protected function getRedirectUrl(): string
@@ -95,6 +109,6 @@ class CreateCollectedShipper extends CreateRecord
 
     protected function getCreatedNotificationTitle(): ?string
     {
-        return 'تم إنشاء التحصيل بنجاح ✅';
+        return null; // نستخدم الإشعار المخصص بدلاً منه
     }
 }
