@@ -210,14 +210,16 @@ class CollectedClient extends Model
         $fees = 0;
 
         foreach ($orders as $order) {
-            $totalAmount += $order->cod ?? 0;
+            if ($order->status === 'deliverd') {
+                $totalAmount += $order->total_amount ?? 0;
+            }
             $fees += $order->fees ?? 0;
         }
 
         $this->update([
             'total_amount' => $totalAmount,
             'fees' => $fees,
-            'net_amount' => $totalAmount,
+            'net_amount' => $totalAmount - $fees,
             'number_of_orders' => $orders->count(),
         ]);
     }

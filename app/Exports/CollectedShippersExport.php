@@ -67,9 +67,7 @@ class CollectedShippersExport implements FromCollection, WithHeadings, WithMappi
                     'order_status' => $order->status,
                     'total_amount' => $order->total_amount,
                     'fees' => $order->fees,
-                    'shipper_fees' => $order->shipper_fees,
                     'cod' => $order->cod,
-                    'cop' => $order->cop,
                     'has_return' => $order->has_return ? 'نعم' : 'لا',
                     'order_note' => $order->order_note,
                 ]);
@@ -98,9 +96,7 @@ class CollectedShippersExport implements FromCollection, WithHeadings, WithMappi
             'حالة الأوردر',
             'المبلغ الإجمالي',
             'المصاريف',
-            'عمولة المندوب',
             'COD',
-            'COP',
             'مرتجع',
             'ملاحظات',
         ];
@@ -125,9 +121,7 @@ class CollectedShippersExport implements FromCollection, WithHeadings, WithMappi
             $row->order_status,
             $row->total_amount,
             $row->fees,
-            $row->shipper_fees,
             $row->cod,
-            $row->cop,
             $row->has_return,
             $row->order_note,
         ];

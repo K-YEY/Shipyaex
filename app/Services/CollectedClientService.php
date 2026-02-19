@@ -93,8 +93,10 @@ class CollectedClientService
         $numberOfOrders = $orders->count();
 
         foreach ($orders as $order) {
-            // Client يستلم COD (المبلغ بعد خصم Company Fees)
-            $totalAmount += $order->cod ?? 0;
+            // نجمع المبلغ الإجمالي للأوردر
+            if ($order->status === 'deliverd') {
+                $totalAmount += $order->total_amount ?? 0;
+            }
             $fees += $order->fees ?? 0;
         }
 
