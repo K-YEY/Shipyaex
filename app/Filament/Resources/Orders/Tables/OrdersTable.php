@@ -418,12 +418,8 @@ class OrdersTable
                                     'total_amount' => $totalAmount,
                                     'cod' => $cod,
 
-                                    // if new status is_deliverd = 1, put timestamp
-                                    'deliverd_at' => $data['status'] == self::STATUS_DELIVERED
-                                        ? now()
-                                        : $record->deliverd_at,
                                     'has_return' => ! empty($data['has_return']) ? 1 : 0,
-                                    'return_at' => ! empty($data['has_return']) ? now() : $record->return_at,
+                                    'has_return_date' => ! empty($data['has_return']) ? now() : $record->has_return_date,
                                 ]);
 
                                 Notification::make()

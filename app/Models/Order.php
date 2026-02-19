@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\OrderStatus;
+use App\Models\Setting;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -194,35 +195,50 @@ class Order extends Model
      */
     public function scopeAvailableForClientCollecting(Builder $query): Builder
     {
+        $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+
         return $query->whereNotNull('status')
             ->whereNull('collected_client_id')
-            ->where(function ($q) {
-                // Status 1: Delivered مع has_return = true -> يحتاج تحصيل ومرتجع Approvedين
-                $q->where(function ($deliveredWithReturn) {
+            ->where(function ($q) use ($requireShipperFirst) {
+                // Status 1: Delivered مع has_return = true -> يحتاج تحصيل ومرتجع Approvedين (إذا كان الإعداد مفعل)
+                $q->where(function ($deliveredWithReturn) use ($requireShipperFirst) {
                     $deliveredWithReturn->where('status', 'deliverd')
-                        ->where('has_return', true)
-                        ->whereNotNull('collected_shipper_id')
-                        ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'))
-                        ->whereNotNull('returned_shipper_id')
-                        ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                        ->where('has_return', true);
+                    
+                    if ($requireShipperFirst) {
+                        $deliveredWithReturn->whereNotNull('collected_shipper_id')
+                            ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'))
+                            ->whereNotNull('returned_shipper_id')
+                            ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                    }
                 })
-                // Status 2: Delivered بدون has_return -> يحتاج تحصيل Approved فقط
-                ->orWhere(function ($deliveredNoReturn) {
+                // Status 2: Delivered بدون has_return -> يحتاج تحصيل Approved فقط (إذا كان الإعداد مفعل)
+                ->orWhere(function ($deliveredNoReturn) use ($requireShipperFirst) {
                     $deliveredNoReturn->where('status', 'deliverd')
                         ->where(function ($hasReturnFalse) {
                             $hasReturnFalse->where('has_return', false)
                                 ->orWhereNull('has_return');
-                        })
-                        ->whereNotNull('collected_shipper_id')
-                        ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'));
+                        });
+                    
+                    if ($requireShipperFirst) {
+                        $deliveredNoReturn->whereNotNull('collected_shipper_id')
+                            ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'));
+                    }
                 })
                 // Status 3: Undelivered -> يحتاج تحصيل ومرتجع Approvedين
-                ->orWhere(function ($undelivered) {
-                    $undelivered->where('status', 'undelivered')
-                        ->whereNotNull('collected_shipper_id')
-                        ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'))
-                        ->whereNotNull('returned_shipper_id')
-                        ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                ->orWhere(function ($undelivered) use ($requireShipperFirst) {
+                    $undelivered->where('status', 'undelivered');
+                    
+                    if ($requireShipperFirst) {
+                       $undelivered->whereNotNull('collected_shipper_id')
+                            ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'))
+                            ->whereNotNull('returned_shipper_id')
+                            ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                    } else {
+                        // حتى لو مش شرط التحصيل، الـ Undelivered لازم يكون فيه مرتجع كابتن اعتمد عشان يظهر للعميل كمرتجع
+                        $undelivered->whereNotNull('returned_shipper_id')
+                            ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                    }
                 });
             });
     }
@@ -321,16 +337,23 @@ class Order extends Model
             return false;
         }
 
-        // فحص وجود واعتماد collected_shipper
-        if (!$this->collected_shipper_id || !$this->collectedShipper || $this->collectedShipper->status !== 'completed') {
-            return false;
+        $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+
+        // فحص وجود واعتماد collected_shipper (إذا كان الإعداد مفعل)
+        if ($requireShipperFirst) {
+            if (!$this->collected_shipper_id || !$this->collectedShipper || $this->collectedShipper->status !== 'completed') {
+                return false;
+            }
         }
 
         // Status 1: Delivered مع has_return = true
         if ($this->status === 'deliverd' && $this->has_return) {
-            return $this->returned_shipper_id 
-                && $this->returnedShipper 
-                && $this->returnedShipper->status === 'completed';
+            if ($requireShipperFirst) {
+                return $this->returned_shipper_id 
+                    && $this->returnedShipper 
+                    && $this->returnedShipper->status === 'completed';
+            }
+            return true;
         }
 
         // Status 2: Delivered بدون has_return
@@ -340,6 +363,7 @@ class Order extends Model
 
         // Status 3: Undelivered
         if ($this->status === 'undelivered') {
+            // الـ Undelivered لازم يكون فيه مرتجع كابتن اعتمد عشان يظهر للعميل كمرتجع
             return $this->returned_shipper_id 
                 && $this->returnedShipper 
                 && $this->returnedShipper->status === 'completed';

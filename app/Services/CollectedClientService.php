@@ -57,20 +57,22 @@ class CollectedClientService
         // معاملة has_return = null كأنها false
         $has_return = (bool) $order->has_return;
 
+        $requireShipperFirst = \App\Models\Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+
         // التحقق من اعتماد تحصيل Shipper ومرتجع Shipper
         $collect_shipper = $order->collectedShipper?->status === 'completed';
         $return_shipper = $order->returnedShipper?->status === 'completed';
 
         // 2. تطبيق قواعد التحصيل
         $canCollect = match (true) {
-            // حالة Delivered مع وجود مرتجع -> يتطلب تحصيل ومرتجع
-            $status === 'deliverd' && $has_return => $collect_shipper && $return_shipper,
+            // حالة Delivered مع وجود مرتجع -> يتطلب تحصيل ومرتجع (إذا كان الإعداد مفعل)
+            $status === 'deliverd' && $has_return => $requireShipperFirst ? ($collect_shipper && $return_shipper) : true,
 
-            // حالة Delivered without return (false أو null) -> يتطلب تحصيل فقط
-            $status === 'deliverd' && !$has_return => $collect_shipper,
+            // حالة Delivered without return (false أو null) -> يتطلب تحصيل فقط (إذا كان الإعداد مفعل)
+            $status === 'deliverd' && !$has_return => $requireShipperFirst ? $collect_shipper : true,
 
-            // حالة Undelivered -> يتطلب تحصيل ومرتجع
-            $status === 'undelivered' => $collect_shipper && $return_shipper,
+            // حالة Undelivered -> يتطلب مرتجع دا Noً (لأن الأوردر لم يسلم) وتطلب تحصيل إذا كان الإعداد مفعل
+            $status === 'undelivered' => $requireShipperFirst ? ($collect_shipper && $return_shipper) : $return_shipper,
 
             // غير ذلك
             default => false,
