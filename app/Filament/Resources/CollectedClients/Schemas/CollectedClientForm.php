@@ -142,7 +142,7 @@ class CollectedClientForm
 
                                 return $query->get()
                                     ->mapWithKeys(fn ($order) => [
-                                        $order->id => "#{$order->code} | {$order->name} | {$order->cod} ج.م | {$order->status}"
+                                        $order->id => "#{$order->code} | {$order->name} | {$order->total_amount} ج.م | مصاريف: {$order->fees} | {$order->status}"
                                     ]);
                             })
                             ->columns(1)
