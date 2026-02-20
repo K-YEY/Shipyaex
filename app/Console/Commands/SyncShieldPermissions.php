@@ -167,7 +167,114 @@ class SyncShieldPermissions extends Command
             }
         }
 
-        // 4. Clear Caches
+        // 4. Sync Client Role Permissions
+        $this->info("Syncing client role permissions...");
+        $clientRole = Role::where('name', 'client')->first();
+        if ($clientRole) {
+            $clientPermissions = [
+                // CRUD الأساسي
+                'ViewAny:Order', 'View:Order', 'Create:Order',
+
+                // الحقول اللازمة لإنشاء الأوردر
+                'ViewCustomerDetailsSection:Order',   // رؤية قسم بيانات الزبون
+                'EditCustomerDetails:Order',           // تعديل اسم / هاتف الزبون
+                'EditCustomerDetailsField:Order',      // تعديل المحافظة / المدينة / العنوان
+                'ViewFinancialSummarySection:Order',   // رؤية قسم المالية
+                'EditFinancialSummaryField:Order',     // تعديل الإجمالي
+
+                // الأعمدة التي يراها العميل في الجدول
+                'ViewCodeColumn:Order',
+                'ViewRegistrationDateColumn:Order',
+                'ViewRecipientNameColumn:Order',
+                'ViewPhoneColumn:Order',
+                'ViewAddressColumn:Order',
+                'ViewGovernorateColumn:Order',
+                'ViewCityColumn:Order',
+                'ViewTotalAmountColumn:Order',
+                'ViewShippingFeesColumn:Order',
+                'ViewCollectionAmountColumn:Order',
+                'ViewStatusColumn:Order',
+                'ViewStatusNotesColumn:Order',
+                'ViewOrderNotesColumn:Order',
+                'ViewOrderNotesField:Order',
+
+                // فلاتر العميل
+                'ViewStatusFilter:Order',
+                'ViewHasReturnFilter:Order',
+                'ViewSettledWithClientFilter:Order',
+                'ViewReturnedToClientFilter:Order',
+
+                // تقارير العميل
+                'ViewWidget:ClientStats',
+
+                // تحصيلات العميل
+                'ViewAny:CollectedClient', 'View:CollectedClient',
+
+                // مرتجعات العميل
+                'ViewAny:ReturnedClient', 'View:ReturnedClient',
+            ];
+            $clientRole->givePermissionTo(
+                Permission::whereIn('name', $clientPermissions)->get()
+            );
+            $this->info("Synced client permissions (" . count($clientPermissions) . " perms)");
+        } else {
+            $this->warn("Client role not found, skipping.");
+        }
+
+        // 5. Sync Shipper Role Permissions
+        $this->info("Syncing shipper role permissions...");
+        $shipperRole = Role::where('name', 'shipper')->first();
+        if ($shipperRole) {
+            $shipperPermissions = [
+                // CRUD الأساسي
+                'ViewAny:Order', 'View:Order',
+
+                // أعمدة يراها المندوب
+                'ViewCodeColumn:Order',
+                'ViewRegistrationDateColumn:Order',
+                'ViewShipperDateColumn:Order',
+                'ViewRecipientNameColumn:Order',
+                'ViewPhoneColumn:Order',
+                'ViewAddressColumn:Order',
+                'ViewGovernorateColumn:Order',
+                'ViewCityColumn:Order',
+                'ViewTotalAmountColumn:Order',
+                'ViewShippingFeesColumn:Order',
+                'ViewShipperCommissionColumn:Order',
+                'ViewCollectionAmountColumn:Order',
+                'ViewStatusColumn:Order',
+                'ViewStatusNotesColumn:Order',
+                'ViewOrderNotesColumn:Order',
+                'ViewShipperColumn:Order',
+
+                // تغيير الحالة
+                'ChangeStatusAction:Order',
+                'ChangeStatus:Order',
+                'ViewStatusFilter:Order',
+
+                // مرتجع المندوب
+                'ManageShipperReturnAction:Order',
+                'ViewReturnedFromShipperFilter:Order',
+                'ViewHasReturnFilter:Order',
+
+                // تقارير المندوب
+                'ViewWidget:ShipperStats',
+
+                // تحصيلات المندوب
+                'ViewAny:CollectedShipper', 'View:CollectedShipper',
+
+                // مرتجعات المندوب
+                'ViewAny:ReturnedShipper', 'View:ReturnedShipper',
+            ];
+            $shipperRole->givePermissionTo(
+                Permission::whereIn('name', $shipperPermissions)->get()
+            );
+            $this->info("Synced shipper permissions (" . count($shipperPermissions) . " perms)");
+        } else {
+            $this->warn("Shipper role not found, skipping.");
+        }
+
+        // 6. Clear Caches
         $this->info("Clearing caches...");
         Artisan::call('optimize:clear');
         Artisan::call('permission:cache-reset');
@@ -175,3 +282,4 @@ class SyncShieldPermissions extends Command
         $this->info("Sync Completed Successfully!");
     }
 }
+
