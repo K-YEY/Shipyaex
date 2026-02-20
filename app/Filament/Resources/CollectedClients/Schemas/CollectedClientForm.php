@@ -135,7 +135,6 @@ class CollectedClientForm
                                     ->where('client_id', $clientId)
                                     ->availableForClientCollecting();
 
-                                // في حالة الEdit، نضيف Orderات الحالية
                                 if ($record) {
                                     $query->orWhere('collected_client_id', $record->id);
                                 }

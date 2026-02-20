@@ -873,7 +873,9 @@ class OrdersTable
                                 }
                                 
                                 $count++;
-                                $totalAmount += $record->total_amount ?? 0;
+                                if ($record->status === self::STATUS_DELIVERED) {
+                                    $totalAmount += $record->total_amount ?? 0;
+                                }
                                 $shipperFees += $record->shipper_fees ?? 0;
                                 $orderIds[] = $record->id;
                             }
@@ -889,7 +891,6 @@ class OrdersTable
                                     $existingCollection->update([
                                         'total_amount' => $existingCollection->total_amount + $totalAmount,
                                         'shipper_fees' => $existingCollection->shipper_fees + $shipperFees,
-                                        'net_amount' => ($existingCollection->total_amount + $totalAmount) - ($existingCollection->shipper_fees + $shipperFees),
                                         'number_of_orders' => $existingCollection->number_of_orders + $count,
                                         'notes' => ($existingCollection->notes ?? '') . "\nAdded {$count} orders on " . now()->format('Y-m-d H:i'),
                                     ]);
@@ -902,7 +903,6 @@ class OrdersTable
                                         'collection_date' => now(),
                                         'total_amount' => $totalAmount,
                                         'shipper_fees' => $shipperFees,
-                                        'net_amount' => $totalAmount - $shipperFees,
                                         'number_of_orders' => $count,
                                         'status' => 'pending',
                                         'notes' => 'Created from orders table - awaiting approval',
@@ -984,7 +984,8 @@ class OrdersTable
                             $clientId = null;
                             $count = 0;
                             $skipped = 0;
-                            $totalCod = 0;
+                            $totalAmount = 0;
+                            $totalFees = 0;
                             $orderIds = [];
                             
                             foreach ($records as $record) {
@@ -1006,7 +1007,10 @@ class OrdersTable
                                 }
                                 
                                 $count++;
-                                $totalCod += $record->cod ?? 0;
+                                if ($record->status === self::STATUS_DELIVERED) {
+                                    $totalAmount += $record->total_amount ?? 0;
+                                }
+                                $totalFees += $record->fees ?? 0;
                                 $orderIds[] = $record->id;
                             }
 
@@ -1019,7 +1023,8 @@ class OrdersTable
                                 if ($existingCollection) {
                                     // Add to existing pending collection
                                     $existingCollection->update([
-                                        'total_amount' => $existingCollection->total_amount + $totalCod,
+                                        'total_amount' => $existingCollection->total_amount + $totalAmount,
+                                        'fees' => $existingCollection->fees + $totalFees,
                                         'number_of_orders' => $existingCollection->number_of_orders + $count,
                                         'notes' => ($existingCollection->notes ?? '') . "\nAdded {$count} orders on " . now()->format('Y-m-d H:i'),
                                     ]);
@@ -1030,7 +1035,8 @@ class OrdersTable
                                     $collection = \App\Models\CollectedClient::create([
                                         'client_id' => $clientId,
                                         'collection_date' => now(),
-                                        'total_amount' => $totalCod,
+                                        'total_amount' => $totalAmount,
+                                        'fees' => $totalFees,
                                         'number_of_orders' => $count,
                                         'status' => 'pending',
                                         'notes' => 'Created from orders table - awaiting approval',
@@ -1979,9 +1985,8 @@ class OrdersTable
                             if ($existingCollection) {
                                 // Add to existing pending collection
                                 $existingCollection->update([
-                                    'total_amount' => $existingCollection->total_amount + ($record->total_amount ?? 0),
+                                    'total_amount' => $existingCollection->total_amount + ($record->status === self::STATUS_DELIVERED ? ($record->total_amount ?? 0) : 0),
                                     'shipper_fees' => $existingCollection->shipper_fees + ($record->shipper_fees ?? 0),
-                                    'net_amount' => ($existingCollection->total_amount + ($record->total_amount ?? 0)) - ($existingCollection->shipper_fees + ($record->shipper_fees ?? 0)),
                                     'number_of_orders' => $existingCollection->number_of_orders + 1,
                                     'notes' => ($existingCollection->notes ?? '') . "\nAdded order #{$record->code} on " . now()->format('Y-m-d H:i'),
                                 ]);
@@ -1992,9 +1997,8 @@ class OrdersTable
                                 $collection = \App\Models\CollectedShipper::create([
                                     'shipper_id' => $record->shipper_id,
                                     'collection_date' => now(),
-                                    'total_amount' => $record->total_amount ?? 0,
+                                    'total_amount' => $record->status === self::STATUS_DELIVERED ? ($record->total_amount ?? 0) : 0,
                                     'shipper_fees' => $record->shipper_fees ?? 0,
-                                    'net_amount' => ($record->total_amount ?? 0) - ($record->shipper_fees ?? 0),
                                     'number_of_orders' => 1,
                                     'status' => 'pending',
                                     'notes' => "Created from order #{$record->code} - awaiting approval",
@@ -2072,7 +2076,8 @@ class OrdersTable
                             if ($existingCollection) {
                                 // Add to existing pending collection
                                 $existingCollection->update([
-                                    'total_amount' => $existingCollection->total_amount + ($record->cod ?? 0),
+                                    'total_amount' => $existingCollection->total_amount + ($record->status === self::STATUS_DELIVERED ? ($record->total_amount ?? 0) : 0),
+                                    'fees' => $existingCollection->fees + ($record->fees ?? 0),
                                     'number_of_orders' => $existingCollection->number_of_orders + 1,
                                     'notes' => ($existingCollection->notes ?? '') . "\nAdded order #{$record->code} on " . now()->format('Y-m-d H:i'),
                                 ]);
@@ -2083,7 +2088,8 @@ class OrdersTable
                                 $collection = \App\Models\CollectedClient::create([
                                     'client_id' => $record->client_id,
                                     'collection_date' => now(),
-                                    'total_amount' => $record->cod ?? 0,
+                                    'total_amount' => $record->status === self::STATUS_DELIVERED ? ($record->total_amount ?? 0) : 0,
+                                    'fees' => $record->fees ?? 0,
                                     'number_of_orders' => 1,
                                     'status' => 'pending',
                                     'notes' => "Created from order #{$record->code} - awaiting approval",
