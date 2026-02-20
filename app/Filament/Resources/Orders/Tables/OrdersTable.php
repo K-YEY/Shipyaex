@@ -1907,6 +1907,27 @@ class OrdersTable
     {
         return [
             ActionGroup::make([
+                Action::make('copyOrder')
+                    ->label('نسخ البيانات')
+                    ->icon('heroicon-o-clipboard-document')
+                    ->color('info')
+                    ->action(fn () => Notification::make()
+                        ->title('تم نسخ البيانات بنجاح')
+                        ->success()
+                        ->send())
+                    ->extraAttributes(fn ($record) => [
+                        'onclick' => "
+                            const text = `كود: {$record->code}
+اسم المستلم: {$record->name}
+التليفون: {$record->phone}
+المحافظة: " . ($record->governorate?->name ?? '-') . "
+المدينة: " . ($record->city?->name ?? '-') . "
+العنوان: {$record->address}
+المبلغ الإجمالي: {$record->total_amount}`;
+                            navigator.clipboard.writeText(text);
+                        "
+                    ]),
+
                 // WhatsApp Action
                 Action::make('whatsapp')
                     ->label('واتساب للعميل')
