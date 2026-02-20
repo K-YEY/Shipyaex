@@ -28,7 +28,7 @@ class EditCollectedClient extends EditRecord
                 ->visible(fn () => auth()->user()->isAdmin() && $this->record->status === 'pending')
                 ->requiresConfirmation()
                 ->modalHeading('Save وApprove collection')
-                ->modalDescription('سيتم Save الEditات ثم Approve collection. هل أنت متأكد؟')
+                ->modalDescription('سيتم Save الEditات ثم اعتماد collection. هل أنت متأكد؟')
                 ->action(function () {
                     // 1. Save الEditات أوNoً
                     try {
@@ -54,8 +54,8 @@ class EditCollectedClient extends EditRecord
                         $service->approveCollection($updatedRecord);
                         
                         Notification::make()
-                            ->title('تم الSave واNoعتماد بنجاح ✅')
-                            ->body('تم Save الEditات وApprove collection')
+                            ->title('تم الSave وااعتماد بنجاح ✅')
+                            ->body('تم Save الEditات واعتماد collection')
                             ->success()
                             ->send();
                         

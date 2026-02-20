@@ -93,8 +93,8 @@ class CollectedClientsExport implements FromCollection, WithHeadings, WithMappin
             'المندوب',
             'حالة الأوردر',
             'المبلغ الإجمالي',
-            'المصاريف',
-            'COD',
+            'مصاريف الشحن',
+            'الصافي',
             'مرتجع',
             'ملاحظات',
         ];

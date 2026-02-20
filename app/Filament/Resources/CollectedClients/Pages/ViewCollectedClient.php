@@ -105,9 +105,9 @@ class ViewCollectedClient extends ViewRecord
                             ->label('Status')
                             ->badge()
                             ->formatStateUsing(fn ($state) => match($state) {
-                                'pending' => 'قيد اNoنتظار',
-                                'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
+                                'pending' => 'قيد انتظار',
+                                'completed' => 'تم',
+                                'cancelled' => 'تم الالغاء',
                                 default => $state,
                             })
                             ->color(fn ($state) => match($state) {
@@ -135,24 +135,24 @@ class ViewCollectedClient extends ViewRecord
                             ->color('primary'),
 
                         TextEntry::make('fees')
-                            ->label('Company Fees')
+                            ->label('مصاريف الشحن')
                             ->money('EGP')
                             ->color('warning'),
 
                         TextEntry::make('net_amount')
-                            ->label('الصافي للعميل')
+                            ->label('الصافي')
                             ->money('EGP')
                             ->weight(FontWeight::Bold)
                             ->color('success'),
                     ]),
 
-                Section::make('Orderات المرتبطة')
+                Section::make('Orders')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->collapsible()
                     ->columnSpanFull()
                     ->schema([
                         RepeatableEntry::make('orders')
-                            ->label('')
+                            ->label('Orders')
                             ->schema([
                                 TextEntry::make('code')
                                     ->label('كود Order')
@@ -183,11 +183,11 @@ class ViewCollectedClient extends ViewRecord
                                     }),
 
                                 TextEntry::make('cod')
-                                    ->label('COD')
+                                    ->label('الصافي للأوردر')
                                     ->money('EGP'),
 
                                 TextEntry::make('fees')
-                                    ->label('Fees')
+                                    ->label('مصاريف الشحن')
                                     ->money('EGP'),
                             ])
                             ->columns(7),

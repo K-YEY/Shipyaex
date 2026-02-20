@@ -69,7 +69,7 @@ class CollectedClientsTable
                     ->color('primary'),
 
                 TextColumn::make('fees')
-                    ->label('مصاريف الشركة')
+                    ->label('مصاريف الشحن')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewFeesColumn:CollectedClient'))
                     ->state(fn ($record) => number_format($record->fees, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
@@ -77,7 +77,7 @@ class CollectedClientsTable
                     ->color('warning'),
 
                 TextColumn::make('net_amount')
-                    ->label('الصافي للعميل')
+                    ->label('الصافي')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountColumn:CollectedClient'))
                     ->state(fn ($record) => number_format($record->net_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()

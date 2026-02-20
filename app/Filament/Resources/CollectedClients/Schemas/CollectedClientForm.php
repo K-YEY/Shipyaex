@@ -215,7 +215,7 @@ class CollectedClientForm
                             ->prefix('ج.م'),
 
                         TextInput::make('fees')
-                            ->label('مصاريف الشركة')
+                            ->label('مصاريف الشحن')
                             ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewFeesField:CollectedClient'))
                             ->numeric()
                             ->disabled()
@@ -224,7 +224,7 @@ class CollectedClientForm
                             ->prefix('ج.م'),
 
                         TextInput::make('net_amount')
-                            ->label('الصافي للعميل')
+                            ->label('الصافي')
                             ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountField:CollectedClient'))
                             ->numeric()
                             ->disabled()
