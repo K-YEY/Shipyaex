@@ -241,15 +241,26 @@ class OrdersTable
 
                 TextColumn::make('cod')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.collection_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format((fn() => $this->getFilteredTableQuery()->sum('cod'))->call($livewire), 2) . 
+                        __('orders.collection_amount') .
+                        ' <span style="color:var(--gray-400); font-size:0.7rem; font-weight:normal;">(إجمالي - شحن)</span>' .
+                        '<br><span style="color:var(--primary-600); font-weight:bold;">' .
+                        number_format(
+                            (fn() => $this->getFilteredTableQuery()->selectRaw('SUM(total_amount - COALESCE(fees, 0)) as total')->value('total') ?? 0)->call($livewire),
+                            2
+                        ) .
                         '</span>'
                     ))
                     ->numeric()
-                    ->state(fn ($record) => number_format($record->cod, 2) . ' ' . __('statuses.currency'))
-                    ->sortable()
+                    ->state(fn ($record) => number_format(
+                        ($record->total_amount ?? 0) - ($record->fees ?? 0),
+                        2
+                    ) . ' ' . __('statuses.currency'))
+                    ->sortable(query: fn ($query, $direction) => $query->orderByRaw("(total_amount - COALESCE(fees, 0)) $direction"))
                     ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectionAmountColumn:Order'))
-                    ->searchable(isIndividual: true)
+                    ->searchable(
+                        query: fn ($query, $search) => $query->whereRaw("(total_amount - COALESCE(fees, 0)) LIKE ?", ["%{$search}%"]),
+                        isIndividual: true
+                    )
                     ->toggleable()
                     ->alignCenter(),
                 TextColumn::make('status')
