@@ -130,6 +130,15 @@ class SyncShieldPermissions extends Command
             'ViewShipperFeesField:Order', 'EditShipperFeesField:Order', 'ViewCopField:Order', 'EditCopField:Order',
             'BypassWorkingHours:Order', 'AssignShipper:Order', 'BarcodeScannerAction:Order',
             'ManageShipperReturnAction:Order', 'ManageClientReturnAction:Order',
+
+            // Scanner Permissions
+            'ViewAny:Scanner',           // رؤية صفحة الماسح
+            'ChangeStatus:Scanner',      // تغيير حالة الطلبات من الماسح
+            'AssignShipper:Scanner',     // إسناد طلبات لمندوب من الماسح
+            'ReturnShipper:Scanner',     // تسجيل مرتجع مندوب من الماسح
+            'ReturnClient:Scanner',      // تسجيل مرتجع عميل من الماسح
+            'ClearList:Scanner',         // مسح قائمة الباركود
+            'RemoveOrder:Scanner',       // إزالة طلب من القائمة
         ];
 
         // Combine with standard CRUD for problematic resources

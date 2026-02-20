@@ -17,6 +17,7 @@ class CityForm
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewGovernorateColumn:City'))
                     ->disabled(fn () => !auth()->user()->isAdmin() && !auth()->user()->can('EditGovernorateField:City'))
                     ->relationship('governorate', 'name')
+                    ->searchable()
                     ->required(),
                 TextInput::make('name')
                     ->label(__('app.city'))

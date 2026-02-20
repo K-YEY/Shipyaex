@@ -417,7 +417,6 @@ class OrdersTable
                                     'status_note' => $statusNote,
                                     'total_amount' => $totalAmount,
                                     'cod' => $cod,
-
                                     'has_return' => ! empty($data['has_return']) ? 1 : 0,
                                     'has_return_date' => ! empty($data['has_return']) ? now() : $record->has_return_date,
                                 ]);
@@ -1918,12 +1917,12 @@ class OrdersTable
                     ->extraAttributes(fn ($record) => [
                         'onclick' => "
                             const text = `كود: {$record->code}
-اسم المستلم: {$record->name}
-التليفون: {$record->phone}
-المحافظة: " . ($record->governorate?->name ?? '-') . "
-المدينة: " . ($record->city?->name ?? '-') . "
-العنوان: {$record->address}
-المبلغ الإجمالي: {$record->total_amount}`;
+                            اسم المستلم: {$record->name}
+                            التليفون: {$record->phone}
+                            المحافظة: " . ($record->governorate?->name ?? '-') . "
+                            المدينة: " . ($record->city?->name ?? '-') . "
+                            العنوان: {$record->address}
+                            المبلغ الإجمالي: {$record->total_amount}`;
                             navigator.clipboard.writeText(text);
                         "
                     ]),

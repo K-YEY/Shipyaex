@@ -50,6 +50,8 @@ class ListScanners extends ListRecords
 
     public function table(Table $table): Table
     {
+        $user = auth()->user();
+
         return $table
             ->columns([
                 TextColumn::make('code')
@@ -79,17 +81,22 @@ class ListScanners extends ListRecords
                     ->label('المندوب'),
             ])
             ->recordActions([
+                // زر إزالة - يحتاج صلاحية RemoveOrder:Scanner أو admin
                 TableAction::make('remove')
                     ->label('إزالة')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->visible(fn () => $user->isAdmin() || $user->can('RemoveOrder:Scanner'))
                     ->action(fn ($record) => $this->removeOrder($record->id)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+
+                    // تغيير حالة - يحتاج صلاحية ChangeStatus:Scanner أو admin
                     BulkAction::make('changeStatus')
                         ->label('تغيير الحالة')
                         ->icon('heroicon-o-arrow-path')
+                        ->visible(fn () => $user->isAdmin() || $user->can('ChangeStatus:Scanner'))
                         ->form([
                             Select::make('status')
                                 ->label('الحالة الجديدة')
@@ -106,9 +113,11 @@ class ListScanners extends ListRecords
                             Notification::make()->title('تم تحديث الحالات بنجاح')->success()->send();
                         }),
 
+                    // إسناد لمندوب - يحتاج صلاحية AssignShipper:Scanner أو admin
                     BulkAction::make('assignShipper')
                         ->label('إسناد لمندوب')
                         ->icon('heroicon-o-truck')
+                        ->visible(fn () => $user->isAdmin() || $user->can('AssignShipper:Scanner'))
                         ->form([
                             Select::make('shipper_id')
                                 ->label('المندوب')
@@ -128,10 +137,12 @@ class ListScanners extends ListRecords
                             Notification::make()->title('تم إسناد الطلبات للمندوب')->success()->send();
                         }),
 
+                    // إزالة من القائمة - يحتاج صلاحية ClearList:Scanner أو admin
                     BulkAction::make('clearFromList')
                         ->label('إزالة من القائمة')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
+                        ->visible(fn () => $user->isAdmin() || $user->can('ClearList:Scanner'))
                         ->action(function ($records) {
                             $idsToRemove = $records->pluck('id')->toArray();
                             $this->scannedOrders = array_values(
@@ -183,6 +194,11 @@ class ListScanners extends ListRecords
 
     public function clearAll(): void
     {
+        $user = auth()->user();
+        if (!$user->isAdmin() && !$user->can('ClearList:Scanner')) {
+            Notification::make()->title('❌ لا تملك صلاحية مسح القائمة')->danger()->send();
+            return;
+        }
         $this->scannedOrders = [];
         Notification::make()->title('تم مسح القائمة')->success()->send();
     }
@@ -196,36 +212,48 @@ class ListScanners extends ListRecords
 
         switch ($action) {
             case 'delivered':
-                if ($user->can('ChangeStatus:Order')) {
+                // يستخدم صلاحية Order أو Scanner
+                if ($user->can('ChangeStatus:Scanner') || $user->can('ChangeStatus:Order') || $user->isAdmin()) {
                     $order->update(['status' => 'deliverd', 'deliverd_at' => now()]);
                 }
                 break;
+
             case 'return_shipper':
-                if ($user->can('ManageShipperReturnAction:Order') || $user->isAdmin()) {
+                // يستخدم صلاحية Scanner أو Order
+                if ($user->can('ReturnShipper:Scanner') || $user->can('ManageShipperReturnAction:Order') || $user->isAdmin()) {
                     $order->update([
                         'return_shipper' => true,
                         'return_shipper_date' => now(),
                         'status' => 'undelivered'
                     ]);
                     Notification::make()->title('✅ تم تسجيل مرتجع المندوب')->success()->send();
+                } else {
+                    Notification::make()->title('❌ لا تملك صلاحية تسجيل مرتجع المندوب')->danger()->send();
                 }
                 break;
+
             case 'return_client':
-                if ($user->can('ManageClientReturnAction:Order') || $user->isAdmin()) {
+                // يستخدم صلاحية Scanner أو Order
+                if ($user->can('ReturnClient:Scanner') || $user->can('ManageClientReturnAction:Order') || $user->isAdmin()) {
                     $order->update([
                         'return_client' => true,
                         'return_client_date' => now(),
                         'status' => 'undelivered'
                     ]);
                     Notification::make()->title('✅ تم تسجيل مرتجع العميل')->success()->send();
+                } else {
+                    Notification::make()->title('❌ لا تملك صلاحية تسجيل مرتجع العميل')->danger()->send();
                 }
                 break;
+
             case 'assign_shipper':
-                if ($user->can('AssignShipper:Order') && $this->targetShipperId) {
+                if (($user->can('AssignShipper:Scanner') || $user->can('AssignShipper:Order') || $user->isAdmin()) && $this->targetShipperId) {
                     $order->update([
                         'shipper_id' => $this->targetShipperId,
                         'status' => 'out for delivery'
                     ]);
+                } else {
+                    Notification::make()->title('❌ لا تملك صلاحية إسناد المندوب')->danger()->send();
                 }
                 break;
         }
