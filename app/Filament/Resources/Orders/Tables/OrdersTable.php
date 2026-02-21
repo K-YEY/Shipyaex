@@ -200,11 +200,8 @@ class OrdersTable
                     ->alignCenter()
                     ->sortable(),
                 TextInputColumn::make('total_amount')
-                    ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.total_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format(self::getColumnTotals($livewire)['total_amount'] ?? 0, 2) . 
-                        '</span>'
-                    ))
+                    ->label(__('orders.total_amount'))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->prefix(__('statuses.currency'))
                     ->sortable()
@@ -214,11 +211,8 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateTotalAmount($record, $state)),
 
                 TextInputColumn::make('fees')
-                    ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.shipping_fees') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format(self::getColumnTotals($livewire)['total_fees'] ?? 0, 2) . 
-                        '</span>'
-                    ))
+                    ->label(__('orders.shipping_fees'))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
@@ -228,11 +222,8 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateFees($record, $state)),
 
                 TextInputColumn::make('shipper_fees')
-                    ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.shipper_commission') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format(self::getColumnTotals($livewire)['total_shipper_fees'] ?? 0, 2) . 
-                        '</span>'
-                    ))
+                    ->label(__('orders.shipper_commission'))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
@@ -241,11 +232,8 @@ class OrdersTable
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
                 TextInputColumn::make('net_fees')
-                    ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.net_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format(self::getColumnTotals($livewire)['net_fees'] ?? 0, 2) . 
-                        '</span>'
-                    ))
+                    ->label(__('orders.net_amount'))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("total_amount - COALESCE(shipper_fees, 0) $direction"))
@@ -1381,7 +1369,7 @@ class OrdersTable
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(500)
+            ->defaultPaginationPageOption(100)
                  ->description(new \Illuminate\Support\HtmlString('
                 <style>
                     #orders-table-wrapper .fi-ta-ctn {
@@ -2497,44 +2485,6 @@ class OrdersTable
         return $record->{$dateField}
             ? Carbon::parse($record->{$dateField})->format('Y-m-d')
             : '✓';
-    }
-
-    /**
-     * ⚡ PERFORMANCE: Get all column totals in a single query per request.
-     * Caches the result statically so it's only computed once per page load.
-     */
-    private static array $cachedTotals = [];
-    private static string $cachedTotalsKey = '';
-
-    private static function getColumnTotals($livewire): array
-    {
-        try {
-            $query = $livewire->getFilteredTableQuery();
-        } catch (\Throwable) {
-            return [];
-        }
-
-        // Build a cache key based on the SQL query to detect filter changes
-        $sql = $query->toRawSql();
-        $cacheKey = md5($sql);
-
-        if (self::$cachedTotalsKey === $cacheKey && !empty(self::$cachedTotals)) {
-            return self::$cachedTotals;
-        }
-
-        $result = $query->select([
-            DB::raw('SUM(total_amount) as total_amount'),
-            DB::raw('SUM(fees) as total_fees'),
-            DB::raw('SUM(shipper_fees) as total_shipper_fees'),
-            DB::raw('SUM(cop) as total_cop'),
-            DB::raw('SUM(COALESCE(total_amount, 0) - COALESCE(fees, 0)) as total_cod'),
-            DB::raw('SUM(COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)) as net_fees')
-        ])->first();
-
-        self::$cachedTotalsKey = $cacheKey;
-        self::$cachedTotals = $result ? $result->toArray() : [];
-
-        return self::$cachedTotals;
     }
 
     private static function updateTotalAmount($record, $state): void
