@@ -246,16 +246,14 @@ class OrdersTable
                     ->toggleable()
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
-                TextInputColumn::make('net_fees')
+                TextColumn::make('net_fees')
                     ->label(__('orders.net_amount'))
                     ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->prefix(__('statuses.currency'))
-                    ->disabled(fn ($record) => self::isFieldDisabled($record))
-                    ->sortable(query: fn ($query, $direction) => $query->orderByRaw("total_amount - COALESCE(shipper_fees, 0) $direction"))
+                    ->sortable()
                     ->visible($isAdmin || self::userCan('ViewNetAmountColumn:Order'))
                     ->toggleable()
-                    ->searchable(query: fn ($query, $search) => $query->whereRaw("total_amount - COALESCE(shipper_fees, 0) LIKE ?", ["%{$search}%"]), isIndividual: true)
-                    ->afterStateUpdated(fn ($record, $state) => self::updateNetFees($record, $state)),
+                    ->searchable(isIndividual: true),
 
                 TextColumn::make('cop')
                     ->label(__('orders.company_share'))
@@ -272,13 +270,9 @@ class OrdersTable
                     ->label(__('orders.collection_amount'))
                     ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->numeric()
-                    ->state(fn ($record) => number_format($record->cod_amount ?? 0, 2) . ' ' . __('statuses.currency'))
-                    ->sortable(query: fn ($query, $direction) => $query->orderByRaw("(total_amount - COALESCE(fees, 0)) $direction"))
+                    ->sortable()
                     ->visible($isAdmin || self::userCan('ViewCollectionAmountColumn:Order'))
-                    ->searchable(
-                        query: fn ($query, $search) => $query->whereRaw("(total_amount - COALESCE(fees, 0)) LIKE ?", ["%{$search}%"]),
-                        isIndividual: true
-                    )
+                    ->searchable(isIndividual: true)
                     ->toggleable()
                     ->alignCenter(),
                 TextColumn::make('status')
