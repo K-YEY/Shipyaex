@@ -61,10 +61,11 @@ class CollectedShipperForm
                                 ->default($isShipper ? $user->id : null)
                                 ->live()
                                 ->afterStateUpdated(function (Set $set, $state) {
-                                    // إعادة تعيين Orderات المستبعدة
-                                    $set('excluded_orders', []);
+                                    // إعادة تعيين البيانات عند تغيير المندوب
+                                    $set('selected_orders', []);
                                     $set('total_amount', 0);
                                     $set('shipper_fees', 0);
+                                    $set('fees', 0);
                                     $set('net_amount', 0);
                                     $set('number_of_orders', 0);
                                 }),
@@ -164,10 +165,23 @@ class CollectedShipperForm
                             ->columns(1)
                             ->bulkToggleable()
                             ->live()
+                            ->afterStateHydrated(function (Set $set, Get $get, $state) {
+                                if (empty($state)) return;
+
+                                $service = new CollectedShipperService();
+                                $amounts = $service->calculateAmounts($state);
+
+                                $set('total_amount', $amounts['total_amount']);
+                                $set('shipper_fees', $amounts['shipper_fees']);
+                                $set('fees', $amounts['fees']);
+                                $set('net_amount', $amounts['net_amount']);
+                                $set('number_of_orders', $amounts['number_of_orders']);
+                            })
                             ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                 if (empty($state)) {
                                     $set('total_amount', 0);
                                     $set('shipper_fees', 0);
+                                    $set('fees', 0);
                                     $set('net_amount', 0);
                                     $set('number_of_orders', 0);
                                     return;
@@ -178,6 +192,7 @@ class CollectedShipperForm
 
                                 $set('total_amount', $amounts['total_amount']);
                                 $set('shipper_fees', $amounts['shipper_fees']);
+                                $set('fees', $amounts['fees']);
                                 $set('net_amount', $amounts['net_amount']);
                                 $set('number_of_orders', $amounts['number_of_orders']);
                             })

@@ -50,18 +50,30 @@ class OrdersReportWidget extends BaseWidget
                 });
             }
 
-            // Trend Data (Last 30 days to ensure we see SOMETHING if orders are old)
-            $getTrend = function($subQuery) {
-                return collect(range(29, 0))->map(function($days) use ($subQuery) {
-                    return (clone $subQuery)->whereDate('created_at', now()->subDays($days))->count();
-                })->toArray();
-            };
-
             // Statuses (Handling common misspellings)
             $deliveredStatus = ['deliverd', 'delivered', 'Delivered', 'تم التسليم'];
             $undeliveredStatus = ['undelivered', 'not delivered', 'لم يتم التسليم'];
             $holdStatus = ['hold', 'pending', 'تأجيل'];
             $outForDeliveryStatus = ['out for delivery', 'shipping', 'في الطريق'];
+
+            // Trend Data - Single query for all trends in the last 30 days
+            $getTrendData = function($statusGroup = null) use ($query) {
+                $trendQuery = (clone $query)
+                    ->select(\Illuminate\Support\Facades\DB::raw('DATE(created_at) as date'), \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->groupBy('date');
+                
+                if ($statusGroup) {
+                    $trendQuery->whereIn('status', $statusGroup);
+                }
+                
+                $data = $trendQuery->pluck('count', 'date')->toArray();
+                
+                return collect(range(29, 0))->map(function($days) use ($data) {
+                    $date = now()->subDays($days)->format('Y-m-d');
+                    return $data[$date] ?? 0;
+                })->toArray();
+            };
 
             // Get counts
             $allOrders = (clone $query)->count();
@@ -71,9 +83,9 @@ class OrdersReportWidget extends BaseWidget
             $undelivered = (clone $query)->whereIn('status', $undeliveredStatus)->count();
 
             // Trends
-            $allOrdersTrend = $getTrend(clone $query);
-            $deliveredTrend = $getTrend((clone $query)->whereIn('status', $deliveredStatus));
-            $undeliveredTrend = $getTrend((clone $query)->whereIn('status', $undeliveredStatus));
+            $allOrdersTrend = $getTrendData();
+            $deliveredTrend = $getTrendData($deliveredStatus);
+            $undeliveredTrend = $getTrendData($undeliveredStatus);
 
             // Totals
             $outForDeliveryTotal = (clone $query)->whereIn('status', $outForDeliveryStatus)->sum('total_amount');

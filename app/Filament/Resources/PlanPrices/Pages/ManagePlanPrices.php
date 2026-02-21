@@ -40,7 +40,7 @@ class ManagePlanPrices extends Page implements HasForms
                     ->schema([
                             Select::make('plan_id')
                                 ->label('الباقة')
-                                ->relationship('plan', 'name')
+                                ->options(Plan::all()->pluck('name', 'id'))
                                 ->searchable()
                                 ->preload()
                             ->live()

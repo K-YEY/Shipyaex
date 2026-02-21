@@ -19,13 +19,11 @@ class PlanPricesTable
                     ->label(__('app.plan'))
                     ->visible(fn () => auth()->user()->can('ViewPlanColumn:PlanPrice'))
                     ->searchable(),
-                TextColumn::make('location_id')
+                TextColumn::make('governorate.name')
                     ->label(__('app.governorate'))
                     ->visible(fn () => auth()->user()->can('ViewLocationColumn:PlanPrice'))
-                    ->formatStateUsing(function ($state, $record) {
-                        return $record->governorate?->name;
-                    })
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('price')
                     ->label(__('app.price'))
                     ->visible(fn () => auth()->user()->can('ViewPriceColumn:PlanPrice'))
@@ -44,7 +42,7 @@ class PlanPricesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('plan_id')
+                SelectFilter::make('plan')
                     ->label(__('app.plan'))
                     ->relationship('plan', 'name'),
             ])

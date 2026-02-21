@@ -13,13 +13,13 @@ class PlanPriceForm
     {
         return $schema
             ->components([
-                Select::make('plan_id')
+                Select::make('plan')
                     ->label(__('app.plan'))
                     ->visible(fn () => auth()->user()->can('ViewPlanColumn:PlanPrice'))
                     ->disabled(fn () => !auth()->user()->can('EditPlanField:PlanPrice'))
                     ->relationship('plan', 'name')
                     ->required(),
-                Select::make('location_id')
+                Select::make('governorate')
                     ->label(__('app.governorate'))
                     ->visible(fn () => auth()->user()->can('ViewLocationColumn:PlanPrice'))
                     ->disabled(fn () => !auth()->user()->can('EditLocationField:PlanPrice'))

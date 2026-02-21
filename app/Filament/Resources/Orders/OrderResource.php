@@ -123,8 +123,18 @@ class OrderResource extends Resource
 
         $cacheKey = 'nav_badge_orders_' . $user->id;
 
-        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () {
-            return static::getEloquentQuery()->count();
+        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($user) {
+            $query = Order::whereNotNull('status');
+            if ($user->isAdmin() || $user->can('ViewAll:Order')) {
+                return $query->count();
+            }
+            if ($user->isClient() || $user->can('ViewOwn:Order')) {
+                return $query->where('client_id', $user->id)->count();
+            }
+            if ($user->isShipper() || $user->can('ViewAssigned:Order')) {
+                return $query->where('shipper_id', $user->id)->count();
+            }
+            return 0;
         });
 
         return $count ?: null;

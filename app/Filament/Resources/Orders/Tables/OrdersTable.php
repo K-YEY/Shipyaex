@@ -75,7 +75,21 @@ class OrdersTable
     
     public static function configure(Table $table): Table
     {
-        // Dynamic roles are now used instead of static caching
+        $user = auth()->user();
+        $isAdmin = $user?->isAdmin() ?? false;
+        self::$cachedUserIsAdmin = $isAdmin;
+        
+        // Load some common permissions once
+        $permissions = [
+            'Update:Order',
+            'EditLocked:Order',
+            'ChangeStatus:Order',
+            'ManageShipperReturnAction:Order',
+            'AssignShipperAction:Order',
+        ];
+        foreach ($permissions as $p) {
+            self::userCan($p);
+        }
 
         return $table
             ->columns([
@@ -104,14 +118,14 @@ class OrdersTable
                     ->sortable()
                     ->toggleable()
                     ->alignCenter()
-                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewCodeColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
                     ->searchable( isIndividual: true,),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
                     ->color('warning')
                     ->badge()
                     ->sortable() ->alignCenter()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewExternalCodeColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(isIndividual: true)
                     ->placeholder(__('orders.external_code_placeholder'))
@@ -143,21 +157,21 @@ class OrdersTable
                     ->sortable()
                     ->searchable(isIndividual: true)
                     ->alignCenter()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewRegistrationDateColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewRegistrationDateColumn:Order'))
                     ->toggleable(),
                 TextColumn::make('shipper_date')
                     ->label(__('orders.shipper_date'))
                     ->date('Y-m-d')
                     ->toggleable()  
                     ->searchable(isIndividual: true)
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperDateColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewShipperDateColumn:Order'))
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
                     ->searchable(isIndividual: true)
                     ->alignCenter()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewRecipientNameColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
                     ->toggleable(),
                 TextColumn::make('customer_phones')
                     ->label(__('orders.phone'))
@@ -171,7 +185,7 @@ class OrdersTable
                             ->join('<br>')
                     )
                     ->html() // very important
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewPhoneColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
                     ->searchable(
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where('phone', 'like', "%{$search}%")
@@ -180,7 +194,7 @@ class OrdersTable
                     ->toggleable()->alignCenter(),
                 TextColumn::make('address')
                     ->label(__('orders.address'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewAddressColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewAddressColumn:Order'))
                     ->toggleable()
                     ->searchable(isIndividual: true)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
@@ -189,13 +203,13 @@ class OrdersTable
                 TextColumn::make('governorate.name')
                     ->numeric()
                     ->searchable(isIndividual: true)
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewGovernorateColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewGovernorateColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('city.name')
                     ->searchable(isIndividual: true)
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCityColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewCityColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
                     ->sortable(),
@@ -207,7 +221,7 @@ class OrdersTable
                     ->sortable()
                     ->toggleable()
                     ->searchable(isIndividual: true)
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewTotalAmountColumn:Order'))
                     ->afterStateUpdated(fn ($record, $state) => self::updateTotalAmount($record, $state)),
 
                 TextInputColumn::make('fees')
@@ -216,7 +230,7 @@ class OrdersTable
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShippingFeesColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewShippingFeesColumn:Order'))
                     ->searchable(isIndividual: true)
                     ->toggleable()
                     ->afterStateUpdated(fn ($record, $state) => self::updateFees($record, $state)),
@@ -227,7 +241,7 @@ class OrdersTable
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperCommissionColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewShipperCommissionColumn:Order'))
                     ->toggleable()
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
@@ -237,7 +251,7 @@ class OrdersTable
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("total_amount - COALESCE(shipper_fees, 0) $direction"))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewNetAmountColumn:Order'))
                     ->toggleable()
                     ->searchable(query: fn ($query, $search) => $query->whereRaw("total_amount - COALESCE(shipper_fees, 0) LIKE ?", ["%{$search}%"]), isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateNetFees($record, $state)),
@@ -249,7 +263,7 @@ class OrdersTable
                     ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->searchable(isIndividual: true)
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCompanyShareColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewCompanyShareColumn:Order'))
                     ->toggleable()
                     ->alignCenter(),
 
@@ -259,7 +273,7 @@ class OrdersTable
                     ->numeric()
                     ->state(fn ($record) => number_format($record->cod_amount ?? 0, 2) . ' ' . __('statuses.currency'))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("(total_amount - COALESCE(fees, 0)) $direction"))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectionAmountColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewCollectionAmountColumn:Order'))
                     ->searchable(
                         query: fn ($query, $search) => $query->whereRaw("(total_amount - COALESCE(fees, 0)) LIKE ?", ["%{$search}%"]),
                         isIndividual: true
@@ -283,7 +297,7 @@ class OrdersTable
                     ->color(fn ($record) => strtolower($record->orderStatus?->color ?? 'gray'))
                     ->sortable()
                     ->searchable()->alignCenter()  
-                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewStatusColumn:Order'))
                     ->toggleable()
                     ->extraAttributes(
                         fn ($record) => self::isRecordLocked($record) || 
@@ -448,7 +462,7 @@ class OrdersTable
                     ->label(__('orders.status_notes'))
                     ->badge()                    
                     ->alignCenter()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusNotesColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewStatusNotesColumn:Order'))
                     ->extraHeaderAttributes(['style' => 'min-width: 200px'])
                     ->searchable(isIndividual: true)
                     ->color(function ($state) {
@@ -492,7 +506,7 @@ class OrdersTable
                     ->badge()
                     ->sortable()
                     ->alignCenter()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewOrderNotesColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewOrderNotesColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(isIndividual: true)
                     ->placeholder(__('orders.order_notes_placeholder'))
@@ -526,7 +540,7 @@ class OrdersTable
 
                 TextColumn::make('shipper.name')
                     ->label('الكابتن')
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewShipperColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewShipperColumn:Order'))
                     ->placeholder('➕ عين كابتن')
                     ->color('primary')
                     ->weight('bold')
@@ -598,7 +612,7 @@ class OrdersTable
                     ),
                 self::getOrderStatusGroup(),
                 TextColumn::make('client.name')
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewClientColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewClientColumn:Order'))
                     ->searchable(isIndividual: true)
                     ->numeric()
                      ->alignCenter()
@@ -608,7 +622,7 @@ class OrdersTable
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewDatesColumn:Order'))
+                    ->visible($isAdmin || self::userCan('ViewDatesColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -621,7 +635,7 @@ class OrdersTable
 
                 \Filament\Tables\Filters\SelectFilter::make('follow_up_status')
                     ->label(__('orders.filters.delay_follow_up'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewDelayedFollowUpFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewDelayedFollowUpFilter:Order'))
                     ->options([
                         'delayed' => __('orders.filters.delayed'),
                         'on_time' => __('orders.filters.on_time'),
@@ -651,7 +665,7 @@ class OrdersTable
                     
                 \Filament\Tables\Filters\SelectFilter::make('status')
                     ->label(__('orders.status'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewStatusFilter:Order'))
                     ->options([
                         self::STATUS_OUT_FOR_DELIVERY => '🚚 ' . __('app.out_for_delivery'),
                         self::STATUS_DELIVERED => '✅ ' . __('app.delivered'),
@@ -660,31 +674,31 @@ class OrdersTable
                     ]),
                 \Filament\Tables\Filters\TernaryFilter::make('collected_shipper')
                     ->label(__('orders.filters.collected_from_shipper'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectedFromShipperFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewCollectedFromShipperFilter:Order'))
                     ->placeholder(__('statuses.all'))
                     ->trueLabel(__('statuses.yes'))
                     ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('return_shipper')
                     ->label(__('orders.filters.returned_from_shipper'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewReturnedFromShipperFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewReturnedFromShipperFilter:Order'))
                     ->placeholder(__('statuses.all'))
                     ->trueLabel(__('statuses.yes'))
                     ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('has_return')
                     ->label(__('orders.filters.has_return'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewHasReturnFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewHasReturnFilter:Order'))
                     ->placeholder(__('statuses.all'))
                     ->trueLabel(__('statuses.yes'))
                     ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('collected_client')
                     ->label(__('orders.filters.settled_with_client'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewSettledWithClientFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewSettledWithClientFilter:Order'))
                     ->placeholder(__('statuses.all'))
                     ->trueLabel(__('statuses.yes'))
                     ->falseLabel(__('statuses.no')),
                 \Filament\Tables\Filters\TernaryFilter::make('return_client')
                     ->label(__('orders.filters.returned_to_client'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewReturnedToClientFilter:Order'))
+                    ->visible($isAdmin || self::userCan('ViewReturnedToClientFilter:Order'))
                     ->placeholder(__('statuses.all'))
                     ->trueLabel(__('statuses.yes'))
                     ->falseLabel(__('statuses.no')),
@@ -698,7 +712,7 @@ class OrdersTable
                         ->label(__('orders.bulk_actions.export_orders'))
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('success')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ExportSelectedAction:Order'))
+                        ->visible($isAdmin || self::userCan('ExportSelectedAction:Order'))
                         ->deselectRecordsAfterCompletion()
                         ->action(function ($records) {
                             $orderIds = $records->pluck('id')->toArray();
@@ -721,7 +735,7 @@ class OrdersTable
                         ->label(__('orders.bulk_actions.export_codes'))
                         ->icon('heroicon-o-document-text')
                         ->color('success')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ExportExternalCodesAction:Order'))
+                        ->visible($isAdmin || self::userCan('ExportExternalCodesAction:Order'))
                         ->deselectRecordsAfterCompletion()
                         ->action(function ($records) {
                             $orderIds = $records->pluck('id')->toArray();
@@ -744,7 +758,7 @@ class OrdersTable
                         ->label(__('orders.bulk_actions.print_labels'))
                         ->icon('heroicon-o-printer')
                         ->color('success')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('PrintLabelsAction:Order'))
+                        ->visible($isAdmin || self::userCan('PrintLabelsAction:Order'))
                         ->deselectRecordsAfterCompletion()
                         ->action(function ($records) {
                             $orderIds = $records->pluck('id')->toArray();
@@ -767,7 +781,7 @@ class OrdersTable
                         ->label(__('orders.bulk_actions.assign_shipper'))
                         ->icon('heroicon-o-truck')
                         ->color('primary')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('AssignShipperAction:Order'))
+                        ->visible($isAdmin || self::userCan('AssignShipperAction:Order'))
                         ->form([
                             Select::make('shipper_id')
                                 ->label(__('orders.shipper_select_label'))

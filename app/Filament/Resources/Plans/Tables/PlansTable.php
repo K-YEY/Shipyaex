@@ -16,22 +16,22 @@ class PlansTable
             ->columns([
                 TextColumn::make('name')
                     ->label(__('app.name'))
-                    ->visible(fn () => auth()->user()->can('ViewNameColumn:Plan'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNameColumn:Plan'))
                     ->searchable(),
                 TextColumn::make('order_count')
                     ->label(__('orders.orders'))
-                    ->visible(fn () => auth()->user()->can('ViewOrderCountColumn:Plan'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrderCountColumn:Plan'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label(__('app.created_at'))
-                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:Plan'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewDatesColumn:Plan'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label(__('app.date'))
-                    ->visible(fn () => auth()->user()->can('ViewDatesColumn:Plan'))
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewDatesColumn:Plan'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
