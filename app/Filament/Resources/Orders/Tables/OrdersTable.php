@@ -243,11 +243,8 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateNetFees($record, $state)),
 
                 TextColumn::make('cop')
-                    ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.company_share') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format(self::getColumnTotals($livewire)['total_cop'] ?? 0, 2) . 
-                        '</span>'
-                    ))
+                    ->label(__('orders.company_share'))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->numeric()
                     ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
@@ -257,13 +254,8 @@ class OrdersTable
                     ->alignCenter(),
 
                 TextColumn::make('cod')
-                    ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
-                        __('orders.collection_amount') .
-                        ' <span style="color:var(--gray-400); font-size:0.7rem; font-weight:normal;">(إجمالي - شحن)</span>' .
-                        '<br><span style="color:var(--primary-600); font-weight:bold;">' .
-                        number_format(self::getColumnTotals($livewire)['total_cod'] ?? 0, 2) .
-                        '</span>'
-                    ))
+                    ->label(__('orders.collection_amount'))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->numeric()
                     ->state(fn ($record) => number_format(
                         ($record->total_amount ?? 0) - ($record->fees ?? 0),
