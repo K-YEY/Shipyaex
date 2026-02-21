@@ -233,7 +233,10 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
                 TextInputColumn::make('net_fees')
                     ->label(__('orders.net_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()
+                        ->label('')
+                        ->using(fn ($query) => $query->sum(DB::raw('COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)')))
+                    )
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("total_amount - COALESCE(shipper_fees, 0) $direction"))
@@ -255,7 +258,10 @@ class OrdersTable
 
                 TextColumn::make('cod')
                     ->label(__('orders.collection_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()
+                        ->label('')
+                        ->using(fn ($query) => $query->sum(DB::raw('COALESCE(total_amount, 0) - COALESCE(fees, 0)')))
+                    )
                     ->numeric()
                     ->state(fn ($record) => number_format(
                         ($record->total_amount ?? 0) - ($record->fees ?? 0),
