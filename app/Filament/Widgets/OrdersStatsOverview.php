@@ -13,6 +13,8 @@ class OrdersStatsOverview extends BaseWidget
 {
     protected ?string $pollingInterval = '30s';
     
+    protected static bool $isLazy = true;
+    
     protected static ?int $sort = 5;
 
 
@@ -46,8 +48,16 @@ class OrdersStatsOverview extends BaseWidget
             // If it's an admin, no specific filtering by client_id or shipper_id is needed,
             // as they should see all orders. The query remains as is.
 
-        // إجمالي الأوردرات
-        $totalOrders = (clone $orderQuery)->count();
+        // Get counts in a single query
+        $statusCounts = (clone $orderQuery)
+            ->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // Get total count
+        $totalOrders = array_sum($statusCounts);
+        
         $stats[] = Stat::make(__('app.total_orders'), $totalOrders)
             ->description($isClient ? __('app.stats_descriptions.your_orders') : ($isShipper ? __('app.stats_descriptions.assigned_orders') : __('app.stats_descriptions.all_system')))
             ->descriptionIcon('heroicon-m-inbox-stack')
@@ -56,7 +66,7 @@ class OrdersStatsOverview extends BaseWidget
             ->url($ordersUrl);
 
         // Out for Delivery
-        $outForDelivery = (clone $orderQuery)->where('status', 'out for delivery')->count();
+        $outForDelivery = $statusCounts['out for delivery'] ?? 0;
         $stats[] = Stat::make(__('app.out_for_delivery'), $outForDelivery)
             ->description($isShipper ? __('app.stats_descriptions.with_you') : __('app.shippers'))
             ->descriptionIcon('heroicon-m-truck')
@@ -65,7 +75,7 @@ class OrdersStatsOverview extends BaseWidget
             ->url($ordersUrl . '?' . http_build_query(['tableFilters' => ['status' => ['value' => 'out for delivery']]]));
 
         // Delivered
-        $delivered = (clone $orderQuery)->where('status', 'deliverd')->count();
+        $delivered = $statusCounts['deliverd'] ?? ($statusCounts['delivered'] ?? 0);
         $stats[] = Stat::make(__('app.delivered'), $delivered)
             ->description(__('app.stats_descriptions.success_delivery'))
             ->descriptionIcon('heroicon-m-check-circle')
@@ -73,8 +83,8 @@ class OrdersStatsOverview extends BaseWidget
             ->color('success')
             ->url($ordersUrl . '?' . http_build_query(['tableFilters' => ['status' => ['value' => 'deliverd']]]));
 
-        // لم يDelivered
-        $undelivered = (clone $orderQuery)->where('status', 'undelivered')->count();
+        // Undelivered
+        $undelivered = $statusCounts['undelivered'] ?? 0;
         $stats[] = Stat::make(__('app.undelivered'), $undelivered)
             ->description(__('app.stats_descriptions.failed_delivery'))
             ->descriptionIcon('heroicon-m-x-circle')
@@ -83,7 +93,7 @@ class OrdersStatsOverview extends BaseWidget
             ->url($ordersUrl . '?' . http_build_query(['tableFilters' => ['status' => ['value' => 'undelivered']]]));
 
         // Hold
-        $hold = (clone $orderQuery)->where('status', 'hold')->count();
+        $hold = $statusCounts['hold'] ?? 0;
         $stats[] = Stat::make(__('app.hold'), $hold)
             ->description(__('app.stats_descriptions.on_hold'))
             ->descriptionIcon('heroicon-m-pause-circle')

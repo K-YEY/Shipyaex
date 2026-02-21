@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 class OrdersByGovernorateChart extends ChartWidget
 {
+    protected static bool $isLazy = true;
+
     protected static ?int $sort = 6;
 
     public function getHeading(): ?string

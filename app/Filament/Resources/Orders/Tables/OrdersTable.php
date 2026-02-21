@@ -92,6 +92,7 @@ class OrdersTable
         }
 
         return $table
+            ->deferLoading()
             ->columns([
                 TextColumn::make('code')
                     ->label(__('orders.code'))
@@ -2544,8 +2545,8 @@ class OrdersTable
             return false;
         }
 
-        return $record->collected_client_at !== null
-            || $record->collected_shipper_at !== null;
+        return $record->collected_client_date !== null
+            || $record->collected_shipper_date !== null;
     }
 
     private static function getStatusFilterColumn(): TextColumn

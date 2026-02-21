@@ -9,6 +9,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class OrdersReportWidget extends BaseWidget
 {
+    protected static bool $isLazy = true;
+
     protected static ?int $sort = 1;
     
     protected int|string|array $columnSpan = 'full';
