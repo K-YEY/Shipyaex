@@ -1,4 +1,5 @@
-<div class="mb-6 space-y-4">
+<div class="mb-6 space-y-4" x-data="{}" x-on:play-scan-sound.window="$refs.scanAudio.play()">
+    <audio x-ref="scanAudio" src="/scan.mp3" preload="auto"></audio>
     <x-filament::section>
         <div class="flex flex-col md:flex-row gap-4 items-end">
             <div class="flex-1" x-data="{ 
@@ -9,6 +10,8 @@
                     if (this.code.trim()) {
                         $wire.processScannedCode(this.code.trim());
                         this.code = '';
+                        // Play sound immediately for feedback
+                        $dispatch('play-scan-sound');
                     }
                 },
                 handleInput() {
