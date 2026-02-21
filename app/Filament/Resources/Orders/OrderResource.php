@@ -72,12 +72,21 @@ class OrderResource extends Resource
     {
         $query = parent::getEloquentQuery()->whereNotNull('status');
         
-        // ⚡ PERFORMANCE OPTIMIZATION: Eager load all relationships to prevent N+1 queries
-        $query->with([
+        // ⚡ PERFORMANCE OPTIMIZATION: Select only necessary columns and eager load relations
+        $query->select([
+            'order.id', 'order.code', 'order.external_code', 'order.name', 'order.phone', 'order.phone_2',
+            'order.address', 'order.governorate_id', 'order.city_id', 'order.total_amount', 'order.fees',
+            'order.shipper_fees', 'order.cop', 'order.cod', 'order.status', 'order.status_note',
+            'order.order_note', 'order.shipper_id', 'order.client_id', 'order.created_at', 'order.updated_at',
+            'order.shipper_date', 'order.collected_shipper', 'order.collected_client', 'order.has_return',
+            'order.collected_shipper_id', 'order.collected_client_id', 'order.returned_shipper_id',
+            'order.returned_client_id', 'order.return_shipper', 'order.return_client', 'order.has_return_date'
+        ])->with([
             'client:id,name,phone,email',
             'shipper:id,name,phone,commission',
-            'governorate:id,name',
+            'governorate:id,name,follow_up_hours',
             'city:id,name,governorate_id',
+            'orderStatus:id,slug,color',
             'collectedShipper:id,status,created_at',
             'collectedClient:id,status,created_at',
             'returnedShipper:id,status,created_at',

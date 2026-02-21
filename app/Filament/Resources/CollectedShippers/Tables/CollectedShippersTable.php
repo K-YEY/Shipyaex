@@ -62,6 +62,14 @@ class CollectedShippersTable
                     ->badge()
                     ->color('info'),
 
+                TextColumn::make('fees')
+                    ->label('شحن')
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShippingColumn:CollectedShipper'))
+                    ->state(fn ($record) => number_format($record->fees, 2) . ' ' . __('statuses.currency'))
+                    ->sortable()
+                    ->alignEnd()
+                    ->color('info'),
+
                 TextColumn::make('total_amount')
                     ->label('الإجمالي')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountColumn:CollectedShipper'))

@@ -43,6 +43,34 @@ class OrdersTable
     
     private static array $totals = [];
     
+    // ⚡ Static caches to avoid repeated DB calls per record
+    private static ?int $cachedFollowUpHours = null;
+    private static bool $cachedUserIsAdmin = false;
+    private static ?bool $cachedCanEditLocked = null;
+    private static array $cachedPermissions = [];
+    
+    /**
+     * ⚡ Get follow up hours setting (cached per request)
+     */
+    private static function getFollowUpHours(): int
+    {
+        if (self::$cachedFollowUpHours === null) {
+            self::$cachedFollowUpHours = (int) \App\Models\Setting::get('order_follow_up_hours', 48);
+        }
+        return self::$cachedFollowUpHours;
+    }
+    
+    /**
+     * ⚡ Check user permission (cached per request)
+     */
+    private static function userCan(string $permission): bool
+    {
+        if (!isset(self::$cachedPermissions[$permission])) {
+            self::$cachedPermissions[$permission] = (bool) auth()->user()?->can($permission);
+        }
+        return self::$cachedPermissions[$permission];
+    }
+    
     
     public static function configure(Table $table): Table
     {
@@ -54,11 +82,11 @@ class OrdersTable
                     ->label(__('orders.code'))
                     ->color(function ($record) {
                         try {
-                            // Check governorate specific hours first, then fallback to global setting
+                            // ⚡ Check governorate specific hours first, then fallback to global setting (cached)
                             $governorateHours = $record->governorate?->follow_up_hours;
                             $limit = ($governorateHours && $governorateHours > 0) 
                                 ? (int) $governorateHours 
-                                : (int) \App\Models\Setting::get('order_follow_up_hours', 48);
+                                : self::getFollowUpHours();
 
                             if (in_array($record->status, [
                                 self::STATUS_OUT_FOR_DELIVERY
@@ -1352,7 +1380,7 @@ class OrdersTable
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(500)
                  ->description(new \Illuminate\Support\HtmlString('
                 <style>
                     #orders-table-wrapper .fi-ta-ctn {
@@ -1372,10 +1400,11 @@ class OrdersTable
                     }
                 </style>
             '))
-            ->paginationPageOptions([25, 50, 100, 250, 500])
+            ->paginationPageOptions([100, 250, 500, 1000])
             ->persistSearchInSession()
             ->persistColumnSearchesInSession()
             ->filtersFormColumns(3)
+            ->deferLoading()
             ->defaultSort('created_at', 'desc')
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
@@ -2542,8 +2571,8 @@ class OrdersTable
 
     private static function isFieldDisabled($record): bool
     {
-        // Disable fields if the user doesn't have update permission or if the record is locked by business rules
-        if (!auth()->user()->can('Update:Order')) {
+        // ⚡ Use cached permission check
+        if (!self::userCan('Update:Order')) {
             return true;
         }
 
@@ -2552,9 +2581,12 @@ class OrdersTable
 
     private static function isRecordLocked($record): bool
     {
-        // Business logic for locking (if collected, it is locked)
-        // Admins/Super Admins might bypass this if they have a specific permission, but for now we follow the existing logic using permission checks
-        if (auth()->user()->can('EditLocked:Order')) {
+        // ⚡ Cache EditLocked permission check
+        if (self::$cachedCanEditLocked === null) {
+            self::$cachedCanEditLocked = self::userCan('EditLocked:Order');
+        }
+        
+        if (self::$cachedCanEditLocked) {
             return false;
         }
 

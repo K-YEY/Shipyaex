@@ -222,6 +222,15 @@ class CollectedShipperForm
                             ->default(0)
                             ->prefix('طلب'),
 
+                        TextInput::make('fees')
+                            ->label('شحن')
+                            ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShippingField:CollectedShipper'))
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated()
+                            ->default(0)
+                            ->prefix('ج.م'),
+
                         TextInput::make('total_amount')
                             ->label('إجمالي المبلغ')
                             ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountField:CollectedShipper'))

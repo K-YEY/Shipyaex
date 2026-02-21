@@ -19,6 +19,7 @@ class CollectedShipper extends Model
         'total_amount',
         'number_of_orders',
         'shipper_fees',
+        'fees',
         'net_amount',
         'status',
         'notes',
@@ -28,6 +29,7 @@ class CollectedShipper extends Model
         'collection_date'  => 'date',
         'total_amount'     => 'decimal:2',
         'shipper_fees'     => 'decimal:2',
+        'fees'             => 'decimal:2',
         'net_amount'       => 'decimal:2',
         'number_of_orders' => 'integer',
     ];
@@ -204,23 +206,37 @@ class CollectedShipper extends Model
      */
     public function recalculateAmounts(): void
     {
-        $orders = $this->orders;
+        $orders = $this->orders()->with('client')->get();
         
         $totalAmount = 0;
         $shipperFees = 0;
+        $fees = 0;
+        $clientNames = [];
 
         foreach ($orders as $order) {
             if ($order->status === 'deliverd') {
                 $totalAmount += $order->total_amount ?? 0;
             }
             $shipperFees += $order->shipper_fees ?? 0;
+            $fees += $order->fees ?? 0;
+            if ($order->client?->name) {
+                $clientNames[] = $order->client->name;
+            }
         }
+
+        $uniqueClients = array_unique($clientNames);
+        $clientsList = implode(', ', $uniqueClients);
+        
+        // تجهيز الملاحظات بحيث تشمل أسماء العملاء بشكل منظم
+        $orderInfo = "العملاء: " . $clientsList;
 
         $this->update([
             'total_amount' => $totalAmount,
             'shipper_fees' => $shipperFees,
+            'fees' => $fees,
             'net_amount' => $totalAmount - $shipperFees,
             'number_of_orders' => $orders->count(),
+            'notes' => $orderInfo,
         ]);
     }
 
