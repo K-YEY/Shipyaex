@@ -97,7 +97,7 @@ class CollectedShipperForm
 
                 // قسم Orderات - عرض All مع إمكانية اNoستبعاد
                 Section::make('الأوردرات المتاحة للتحصيل')
-                    ->description('⚡ سيتم إنشاء فاتورة منفصلة لكل عميل تلقائياً — حدّد الأوردرات المطلوبة')
+                    ->description('⚡ سيتم إنشاء فاتورة واحدة للمندوب — حدّد الأوردرات المطلوبة')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->collapsible()
                     ->columnSpanFull()
@@ -202,7 +202,7 @@ class CollectedShipperForm
                                     ->pluck('id')
                                     ->toArray();
                             })
-                            ->helperText('✅ كل الأوردرات محددة افتراضياً — عند الحفظ سيتم فصل كل عميل في فاتورة مستقلة'),
+                            ->helperText('✅ كل الأوردرات محددة افتراضياً — عند الحفظ سيتم إنشاء فاتورة تحصيل واحدة للمندوب'),
                     ]),
 
                 // قسم ملخص المبالغ

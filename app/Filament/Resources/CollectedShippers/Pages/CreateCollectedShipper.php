@@ -80,26 +80,21 @@ class CreateCollectedShipper extends CreateRecord
             $this->halt();
         }
 
-        // إنشاء تحصيل مقسم حسب العميل (كل عميل فاتورة منفصلة)
-        $collections = $service->createCollectionSplitByClient(
+        // إنشاء تحصيل واحد للمندوب (يشمل كل العملاء)
+        $collection = $service->createCollection(
             $data['shipper_id'],
             $orderIds,
             $data['collection_date']
         );
 
-        // إشعار بعدد الفواتير المنشأة
-        $clientCount = count($collections);
-        $totalOrders = array_sum(array_map(fn($c) => $c->number_of_orders, $collections));
-
         Notification::make()
-            ->title("✅ تم إنشاء {$clientCount} فاتورة تحصيل")
-            ->body("تم تقسيم {$totalOrders} طلب على {$clientCount} عميل/فاتورة منفصلة")
+            ->title("✅ تم إنشاء فاتورة تحصيل بنجاح")
+            ->body("تم إنشاء توريدة للمندوب تشمل {$collection->number_of_orders} طلب")
             ->success()
             ->persistent()
             ->send();
 
-        // نرجّع أول سجل لأن Filament يتوقع Model واحد
-        return $collections[0];
+        return $collection;
     }
 
     protected function getRedirectUrl(): string

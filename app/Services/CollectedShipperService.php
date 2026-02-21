@@ -106,12 +106,13 @@ class CollectedShipperService
      */
     public function calculateAmounts(array $orderIds): array
     {
-        $orders = Order::whereIn('id', $orderIds)->get();
+        $orders = Order::whereIn('id', $orderIds)->with('client')->get();
 
         $totalAmount = 0;
         $shipperFees = 0;
         $fees = 0;
         $numberOfOrders = $orders->count();
+        $clientNames = [];
 
         foreach ($orders as $order) {
             // Delivered (كامل أو partial) - we collect the full amount
@@ -123,7 +124,14 @@ class CollectedShipperService
 
             $shipperFees += $order->shipper_fees ?? 0;
             $fees += $order->fees ?? 0;
+
+            if ($order->client?->name) {
+                $clientNames[] = $order->client->name;
+            }
         }
+
+        $uniqueClients = array_unique($clientNames);
+        $clientsList = implode(', ', $uniqueClients);
 
         return [
             'total_amount' => $totalAmount,
@@ -131,6 +139,7 @@ class CollectedShipperService
             'fees' => $fees,
             'net_amount' => $totalAmount - $shipperFees,
             'number_of_orders' => $numberOfOrders,
+            'client_names' => $clientsList,
         ];
     }
 
@@ -153,6 +162,7 @@ class CollectedShipperService
                 'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
                 'number_of_orders' => $amounts['number_of_orders'],
                 'status' => CollectingStatus::PENDING->value,
+                'notes' => 'العملاء: ' . $amounts['client_names'],
             ]);
 
             // ربط Orderات بالتحصيل (بدون قلب الحالة لـ true)
@@ -339,6 +349,7 @@ class CollectedShipperService
             'fees' => $amounts['fees'],
             'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
             'number_of_orders' => $amounts['number_of_orders'],
+            'notes' => 'العملاء: ' . ($amounts['client_names'] ?? ''),
         ]);
 
         return $collection->fresh();

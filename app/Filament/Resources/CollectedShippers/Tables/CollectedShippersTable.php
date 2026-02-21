@@ -47,6 +47,14 @@ class CollectedShippersTable
                     ->icon('heroicon-o-truck')
                     ->weight('bold'),
 
+                TextColumn::make('notes')
+                    ->label('العملاء')
+                    ->searchable()
+                    ->wrap()
+                    ->limit(50)
+                    ->tooltip(fn ($record) => $record->notes)
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNotesColumn:CollectedShipper')),
+
                 TextColumn::make('collection_date')
                     ->label('تاريخ التحصيل')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectionDateColumn:CollectedShipper'))
