@@ -26,6 +26,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -2521,14 +2522,14 @@ class OrdersTable
             return self::$cachedTotals;
         }
 
-        $result = $query->selectRaw('
-            SUM(total_amount) as total_amount,
-            SUM(fees) as total_fees,
-            SUM(shipper_fees) as total_shipper_fees,
-            SUM(cop) as total_cop,
-            SUM(COALESCE(total_amount, 0) - COALESCE(fees, 0)) as total_cod,
-            SUM(COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)) as net_fees
-        ')->first();
+        $result = $query->select([
+            DB::raw('SUM(total_amount) as total_amount'),
+            DB::raw('SUM(fees) as total_fees'),
+            DB::raw('SUM(shipper_fees) as total_shipper_fees'),
+            DB::raw('SUM(cop) as total_cop'),
+            DB::raw('SUM(COALESCE(total_amount, 0) - COALESCE(fees, 0)) as total_cod'),
+            DB::raw('SUM(COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)) as net_fees')
+        ])->first();
 
         self::$cachedTotalsKey = $cacheKey;
         self::$cachedTotals = $result ? $result->toArray() : [];
