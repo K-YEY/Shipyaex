@@ -110,10 +110,20 @@ class OrderResource extends Resource
 
     /**
      * Badge للعدد في القائمة الجانبية
+     * ⚡ Cached for 60s to avoid a DB query on every request
      */
     public static function getNavigationBadge(): ?string
     {
-        return static::getEloquentQuery()->count() ?: null;
+        $user = auth()->user();
+        if (!$user) return null;
+
+        $cacheKey = 'nav_badge_orders_' . $user->id;
+
+        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () {
+            return static::getEloquentQuery()->count();
+        });
+
+        return $count ?: null;
     }
 
     public static function getNavigationBadgeColor(): ?string

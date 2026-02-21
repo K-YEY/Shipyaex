@@ -173,7 +173,7 @@ class OrdersTable
                 TextInputColumn::make('total_amount')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
                         __('orders.total_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format((fn() => $this->getFilteredTableQuery()->sum('total_amount'))->call($livewire), 2) . 
+                        number_format(self::getColumnTotals($livewire)['total_amount'] ?? 0, 2) . 
                         '</span>'
                     ))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
@@ -187,7 +187,7 @@ class OrdersTable
                 TextInputColumn::make('fees')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
                         __('orders.shipping_fees') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format((fn() => $this->getFilteredTableQuery()->sum('fees'))->call($livewire), 2) . 
+                        number_format(self::getColumnTotals($livewire)['total_fees'] ?? 0, 2) . 
                         '</span>'
                     ))
                     ->prefix(__('statuses.currency'))
@@ -201,7 +201,7 @@ class OrdersTable
                 TextInputColumn::make('shipper_fees')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
                         __('orders.shipper_commission') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format((fn() => $this->getFilteredTableQuery()->sum('shipper_fees'))->call($livewire), 2) . 
+                        number_format(self::getColumnTotals($livewire)['total_shipper_fees'] ?? 0, 2) . 
                         '</span>'
                     ))
                     ->prefix(__('statuses.currency'))
@@ -214,7 +214,7 @@ class OrdersTable
                 TextInputColumn::make('net_fees')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
                         __('orders.net_amount') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format((fn() => $this->getFilteredTableQuery()->sum('total_amount') - $this->getFilteredTableQuery()->sum('shipper_fees'))->call($livewire), 2) . 
+                        number_format(self::getColumnTotals($livewire)['net_fees'] ?? 0, 2) . 
                         '</span>'
                     ))
                     ->prefix(__('statuses.currency'))
@@ -228,7 +228,7 @@ class OrdersTable
                 TextColumn::make('cop')
                     ->label(fn ($livewire) => new \Illuminate\Support\HtmlString(
                         __('orders.company_share') . '<br><span style="color:var(--primary-600); font-weight:bold;">' . 
-                        number_format((fn() => $this->getFilteredTableQuery()->sum('cop'))->call($livewire), 2) . 
+                        number_format(self::getColumnTotals($livewire)['total_cop'] ?? 0, 2) . 
                         '</span>'
                     ))
                     ->numeric()
@@ -244,10 +244,7 @@ class OrdersTable
                         __('orders.collection_amount') .
                         ' <span style="color:var(--gray-400); font-size:0.7rem; font-weight:normal;">(إجمالي - شحن)</span>' .
                         '<br><span style="color:var(--primary-600); font-weight:bold;">' .
-                        number_format(
-                            (fn() => $this->getFilteredTableQuery()->selectRaw('SUM(total_amount - COALESCE(fees, 0)) as total')->value('total') ?? 0)->call($livewire),
-                            2
-                        ) .
+                        number_format(self::getColumnTotals($livewire)['total_cod'] ?? 0, 2) .
                         '</span>'
                     ))
                     ->numeric()
@@ -1355,7 +1352,7 @@ class OrdersTable
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(500)
+            ->defaultPaginationPageOption(50)
                  ->description(new \Illuminate\Support\HtmlString('
                 <style>
                     #orders-table-wrapper .fi-ta-ctn {
@@ -1375,11 +1372,10 @@ class OrdersTable
                     }
                 </style>
             '))
-            ->paginationPageOptions([10, 25, 50, 100, 500, 1000])
+            ->paginationPageOptions([25, 50, 100, 250, 500])
             ->persistSearchInSession()
             ->persistColumnSearchesInSession()
             ->filtersFormColumns(3)
-            ->poll('20s')
             ->defaultSort('created_at', 'desc')
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
@@ -2471,6 +2467,44 @@ class OrdersTable
         return $record->{$dateField}
             ? Carbon::parse($record->{$dateField})->format('Y-m-d')
             : '✓';
+    }
+
+    /**
+     * ⚡ PERFORMANCE: Get all column totals in a single query per request.
+     * Caches the result statically so it's only computed once per page load.
+     */
+    private static array $cachedTotals = [];
+    private static string $cachedTotalsKey = '';
+
+    private static function getColumnTotals($livewire): array
+    {
+        try {
+            $query = $livewire->getFilteredTableQuery();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        // Build a cache key based on the SQL query to detect filter changes
+        $sql = $query->toRawSql();
+        $cacheKey = md5($sql);
+
+        if (self::$cachedTotalsKey === $cacheKey && !empty(self::$cachedTotals)) {
+            return self::$cachedTotals;
+        }
+
+        $result = $query->selectRaw('
+            SUM(total_amount) as total_amount,
+            SUM(fees) as total_fees,
+            SUM(shipper_fees) as total_shipper_fees,
+            SUM(cop) as total_cop,
+            SUM(COALESCE(total_amount, 0) - COALESCE(fees, 0)) as total_cod,
+            SUM(COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)) as net_fees
+        ')->first();
+
+        self::$cachedTotalsKey = $cacheKey;
+        self::$cachedTotals = $result ? $result->toArray() : [];
+
+        return self::$cachedTotals;
     }
 
     private static function updateTotalAmount($record, $state): void
