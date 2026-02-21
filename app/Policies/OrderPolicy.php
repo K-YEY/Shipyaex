@@ -11,6 +11,21 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class OrderPolicy
 {
     use HandlesAuthorization;
+
+    /**
+     * @param AuthUser $authUser
+     * @param string $ability
+     * @return bool|null
+     */
+    public function before(AuthUser $authUser, string $ability): ?bool
+    {
+        // Always allow super_admin and admin
+        if ($authUser->hasRole(config('filament-shield.super_admin.name', 'super_admin')) || $authUser->hasRole('admin')) {
+            return true;
+        }
+
+        return null;
+    }
     
     public function viewAny(AuthUser $authUser): bool
     {
