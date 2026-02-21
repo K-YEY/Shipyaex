@@ -233,10 +233,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
                 TextInputColumn::make('net_fees')
                     ->label(__('orders.net_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()
-                        ->label('')
-                        ->using(fn ($query) => $query->sum(DB::raw('COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)')))
-                    )
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("total_amount - COALESCE(shipper_fees, 0) $direction"))
@@ -256,17 +253,11 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter(),
 
-                TextColumn::make('cod')
+                TextColumn::make('cod_amount')
                     ->label(__('orders.collection_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()
-                        ->label('')
-                        ->using(fn ($query) => $query->sum(DB::raw('COALESCE(total_amount, 0) - COALESCE(fees, 0)')))
-                    )
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->numeric()
-                    ->state(fn ($record) => number_format(
-                        ($record->total_amount ?? 0) - ($record->fees ?? 0),
-                        2
-                    ) . ' ' . __('statuses.currency'))
+                    ->state(fn ($record) => number_format($record->cod_amount ?? 0, 2) . ' ' . __('statuses.currency'))
                     ->sortable(query: fn ($query, $direction) => $query->orderByRaw("(total_amount - COALESCE(fees, 0)) $direction"))
                     ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCollectionAmountColumn:Order'))
                     ->searchable(
