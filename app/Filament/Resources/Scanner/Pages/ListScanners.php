@@ -168,17 +168,20 @@ class ListScanners extends ListRecords
 
         if (!$order) {
             Notification::make()->title('❌ الأوردر غير موجود')->danger()->send();
+            $this->dispatch('play-error-sound');
             return;
         }
 
         if (collect($this->scannedOrders)->contains('id', $order->id)) {
             Notification::make()->title('⚠️ الأوردر مضاف بالفعل')->warning()->send();
+            $this->dispatch('play-error-sound');
             return;
         }
 
         $this->scannedOrders[] = ['id' => $order->id];
         
         Notification::make()->title("✅ تم إضافة أوردر #{$order->code}")->success()->send();
+        $this->dispatch('play-scan-sound');
 
         if ($this->autoProcess && $this->selectedAction !== 'view') {
             $this->quickAction($order->id, $this->selectedAction);
@@ -197,6 +200,7 @@ class ListScanners extends ListRecords
         $user = auth()->user();
         if (!$user->isAdmin() && !$user->can('ClearList:Scanner')) {
             Notification::make()->title('❌ لا تملك صلاحية مسح القائمة')->danger()->send();
+            $this->dispatch('play-error-sound');
             return;
         }
         $this->scannedOrders = [];

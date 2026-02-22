@@ -1,5 +1,9 @@
-<div class="mb-6 space-y-4" x-data="{}" x-on:play-scan-sound.window="$refs.scanAudio.play()">
+<div class="mb-6 space-y-4" x-data="{}" 
+    x-on:play-scan-sound.window="$refs.scanAudio.play()"
+    x-on:play-error-sound.window="$refs.errorAudio.play()"
+>
     <audio x-ref="scanAudio" src="/scan.mp3" preload="auto"></audio>
+    <audio x-ref="errorAudio" src="/error-scan.mp3" preload="auto"></audio>
     <x-filament::section>
         <div class="flex flex-col md:flex-row gap-4 items-end">
             <div class="flex-1" x-data="{ 

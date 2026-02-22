@@ -5,6 +5,10 @@
         lastScan: null,
         focusInput() {
             this.$refs.scanInput.focus();
+        },
+        playScanSound() {
+            const audio = new Audio('/scan.mp3');
+            audio.play().catch(e => console.log('Audio play failed:', e));
         }
     }"
     x-init="focusInput()"
@@ -19,6 +23,7 @@
                 x-model="scannedCode"
                 @keydown.enter.prevent="
                     if (scannedCode.trim()) {
+                        playScanSound();
                         $wire.processScannedCode(scannedCode.trim());
                         lastScan = scannedCode.trim();
                         scannedCode = '';
