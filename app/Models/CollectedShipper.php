@@ -214,11 +214,17 @@ class CollectedShipper extends Model
         $clientNames = [];
 
         foreach ($orders as $order) {
+            // الإجمالي هو ما تم تحصيله فعلياً من العميل (فقط في حالة التسليم)
             if ($order->status === 'deliverd') {
                 $totalAmount += $order->total_amount ?? 0;
             }
+            
+            // عمولة المندوب تحسب دائماً (سواء سلم أو لم يسلم)
             $shipperFees += $order->shipper_fees ?? 0;
+            
+            // مصاريف الشحن للشركة
             $fees += $order->fees ?? 0;
+
             if ($order->client?->name) {
                 $clientNames[] = $order->client->name;
             }
@@ -227,17 +233,15 @@ class CollectedShipper extends Model
         $uniqueClients = array_unique($clientNames);
         $clientsList = implode(', ', $uniqueClients);
         
-        // تجهيز الملاحظات بحيث تشمل أسماء العملاء بشكل منظم
-        $orderInfo = "العملاء: " . $clientsList;
-
-        $this->update([
-            'total_amount' => $totalAmount,
-            'shipper_fees' => $shipperFees,
-            'fees' => $fees,
-            'net_amount' => $totalAmount - $shipperFees,
-            'number_of_orders' => $orders->count(),
-            'notes' => $orderInfo,
-        ]);
+        // الصافي = المجموع المحصل - عمولات المندوب
+        $this->total_amount = $totalAmount;
+        $this->shipper_fees = $shipperFees;
+        $this->fees = $fees;
+        $this->net_amount = $totalAmount - $shipperFees;
+        $this->number_of_orders = $orders->count();
+        $this->notes = "العملاء: " . $clientsList;
+        
+        $this->save();
     }
 
     /**
@@ -252,7 +256,8 @@ class CollectedShipper extends Model
     protected static function booted()
     {
         static::saving(function ($model) {
-            $model->net_amount = $model->total_amount - $model->shipper_fees;
+            // التأكد دائماً أن الصافي = الإجمالي - العمولة
+            $model->net_amount = ($model->total_amount ?? 0) - ($model->shipper_fees ?? 0);
         });
     }
 }

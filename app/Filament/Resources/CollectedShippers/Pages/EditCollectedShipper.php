@@ -54,12 +54,12 @@ class EditCollectedShipper extends EditRecord
                         // 2. Approve collection
                         $service->approveCollection($updatedRecord);
                         
-                        Notification::make()
-                            ->title('تم الSave واNoعتماد بنجاح ✅')
-                            ->body('تم Save الEditات وApprove collection')
-                            ->success()
-                            ->send();
-                        
+                  Notification::make()
+                        ->title('تم الحفظ والاعتماد بنجاح ✅')
+                        ->body('تم حفظ التعديلات واعتماد المجموعة بنجاح')
+                        ->success()
+                        ->send();
+                                            
                         $this->redirect($this->getResource()::getUrl('index'));
                         
                     } catch (\Exception $e) {
@@ -108,8 +108,8 @@ class EditCollectedShipper extends EditRecord
         // التحقق من أن التحصيل No يزال Holdًا
         if ($record->status !== 'pending') {
             Notification::make()
-                ->title('No يمكن Edit هذا التحصيل')
-                ->body('التحصيل تم اعتماده أو إلغاؤه')
+->title('غير مسموح بتعديل هذا التحصيل')     
+           ->body('التحصيل تم اعتماده أو إلغاؤه')
                 ->danger()
                 ->send();
             

@@ -159,13 +159,13 @@ class CollectedShipperService
                 'total_amount' => $amounts['total_amount'],
                 'shipper_fees' => $amounts['shipper_fees'],
                 'fees' => $amounts['fees'],
-                'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
+                'net_amount' => $amounts['total_amount'] - $amounts['shipper_fees'],
                 'number_of_orders' => $amounts['number_of_orders'],
                 'status' => CollectingStatus::PENDING->value,
                 'notes' => 'العملاء: ' . $amounts['client_names'],
             ]);
 
-            // ربط Orderات بالتحصيل (بدون قلب الحالة لـ true)
+            // ربط Orderات بالتحصيل
             foreach ($orders as $order) {
                 $order->update([
                     'collected_shipper_id' => $collection->id,
@@ -173,6 +173,28 @@ class CollectedShipperService
             }
 
             return $collection;
+        });
+    }
+
+    /**
+     * إضافة طلبات لتحصيل موجود (بشرط أن يكون Pending)
+     */
+    public function addOrdersToCollection(CollectedShipper $collection, array $orderIds): CollectedShipper
+    {
+        if ($collection->status !== CollectingStatus::PENDING->value) {
+            throw new \Exception("لا يمكن إضافة طلبات لتحصيل غير معلق");
+        }
+
+        return DB::transaction(function () use ($collection, $orderIds) {
+            // ربط الطلبات الجديدة بالتحصيل
+            Order::whereIn('id', $orderIds)->update([
+                'collected_shipper_id' => $collection->id,
+            ]);
+
+            // إعادة حساب كافة القيم بناءً على جميع الطلبات المرتبطة حالياً
+            $collection->recalculateAmounts();
+
+            return $collection->fresh();
         });
     }
 
@@ -230,33 +252,22 @@ class CollectedShipperService
     public function updateCollection(CollectedShipper $collection, array $orderIds): CollectedShipper
     {
         return DB::transaction(function () use ($collection, $orderIds) {
-            // إزالة Orderات القديمة
+            // إزالة الربط القديم للطلبات التي لم تعد في القائمة الجديدة
             Order::where('collected_shipper_id', $collection->id)
+                ->whereNotIn('id', $orderIds)
                 ->update([
                     'collected_shipper' => false,
                     'collected_shipper_date' => null,
                     'collected_shipper_id' => null,
                 ]);
 
-            // Calculate new amounts
-            $amounts = $this->calculateAmounts($orderIds);
-            $orders = Order::whereIn('id', $orderIds)->get();
-
-            // Update collection record
-            $collection->update([
-                'total_amount' => $amounts['total_amount'],
-                'shipper_fees' => $amounts['shipper_fees'],
-                'fees' => $amounts['fees'],
-                'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
-                'number_of_orders' => $amounts['number_of_orders'],
+            // ربط الطلبات الجديدة (أو تحديث القديمة)
+            Order::whereIn('id', $orderIds)->update([
+                'collected_shipper_id' => $collection->id,
             ]);
 
-            // ربط Orderات بالتحصيل (بدون قلب الحالة لـ true)
-            foreach ($orders as $order) {
-                $order->update([
-                    'collected_shipper_id' => $collection->id,
-                ]);
-            }
+            // إعادة الحساب الشامل
+            $collection->recalculateAmounts();
 
             return $collection->fresh();
         });

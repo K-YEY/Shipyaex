@@ -214,10 +214,10 @@ class ViewCollectedShipper extends ViewRecord
                     ->collapsed()
                     ->columnSpanFull()
                     ->schema([
-                        TextEntry::make('notes')
-                            ->label('مNoحظات')
-                            ->placeholder('No توجد مNoحظات')
-                            ->columnSpanFull(),
+                            TextEntry::make('notes')
+                                    ->label('ملاحظات')
+                                    ->placeholder('لا توجد ملاحظات')
+                                    ->columnSpanFull(),
 
                         TextEntry::make('created_at')
                             ->label('Created At')

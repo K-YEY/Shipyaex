@@ -857,95 +857,61 @@ class OrdersTable
                 // 💰 SHIPPER COLLECTIONS
                 BulkActionGroup::make([
                     BulkAction::make('collectShipper')
-                        ->label('Collection from Shipper')
+                        ->label('تحصيل من المندوب')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
                         ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageShipperCollectionAction:Order'))
                         ->requiresConfirmation()
-                        ->modalHeading('Collect from Shipper')
-                        ->modalDescription('Are you sure you want to collect amounts from Shipper for selected orders?')
+                        ->modalHeading('تحصيل المبالغ من المندوبين')
+                        ->modalDescription('سيتم إنشاء فاتورة تحصيل (أو الإضافة لفاتورة معلقة) لكل مندوب تم اختيار طلبات له.')
                         ->deselectRecordsAfterCompletion()
-                        ->action(function ($records) {
-                            $user = auth()->user();
-                            $shipperId = null;
-                            $count = 0;
-                            $totalAmount = 0;
-                            $shipperFees = 0;
-                            $orderIds = [];
-                            $skipped = 0;
+                        ->action(function (Collection $records) {
+                            $service = new CollectedShipperService();
+                            
+                            // تجميع الطلبات حسب المندوب
+                            $groupedByShipper = $records->groupBy('shipper_id');
+                            
+                            $successCount = 0;
+                            $shippersInvolved = 0;
 
-                            foreach ($records as $record) {
-                                // Check if order is in valid status for collection
-                                if ($record->status != self::STATUS_DELIVERED && $record->status != self::STATUS_UNDELIVERED) {
-                                    $skipped++;
-                                    continue;
-                                }
-
-                                // Determine shipper from first order
-                                if (!$shipperId && $record->shipper_id) {
-                                    $shipperId = $record->shipper_id;
-                                }
+                            foreach ($groupedByShipper as $shipperId => $shipperOrders) {
+                                if (!$shipperId) continue;
                                 
-                                $count++;
-                                if ($record->status === self::STATUS_DELIVERED) {
-                                    $totalAmount += $record->total_amount ?? 0;
-                                }
-                                $shipperFees += $record->shipper_fees ?? 0;
-                                $orderIds[] = $record->id;
-                            }
+                                $shippersInvolved++;
+                                
+                                // فلترة الطلبات الصالحة للتحصيل فقط
+                                $validOrderIds = $shipperOrders->filter(function ($order) use ($service) {
+                                    return $service->isOrderEligibleForCollection($order);
+                                })->pluck('id')->toArray();
 
-                            if ($count > 0 && $shipperId) {
-                                // Check if there's an existing pending collection for this shipper
+                                if (empty($validOrderIds)) continue;
+
+                                // البحث عن تحصيل معلق لهذا المندوب
                                 $existingCollection = \App\Models\CollectedShipper::where('shipper_id', $shipperId)
-                                    ->where('status', 'pending')
+                                    ->where('status', \App\Enums\CollectingStatus::PENDING->value)
                                     ->first();
 
                                 if ($existingCollection) {
-                                    // Add to existing pending collection
-                                    $existingCollection->update([
-                                        'total_amount' => $existingCollection->total_amount + $totalAmount,
-                                        'shipper_fees' => $existingCollection->shipper_fees + $shipperFees,
-                                        'number_of_orders' => $existingCollection->number_of_orders + $count,
-                                        'notes' => ($existingCollection->notes ?? '') . "\nAdded {$count} orders on " . now()->format('Y-m-d H:i'),
-                                    ]);
-
-                                    $collection = $existingCollection;
+                                    // إضافة الطلبات للتحصيل الموجود
+                                    $service->addOrdersToCollection($existingCollection, $validOrderIds);
                                 } else {
-                                    // Create new collection record with pending status
-                                    $collection = \App\Models\CollectedShipper::create([
-                                        'shipper_id' => $shipperId,
-                                        'collection_date' => now(),
-                                        'total_amount' => $totalAmount,
-                                        'shipper_fees' => $shipperFees,
-                                        'number_of_orders' => $count,
-                                        'status' => 'pending',
-                                        'notes' => 'Created from orders table - awaiting approval',
-                                    ]);
+                                    // إنشاء تحصيل جديد
+                                    $service->createCollection($shipperId, $validOrderIds);
                                 }
+                                
+                                $successCount += count($validOrderIds);
+                            }
 
-                                // Mark orders as collected and link to collection
-                                \App\Models\Order::whereIn('id', $orderIds)
-                                    ->update([
-                                        'collected_shipper' => true,
-                                        'collected_shipper_date' => now(),
-                                        'collected_shipper_id' => $collection->id
-                                    ]);
-
-                                // Notify success
+                            if ($successCount > 0) {
                                 Notification::make()
-                                    ->title("✅ Collection Created")
-                                    ->body("Created collection with {$count} orders - Status: Pending")
+                                    ->title("✅ تم التحصيل بنجاح")
+                                    ->body("تمت معالجة {$successCount} طلب لعدد {$shippersInvolved} مندوب.")
                                     ->success()
                                     ->send();
                             } else {
-                                $message = "No valid orders to collect";
-                                if ($skipped > 0) {
-                                    $message .= "\n⚠️ {$skipped} orders skipped (invalid status or already collected)";
-                                }
-                                
                                 Notification::make()
-                                    ->title("⚠️ Cannot Proceed")
-                                    ->body($message)
+                                    ->title("⚠️ لم يتم تحصيل أي طلبات")
+                                    ->body("تأكد من أن الطلبات المختارة في حالة (تم التسليم) أو (غير مستلم) ولم يتم تحصيلها مسبقاً.")
                                     ->warning()
                                     ->send();
                             }
