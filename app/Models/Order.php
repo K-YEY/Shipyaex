@@ -52,6 +52,7 @@ class Order extends Model
         'client_id',
         'returned_shipper_id',
         'returned_client_id',
+        'shipping_content',
     ];
 
     /**
@@ -143,6 +144,11 @@ class Order extends Model
     public function collectedClient()
     {
         return $this->belongsTo(CollectedClient::class, 'collected_client_id');
+    }
+
+    public function shippingContent()
+    {
+        return $this->belongsTo(ShippingContent::class, 'shipping_content');
     }
 
     public function statusHistories()
