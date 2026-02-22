@@ -72,11 +72,8 @@ class OrderResource extends Resource
     {
         $query = parent::getEloquentQuery()->whereNotNull('status');
         
-        // ⚡ PERFORMANCE OPTIMIZATION: Select columns and add virtual columns for accurate summarization
-        $query->select('*')
-            ->selectRaw('(COALESCE(total_amount, 0) - COALESCE(shipper_fees, 0)) as net_fees')
-            ->selectRaw('(COALESCE(total_amount, 0) - COALESCE(fees, 0)) as cod_amount')
-            ->with([
+        // ⚡ PERFORMANCE OPTIMIZATION: Load necessary relationships
+        $query->with([
             'client:id,name,phone,email',
             'shipper:id,name,phone,commission',
             'governorate:id,name,follow_up_hours',
@@ -172,7 +169,6 @@ class OrderResource extends Resource
             'view_total_amount_column',
             'view_shipping_fees_column',
             'view_shipper_commission_column',
-            'view_net_amount_column',
             'view_company_share_column',
             'view_collection_amount_column',
             'view_status_column',

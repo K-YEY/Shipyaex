@@ -246,14 +246,6 @@ class OrdersTable
                     ->toggleable()
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
-                TextColumn::make('net_fees')
-                    ->label(__('orders.net_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
-                    ->prefix(__('statuses.currency'))
-                    ->sortable()
-                    ->visible($isAdmin || self::userCan('ViewNetAmountColumn:Order'))
-                    ->toggleable()
-                    ->searchable(isIndividual: true),
 
                 TextColumn::make('cop')
                     ->label(__('orders.company_share'))
@@ -266,7 +258,7 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter(),
 
-                TextColumn::make('cod_amount')
+                TextColumn::make('cod')
                     ->label(__('orders.collection_amount'))
                     ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
                     ->numeric()

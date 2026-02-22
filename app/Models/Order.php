@@ -497,23 +497,5 @@ class Order extends Model
             }
         });
     }
-    /**
-     * Accessor for Net Fees (Virtual Attribute)
-     * Net Fees = Total Amount - Shipper Fees
-     */
-    public function getNetFeesAttribute()
-    {
-        return $this->total_amount - ($this->shipper_fees ?? 0);
-    }
 
-    /**
-     * Mutator for Net Fees
-     * When Net Fees is updated, we update Total Amount
-     */
-    public function setNetFeesAttribute($value)
-    {
-        $this->attributes['total_amount'] = $value + ($this->shipper_fees ?? 0);
-        // We don't set 'net_fees' or 'cod' directly here because boot/saving event handles cod calculation
-        // But since this might be called by mass assignment or direct set, we rely on saving event.
-    }
 }
