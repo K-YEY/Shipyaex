@@ -176,8 +176,6 @@ class CollectedShipperForm
                                 $set('fees', $amounts['fees']);
                                 $set('net_amount', $amounts['net_amount']);
                                 $set('number_of_orders', $amounts['number_of_orders']);
-                                $set('delivered_count', $amounts['delivered_count'] ?? 0);
-                                $set('undelivered_count', $amounts['undelivered_count'] ?? 0);
                             })
                             ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                 if (empty($state)) {
@@ -186,8 +184,6 @@ class CollectedShipperForm
                                     $set('fees', 0);
                                     $set('net_amount', 0);
                                     $set('number_of_orders', 0);
-                                    $set('delivered_count', 0);
-                                    $set('undelivered_count', 0);
                                     return;
                                 }
 
@@ -199,8 +195,6 @@ class CollectedShipperForm
                                 $set('fees', $amounts['fees']);
                                 $set('net_amount', $amounts['net_amount']);
                                 $set('number_of_orders', $amounts['number_of_orders']);
-                                $set('delivered_count', $amounts['delivered_count'] ?? 0);
-                                $set('undelivered_count', $amounts['undelivered_count'] ?? 0);
                             })
                             ->default(function (Get $get, $record) use ($user, $isShipper) {
                                 // في حالة الEdit، نرجع Orderات المحفوظة
@@ -243,21 +237,7 @@ class CollectedShipperForm
                             ->default(0)
                             ->prefix('طلب'),
 
-                        TextInput::make('delivered_count')
-                            ->label('تم التسليم')
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated()
-                            ->default(0)
-                            ->prefix('✅'),
 
-                        TextInput::make('undelivered_count')
-                            ->label('لم يتم التسليم')
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated()
-                            ->default(0)
-                            ->prefix('❌'),
 
                         TextInput::make('fees')
                             ->label('شحن')
