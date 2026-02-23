@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('collected_shipper', function (Blueprint $table) {
+            $table->integer('delivered_count')->default(0)->after('number_of_orders');
+            $table->integer('undelivered_count')->default(0)->after('delivered_count');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('collected_shipper', function (Blueprint $table) {
+            $table->dropColumn(['delivered_count', 'undelivered_count']);
+        });
+    }
+};

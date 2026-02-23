@@ -70,6 +70,20 @@ class CollectedShippersTable
                     ->badge()
                     ->color('info'),
 
+                TextColumn::make('delivered_count')
+                    ->label('تم التسليم')
+                    ->badge()
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->alignCenter(),
+
+                TextColumn::make('undelivered_count')
+                    ->label('لم يتم')
+                    ->badge()
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
+                    ->alignCenter(),
+
                 TextColumn::make('fees')
                     ->label('شحن')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewShippingColumn:CollectedShipper'))

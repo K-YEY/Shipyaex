@@ -18,6 +18,8 @@ class CollectedShipper extends Model
         'collection_date',
         'total_amount',
         'number_of_orders',
+        'delivered_count',
+        'undelivered_count',
         'shipper_fees',
         'fees',
         'net_amount',
@@ -32,6 +34,8 @@ class CollectedShipper extends Model
         'fees'             => 'decimal:2',
         'net_amount'       => 'decimal:2',
         'number_of_orders' => 'integer',
+        'delivered_count'  => 'integer',
+        'undelivered_count' => 'integer',
     ];
 
     /**
@@ -208,15 +212,21 @@ class CollectedShipper extends Model
     {
         $orders = $this->orders()->with('client')->get();
         
+        $deliveredCount = 0;
+        $undeliveredCount = 0;
         $totalAmount = 0;
         $shipperFees = 0;
         $fees = 0;
         $clientNames = [];
 
         foreach ($orders as $order) {
-            // الإجمالي هو ما تم تحصيله فعلياً من العميل (فقط في حالة التسليم)
+            // Count based on status
             if ($order->status === 'deliverd') {
+                $deliveredCount++;
+                // الإجمالي هو ما تم تحصيله فعلياً من العميل (فقط في حالة التسليم)
                 $totalAmount += $order->total_amount ?? 0;
+            } elseif ($order->status === 'undelivered') {
+                $undeliveredCount++;
             }
             
             // عمولة المندوب تحسب دائماً (سواء سلم أو لم يسلم)
@@ -239,6 +249,8 @@ class CollectedShipper extends Model
         $this->fees = $fees;
         $this->net_amount = $totalAmount - $shipperFees;
         $this->number_of_orders = $orders->count();
+        $this->delivered_count = $deliveredCount;
+        $this->undelivered_count = $undeliveredCount;
         $this->notes = "العملاء: " . $clientsList;
         
         $this->save();

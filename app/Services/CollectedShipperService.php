@@ -111,13 +111,18 @@ class CollectedShipperService
         $totalAmount = 0;
         $shipperFees = 0;
         $fees = 0;
+        $deliveredCount = 0;
+        $undeliveredCount = 0;
         $numberOfOrders = $orders->count();
         $clientNames = [];
 
         foreach ($orders as $order) {
             // Delivered (كامل أو partial) - we collect the full amount
             if ($order->status === 'deliverd') {
+                $deliveredCount++;
                 $totalAmount += $order->total_amount ?? 0;
+            } elseif ($order->status === 'undelivered') {
+                $undeliveredCount++;
             }
             // Undelivered - no amount to collect
             // لكن نحسب رسوم Shipper
@@ -139,6 +144,8 @@ class CollectedShipperService
             'fees' => $fees,
             'net_amount' => $totalAmount - $shipperFees,
             'number_of_orders' => $numberOfOrders,
+            'delivered_count' => $deliveredCount,
+            'undelivered_count' => $undeliveredCount,
             'client_names' => $clientsList,
         ];
     }
@@ -161,6 +168,8 @@ class CollectedShipperService
                 'fees' => $amounts['fees'],
                 'net_amount' => $amounts['total_amount'] - $amounts['shipper_fees'],
                 'number_of_orders' => $amounts['number_of_orders'],
+                'delivered_count' => $amounts['delivered_count'],
+                'undelivered_count' => $amounts['undelivered_count'],
                 'status' => CollectingStatus::PENDING->value,
                 'notes' => 'العملاء: ' . $amounts['client_names'],
             ]);
@@ -227,6 +236,8 @@ class CollectedShipperService
                     'fees' => $amounts['fees'],
                     'net_amount' => $amounts['total_amount'] - $amounts['shipper_fees'],
                     'number_of_orders' => $amounts['number_of_orders'],
+                    'delivered_count' => $amounts['delivered_count'],
+                    'undelivered_count' => $amounts['undelivered_count'],
                     'status' => CollectingStatus::PENDING->value,
                     'notes' => 'عميل: ' . ($clientOrders->first()->client?->name ?? 'بدون عميل'),
                 ]);
@@ -360,6 +371,8 @@ class CollectedShipperService
             'fees' => $amounts['fees'],
             'net_amount' =>$amounts['total_amount'] - $amounts['shipper_fees'],
             'number_of_orders' => $amounts['number_of_orders'],
+            'delivered_count' => $amounts['delivered_count'],
+            'undelivered_count' => $amounts['undelivered_count'],
             'notes' => 'العملاء: ' . ($amounts['client_names'] ?? ''),
         ]);
 
