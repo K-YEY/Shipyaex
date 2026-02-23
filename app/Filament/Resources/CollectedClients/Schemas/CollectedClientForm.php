@@ -63,6 +63,8 @@ class CollectedClientForm
                                     $set('fees', 0);
                                     $set('net_amount', 0);
                                     $set('number_of_orders', 0);
+                                    $set('delivered_count', 0);
+                                    $set('undelivered_count', 0);
                                 }),
 
                             // تاريخ التحصيل
@@ -153,6 +155,8 @@ class CollectedClientForm
                                     $set('fees', 0);
                                     $set('net_amount', 0);
                                     $set('number_of_orders', 0);
+                                    $set('delivered_count', 0);
+                                    $set('undelivered_count', 0);
                                     return;
                                 }
 
@@ -163,6 +167,8 @@ class CollectedClientForm
                                 $set('fees', $amounts['fees']);
                                 $set('net_amount', $amounts['net_amount']);
                                 $set('number_of_orders', $amounts['number_of_orders']);
+                                $set('delivered_count', $amounts['delivered_count']);
+                                $set('undelivered_count', $amounts['undelivered_count']);
                             })
                             ->default(function (Get $get, $record) use ($user, $isClient) {
                                 // في حالة الEdit، نرجع Orderات المحفوظة
@@ -193,17 +199,37 @@ class CollectedClientForm
                     ->description('حساب المبالغ تلقائي')
                     ->icon('heroicon-o-calculator')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewSummaryField:CollectedClient'))
-                    ->columns(4)
+                    ->columns(6)
                     ->columnSpanFull()
                     ->schema([
                         TextInput::make('number_of_orders')
-                            ->label('عدد الأوردرات')
+                            ->label('إجمالي الأوردرات')
                             ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountField:CollectedClient'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated()
                             ->default(0)
                             ->prefix('طلب'),
+
+                        Placeholder::make('delivered_count_placeholder')
+                            ->label('عدد المسلم')
+                            ->content(function (Get $get, $record) {
+                                if ($record) {
+                                    return $record->orders()->where('status', 'deliverd')->count();
+                                }
+                                return $get('delivered_count') ?? 0;
+                            })
+                            ->extraAttributes(['class' => 'text-success-600 font-bold']),
+
+                        Placeholder::make('undelivered_count_placeholder')
+                            ->label('عدد غير المسلم')
+                            ->content(function (Get $get, $record) {
+                                if ($record) {
+                                    return $record->orders()->where('status', 'undelivered')->count();
+                                }
+                                return $get('undelivered_count') ?? 0;
+                            })
+                            ->extraAttributes(['class' => 'text-danger-600 font-bold']),
 
                         TextInput::make('total_amount')
                             ->label('إجمالي المبلغ')
@@ -224,7 +250,7 @@ class CollectedClientForm
                             ->prefix('ج.م'),
 
                         TextInput::make('net_amount')
-                            ->label('الصافي')
+                            ->label('الصافي للعميل')
                             ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountField:CollectedClient'))
                             ->numeric()
                             ->disabled()

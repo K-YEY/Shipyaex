@@ -210,9 +210,7 @@ class CollectedClient extends Model
         $fees = 0;
 
         foreach ($orders as $order) {
-            if ($order->status === 'deliverd') {
-                $totalAmount += $order->total_amount ?? 0;
-            }
+            $totalAmount += $order->total_amount ?? 0;
             $fees += $order->fees ?? 0;
         }
 

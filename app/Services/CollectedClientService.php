@@ -90,12 +90,17 @@ class CollectedClientService
 
         $totalAmount = 0;
         $fees = 0;
+        $deliveredCount = 0;
+        $undeliveredCount = 0;
         $numberOfOrders = $orders->count();
 
         foreach ($orders as $order) {
-            // نجمع المبلغ الإجمالي للأوردر
+            $totalAmount += $order->total_amount ?? 0;
+            
             if ($order->status === 'deliverd') {
-                $totalAmount += $order->total_amount ?? 0;
+                $deliveredCount++;
+            } elseif ($order->status === 'undelivered') {
+                $undeliveredCount++;
             }
             $fees += $order->fees ?? 0;
         }
@@ -105,6 +110,8 @@ class CollectedClientService
             'fees' => $fees,
             'net_amount' => $totalAmount - $fees,
             'number_of_orders' => $numberOfOrders,
+            'delivered_count' => $deliveredCount,
+            'undelivered_count' => $undeliveredCount,
         ];
     }
 

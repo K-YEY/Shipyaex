@@ -60,6 +60,22 @@ class CollectedClientsTable
                     ->badge()
                     ->color('info'),
 
+                TextColumn::make('delivered_count')
+                    ->label('مسلم')
+                    ->state(fn ($record) => $record->orders()->where('status', 'deliverd')->count())
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:CollectedClient'))
+                    ->alignCenter()
+                    ->badge()
+                    ->color('success'),
+
+                TextColumn::make('undelivered_count')
+                    ->label('غير مسلم')
+                    ->state(fn ($record) => $record->orders()->where('status', 'undelivered')->count())
+                    ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:CollectedClient'))
+                    ->alignCenter()
+                    ->badge()
+                    ->color('danger'),
+
                 TextColumn::make('total_amount')
                     ->label('الإجمالي')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountColumn:CollectedClient'))
