@@ -423,12 +423,19 @@ class OrdersTable
                                 }
 
                                 // Calculate new COD based on total_amount and fees
+                                $status = $data['status'];
                                 $totalAmount = $data['total_amount'] ?? $record->total_amount;
+                                
+                                // if status is undelivered set total_amount to 0
+                                if ($status === self::STATUS_UNDELIVERED && !isset($data['total_amount'])) {
+                                    $totalAmount = 0;
+                                }
+
                                 $fees = $record->fees ?? 0;
                                 $cod = $totalAmount - $fees;
 
                                 $record->update([
-                                    'status' => $data['status'],
+                                    'status' => $status,
                                     'status_note' => $statusNote,
                                     'total_amount' => $totalAmount,
                                     'cod' => $cod,
@@ -2471,7 +2478,7 @@ class OrdersTable
         // إذا تغير Net Fees، نقوم بتحديث Total Amount
         // New Total = New Net Fees + Fees
         
-        $record->total_amount = $state + $record->shipper_fees;
+        $record->total_amount = $state + $record->fees;
         $record->recalculateFinancials(); // سيقوم بحساب COD وتحديثه ليطابق Net Fees
         $record->save();
     }

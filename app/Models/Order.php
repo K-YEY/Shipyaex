@@ -431,11 +431,9 @@ class Order extends Model
      * COD = total_amount - fees
      * يسمح بالقيم السالبة (لو total_amount = 0 و fees = 100 يكون COD = -100)
      */
-    public static function calculateCod(?float $totalAmount, ?float $fees, ?string $status = 'deliverd'): float
+    public static function calculateCod(?float $totalAmount, ?float $fees): float
     {
-        // Only delivered orders have their total_amount collected.
-        // Undelivered/Returned orders collect 0 from customer but still have fees.
-        $total = ($status === 'deliverd') ? ($totalAmount ?? 0) : 0;
+        $total = $totalAmount ?? 0;
         $feesValue = $fees ?? 0;
 
         return $total - $feesValue;
@@ -459,7 +457,7 @@ class Order extends Model
      */
     public function recalculateFinancials(): void
     {
-        $this->cod = self::calculateCod($this->total_amount, $this->fees, $this->status);
+        $this->cod = self::calculateCod($this->total_amount, $this->fees);
         $this->cop = self::calculateCop($this->fees, $this->shipper_fees);
     }
 
@@ -472,7 +470,7 @@ class Order extends Model
 
         // عند الإنشاء أو التحديث، نحسب COD و COP تلقائياً
         static::saving(function (Order $order) {
-            $order->cod = self::calculateCod($order->total_amount, $order->fees, $order->status);
+            $order->cod = self::calculateCod($order->total_amount, $order->fees);
             $order->cop = self::calculateCop($order->fees, $order->shipper_fees);
 
             // تعيين تاريخ Shipper عند تغييره (أو تصفيره إذا تم Delete Shipper)

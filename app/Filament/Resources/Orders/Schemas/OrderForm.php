@@ -26,9 +26,8 @@ class OrderForm
             $total = (float) ($get('total_amount') ?? 0);
             $fees = (float) ($get('fees') ?? 0);
             $shipper = (float) ($get('shipper_fees') ?? 0);
-            $status = $get('status');
 
-            $set('cod', Order::calculateCod($total, $fees, $status));
+            $set('cod', Order::calculateCod($total, $fees));
             $set('cop', Order::calculateCop($fees, $shipper));
         };
 
@@ -194,11 +193,6 @@ class OrderForm
                         if (! $planPrice) return;
                         $fees = $planPrice->price ?? 0;
                         $set('fees', $fees);
-                        $shipperFees = $get('shipper_fees') ?? 0;
-                        $set('cop', $fees - $shipperFees);
-                        $total = $get('total_amount') ?? 0;
-                        $status = $get('status');
-                        $set('cod', Order::calculateCod($total, $fees, $status));
                         $recalculate($get, $set);
                     })
                     ->disabled(fn (Get $get) => ! $get('client_id') || !auth()->user()->can('EditCustomerDetails:Order'))
