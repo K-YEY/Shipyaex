@@ -220,11 +220,12 @@ class CollectedShipper extends Model
         $clientNames = [];
 
         foreach ($orders as $order) {
+            // Sum total_amount for all orders in the collection
+            $totalAmount += $order->total_amount ?? 0;
+
             // Count based on status
             if ($order->status === 'deliverd') {
                 $deliveredCount++;
-                // الإجمالي هو ما تم تحصيله فعلياً من العميل (فقط في حالة التسليم)
-                $totalAmount += $order->total_amount ?? 0;
             } elseif ($order->status === 'undelivered') {
                 $undeliveredCount++;
             }

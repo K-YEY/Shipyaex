@@ -117,10 +117,11 @@ class CollectedShipperService
         $clientNames = [];
 
         foreach ($orders as $order) {
-            // Delivered (كامل أو partial) - we collect the full amount
+            // Sum total_amount for all orders in the collection
+            $totalAmount += $order->total_amount ?? 0;
+
             if ($order->status === 'deliverd') {
                 $deliveredCount++;
-                $totalAmount += $order->total_amount ?? 0;
             } elseif ($order->status === 'undelivered') {
                 $undeliveredCount++;
             }
