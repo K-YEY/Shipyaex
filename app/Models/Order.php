@@ -231,11 +231,16 @@ class Order extends Model
                             ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'));
                     }
                 })
-                // Status 3: Undelivered -> يحتاج مرتجع Approved فقط (لا يشترط تحصيل شيبّر لأنه لا يوجد مبلغ للتحصيل)
-                ->orWhere(function ($undelivered) {
+                // Status 3: Undelivered -> يكفي أن collected_shipper=true (تم الاعتماد من المندوب)
+                // نستخدم العمود البوليان مباشرة لأن returned_shipper_id قد يكون null حتى لو تم التسليم
+                ->orWhere(function ($undelivered) use ($requireShipperFirst) {
                     $undelivered->where('status', 'undelivered')
-                        ->whereNotNull('returned_shipper_id')
-                        ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                        ->where('return_shipper', true); // المندوب سلّم المرتجع
+                    
+                    if ($requireShipperFirst) {
+                        // يشترط أيضاً أن يكون تحصيل الشيبّر تم اعتماده
+                        $undelivered->where('collected_shipper', true);
+                    }
                 });
             });
     }
@@ -357,10 +362,13 @@ class Order extends Model
 
         // Status 3: Undelivered
         if ($this->status === 'undelivered') {
-            // الـ Undelivered لازم يكون فيه مرتجع كابتن اعتمد عشان يظهر للعميل كمرتجع
-            return $this->returned_shipper_id 
-                && $this->returnedShipper 
-                && $this->returnedShipper->status === 'completed';
+            // نستخدم العمود البوليان return_shipper لأن returned_shipper_id قد يكون null
+            if ($requireShipperFirst) {
+                // يشترط أن يكون تحصيل الشيبّر وتسليم المرتجع كلاهما تم
+                return $this->collected_shipper && $this->return_shipper;
+            }
+            // يكفي أن يكون المندوب سلّم المرتجع
+            return (bool) $this->return_shipper;
         }
 
         return false;

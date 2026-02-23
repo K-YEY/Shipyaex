@@ -71,8 +71,10 @@ class CollectedClientService
             // حالة Delivered without return -> يتطلب تحصيل فقط (إذا كان الإعداد مفعل)
             $status === 'deliverd' && !$has_return => $requireShipperFirst ? $collect_shipper : true,
 
-            // حالة Undelivered -> يتطلب مرتجع دائمًا (لا يشترط تحصيل شيبّر لعدم وجود مبالغ)
-            $status === 'undelivered' => $return_shipper,
+            // حالة Undelivered -> يتطلب return_shipper=true (البوليانية) لأن returned_shipper_id قد يكون null
+            $status === 'undelivered' => $requireShipperFirst
+                ? ($order->collected_shipper && $order->return_shipper)
+                : $order->return_shipper,
 
             // غير ذلك
             default => false,
