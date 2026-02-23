@@ -231,20 +231,11 @@ class Order extends Model
                             ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'));
                     }
                 })
-                // Status 3: Undelivered -> يحتاج تحصيل ومرتجع Approvedين
-                ->orWhere(function ($undelivered) use ($requireShipperFirst) {
-                    $undelivered->where('status', 'undelivered');
-                    
-                    if ($requireShipperFirst) {
-                       $undelivered->whereNotNull('collected_shipper_id')
-                            ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'))
-                            ->whereNotNull('returned_shipper_id')
-                            ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
-                    } else {
-                        // حتى لو مش شرط التحصيل، الـ Undelivered لازم يكون فيه مرتجع كابتن اعتمد عشان يظهر للعميل كمرتجع
-                        $undelivered->whereNotNull('returned_shipper_id')
-                            ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
-                    }
+                // Status 3: Undelivered -> يحتاج مرتجع Approved فقط (لا يشترط تحصيل شيبّر لأنه لا يوجد مبلغ للتحصيل)
+                ->orWhere(function ($undelivered) {
+                    $undelivered->where('status', 'undelivered')
+                        ->whereNotNull('returned_shipper_id')
+                        ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
                 });
             });
     }
@@ -345,8 +336,8 @@ class Order extends Model
 
         $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
 
-        // فحص وجود واعتماد collected_shipper (إذا كان الإعداد مفعل)
-        if ($requireShipperFirst) {
+        // فحص وجود واعتماد collected_shipper (إذا كان الإعداد مفعل - ويستثنى غير المستلم)
+        if ($requireShipperFirst && $this->status !== 'undelivered') {
             if (!$this->collected_shipper_id || !$this->collectedShipper || $this->collectedShipper->status !== 'completed') {
                 return false;
             }
@@ -354,12 +345,9 @@ class Order extends Model
 
         // Status 1: Delivered مع has_return = true
         if ($this->status === 'deliverd' && $this->has_return) {
-            if ($requireShipperFirst) {
-                return $this->returned_shipper_id 
-                    && $this->returnedShipper 
-                    && $this->returnedShipper->status === 'completed';
-            }
-            return true;
+            return $this->returned_shipper_id 
+                && $this->returnedShipper 
+                && $this->returnedShipper->status === 'completed';
         }
 
         // Status 2: Delivered بدون has_return
