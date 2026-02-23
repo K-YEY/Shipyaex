@@ -63,6 +63,9 @@ class CollectedClientsExport implements FromCollection, WithHeadings, WithMappin
                     'city' => $order->city?->name,
                     'shipper_name' => $order->shipper?->name,
                     'order_status' => $order->status,
+                    'status_note' => is_array($order->status_note) 
+                        ? \App\Models\RefusedReason::whereIn('id', $order->status_note)->pluck('name')->implode(' - ')
+                        : '',
                     'total_amount' => $order->total_amount,
                     'fees' => $order->fees,
                     'cod' => $order->cod,
@@ -92,6 +95,7 @@ class CollectedClientsExport implements FromCollection, WithHeadings, WithMappin
             'المدينة',
             'المندوب',
             'حالة الأوردر',
+            'سبب الحالة',
             'المبلغ الإجمالي',
             'مصاريف الشحن',
             'الصافي',
@@ -117,6 +121,7 @@ class CollectedClientsExport implements FromCollection, WithHeadings, WithMappin
             $row->city,
             $row->shipper_name,
             $row->order_status,
+            $row->status_note,
             $row->total_amount,
             $row->fees,
             $row->cod,
