@@ -118,11 +118,6 @@ class CollectedShipperService
             // Sum total_amount for all orders in the collection
             $totalAmount += $order->total_amount ?? 0;
 
-            if ($order->status === 'deliverd') {
-                $deliveredCount++;
-            } elseif ($order->status === 'undelivered') {
-                $undeliveredCount++;
-            }
             // Undelivered - no amount to collect
             // لكن نحسب رسوم Shipper
 

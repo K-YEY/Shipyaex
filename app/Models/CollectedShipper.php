@@ -207,9 +207,6 @@ class CollectedShipper extends Model
     public function recalculateAmounts(): void
     {
         $orders = $this->orders()->with('client')->get();
-        
-        $deliveredCount = 0;
-        $undeliveredCount = 0;
         $totalAmount = 0;
         $shipperFees = 0;
         $fees = 0;
@@ -219,13 +216,6 @@ class CollectedShipper extends Model
             // Sum total_amount for all orders in the collection
             $totalAmount += $order->total_amount ?? 0;
 
-            // Count based on status
-            if ($order->status === 'deliverd') {
-                $deliveredCount++;
-            } elseif ($order->status === 'undelivered') {
-                $undeliveredCount++;
-            }
-            
             // عمولة المندوب تحسب دائماً (سواء سلم أو لم يسلم)
             $shipperFees += $order->shipper_fees ?? 0;
             
