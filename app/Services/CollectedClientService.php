@@ -68,11 +68,11 @@ class CollectedClientService
             // حالة Delivered مع وجود مرتجع -> يتطلب تحصيل ومرتجع (إذا كان الإعداد مفعل)
             $status === 'deliverd' && $has_return => $requireShipperFirst ? ($collect_shipper && $return_shipper) : true,
 
-            // حالة Delivered without return -> يتطلب تحصيل فقط (إذا كان الإعداد مفعل)
+            // حالة Delivered without return (false أو null) -> يتطلب تحصيل فقط (إذا كان الإعداد مفعل)
             $status === 'deliverd' && !$has_return => $requireShipperFirst ? $collect_shipper : true,
 
-            // حالة Undelivered -> يتطلب مرتجع دائمًا (لا يشترط تحصيل شيبّر لعدم وجود مبالغ)
-            $status === 'undelivered' => $return_shipper,
+            // حالة Undelivered -> يتطلب مرتجع دا Noً (لأن الأوردر لم يسلم) وتطلب تحصيل إذا كان الإعداد مفعل
+            $status === 'undelivered' => $requireShipperFirst ? ($collect_shipper && $return_shipper) : $return_shipper,
 
             // غير ذلك
             default => false,
@@ -95,8 +95,9 @@ class CollectedClientService
         $numberOfOrders = $orders->count();
 
         foreach ($orders as $order) {
+            $totalAmount += $order->total_amount ?? 0;
+            
             if ($order->status === 'deliverd') {
-                $totalAmount += $order->total_amount ?? 0;
                 $deliveredCount++;
             } elseif ($order->status === 'undelivered') {
                 $undeliveredCount++;
