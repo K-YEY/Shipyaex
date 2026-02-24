@@ -16,6 +16,8 @@ class Order extends Model
     // جدول مخصص لأنه مش plural
     protected $table = 'order';
 
+    protected $perPage = 100; // ⚡ Force 100 records per page globally for this model
+
     // الحقول القابلة للEdit
     protected $fillable = [
         'code',

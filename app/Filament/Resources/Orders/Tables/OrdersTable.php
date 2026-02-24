@@ -165,7 +165,8 @@ class OrdersTable
             ->persistSearchInSession()
             ->modifyQueryUsing(fn ($query) => $query->latest())
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple) // ⚡ PERF: Much faster than regular pagination (skips COUNT query)
-            ->paginationPageOptions([10, 25, 50])
+            ->paginationPageOptions([100])
+            ->defaultPaginationPageOption(100)
             ->columns([
                 TextColumn::make('code')
                     ->label(__('orders.code'))
@@ -1397,7 +1398,7 @@ class OrdersTable
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(50) 
+            ->defaultPaginationPageOption(100) 
                  ->description(new \Illuminate\Support\HtmlString('
                 <style>
                     #orders-table-wrapper .fi-ta-ctn {
@@ -1417,7 +1418,8 @@ class OrdersTable
                     }
                 </style>
             '))
-            ->paginationPageOptions([25, 50])
+            ->paginationPageOptions([100])
+            ->defaultPaginationPageOption(100)
             ->persistSearchInSession()
             ->persistColumnSearchesInSession()
             ->filtersFormColumns(3)
