@@ -255,7 +255,7 @@ class OrdersTable
                 TextColumn::make('shipper_date')
                     ->label(__('orders.shipper_date'))
                     ->date('Y-m-d')
-                    ->toggleable(isToggledHiddenByDefault: true)  
+                    ->toggleable()  
                     ->searchable(isIndividual: true)
                     ->visible($isAdmin || self::userCan('ViewShipperDate_column_order'))
                     ->alignCenter()
@@ -331,7 +331,7 @@ class OrdersTable
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewShipperCommission_column_order'))
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->toggleable()
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
 
