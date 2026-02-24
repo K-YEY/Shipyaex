@@ -130,6 +130,7 @@ class ReturnedClientsExport implements FromCollection, WithHeadings, WithMapping
             $row->city,
             $row->shipper_name,
             $row->order_status,
+            $row->status_note,
             $row->total_amount,
             $row->fees,
             $row->cod,

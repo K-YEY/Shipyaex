@@ -130,6 +130,7 @@ class ReturnedShippersExport implements FromCollection, WithHeadings, WithMappin
             $row->governorate,
             $row->city,
             $row->order_status,
+            $row->status_note,
             $row->total_amount,
             $row->fees,
             $row->cod,
