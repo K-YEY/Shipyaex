@@ -63,6 +63,18 @@ class ReturnedShippersExport implements FromCollection, WithHeadings, WithMappin
                     'governorate' => $order->governorate?->name,
                     'city' => $order->city?->name,
                     'order_status' => $order->status,
+                    'status_note' => (function() use ($order) {
+                        $note = $order->status_note;
+                        if (is_array($note) && count($note) > 0) {
+                            return implode(' - ', $note);
+                        }
+                        if (is_string($note) && !empty($note)) {
+                            $decoded = json_decode($note, true);
+                            if (is_array($decoded)) return implode(' - ', $decoded);
+                            return $note;
+                        }
+                        return '';
+                    })(),
                     'total_amount' => $order->total_amount,
                     'fees' => $order->fees,
                     'cod' => $order->cod,
