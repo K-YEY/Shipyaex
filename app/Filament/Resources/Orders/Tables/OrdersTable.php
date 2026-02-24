@@ -162,7 +162,6 @@ class OrdersTable
         }
 
         return $table
-            ->persistSearchInSession()
             ->modifyQueryUsing(fn ($query) => $query->latest())
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
@@ -176,7 +175,6 @@ class OrdersTable
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
                 'class' => 'orders-table-container',
-                'style' => 'max-height: calc(100vh - 190px); overflow: auto !important; position: relative;',
             ])
             ->columns([
                 TextColumn::make('code')
@@ -348,18 +346,7 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter(),
                 TextColumn::make('status')
-                    ->label(new \Illuminate\Support\HtmlString(
-                        view('filament.tables.columns.status-select-header', [
-                            'label' => __('orders.status'),
-                            'field' => 'status',
-                            'options' => [
-                                self::STATUS_OUT_FOR_DELIVERY => '🚚 ' . __('app.out_for_delivery'),
-                                self::STATUS_DELIVERED => '✅ ' . __('app.delivered'),
-                                self::STATUS_UNDELIVERED => '❌ ' . __('app.undelivered'),
-                                self::STATUS_HOLD => '⏸️ ' . __('app.hold'),
-                            ],
-                        ])->render()
-                    ))
+                    ->label(__('orders.status'))
                     ->badge()
                     ->color(fn ($record) => strtolower($record->orderStatus?->color ?? 'gray'))
                     ->sortable()
