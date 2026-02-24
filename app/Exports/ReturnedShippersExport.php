@@ -104,6 +104,7 @@ class ReturnedShippersExport implements FromCollection, WithHeadings, WithMappin
             'المحافظة',
             'المدينة',
             'حالة الأوردر',
+            'ملاحظات الحالة',
             'المبلغ الإجمالي',
             'المصاريف',
             'COD',

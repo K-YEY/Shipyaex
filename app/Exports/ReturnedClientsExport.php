@@ -104,6 +104,7 @@ class ReturnedClientsExport implements FromCollection, WithHeadings, WithMapping
             'المدينة',
             'المندوب',
             'حالة الأوردر',
+            'ملاحظات الحالة',
             'المبلغ الإجمالي',
             'المصاريف',
             'COD',
