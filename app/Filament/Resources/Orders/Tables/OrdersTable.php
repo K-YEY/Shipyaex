@@ -50,6 +50,35 @@ class OrdersTable
     private static ?bool $cachedCanEditLocked = null;
     private static array $cachedPermissions = [];
     private static ?bool $cachedRequireShipperFirst = null; // ⚡ cached setting
+    private static ?object $cachedHeaderSums = null; // ⚡ cached sums for column headers
+
+    /**
+     * ⚡ Get Sum of a column from the filtered result (cached per request)
+     */
+    /**
+     * ⚡ Get Sum of a column from the CURRENTLY DISPLAYED records only
+     */
+    private static function getHeaderSum(Table $table, string $column): float
+    {
+        if (self::$cachedHeaderSums === null) {
+            // Get the records currently being displayed on the page
+            $records = $table->getLivewire()->getTableRecords();
+            
+            // Convert to collection depending on pagination type
+            $items = ($records instanceof \Illuminate\Contracts\Pagination\Paginator || $records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)
+                ? collect($records->items())
+                : collect($records);
+
+            self::$cachedHeaderSums = (object)[
+                'total_amount' => (float) $items->sum('total_amount'),
+                'fees'         => (float) $items->sum('fees'),
+                'shipper_fees' => (float) $items->sum('shipper_fees'),
+                'cop'          => (float) $items->sum('cop'),
+                'cod'          => (float) $items->sum('cod'),
+            ];
+        }
+        return (float) (self::$cachedHeaderSums->$column ?? 0);
+    }
     
     /**
      * ⚡ Get 'require_shipper_collection_first' setting (cached per request)
@@ -133,9 +162,10 @@ class OrdersTable
         }
 
         return $table
-            ->deferLoading()
-            ->persistSearchInSession() // يحفظ حالة البحث في الجلسة (الاسم الصحيح في Filament v3)
-            ->modifyQueryUsing(fn ($query) => $query->latest()) // الترتيب الأساسي
+            ->persistSearchInSession()
+            ->modifyQueryUsing(fn ($query) => $query->latest())
+            ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple) // ⚡ PERF: Much faster than regular pagination (skips COUNT query)
+            ->paginationPageOptions([10, 25, 50])
             ->columns([
                 TextColumn::make('code')
                     ->label(__('orders.code'))
@@ -258,8 +288,7 @@ class OrdersTable
                     ->alignCenter()
                     ->sortable(),
                 TextInputColumn::make('total_amount')
-                    ->label(__('orders.total_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->label(fn (Table $table) => __('orders.total_amount') . ' (' . number_format(self::getHeaderSum($table, 'total_amount'), 0) . ')')
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->prefix(__('statuses.currency'))
                     ->sortable()
@@ -269,8 +298,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateTotalAmount($record, $state)),
 
                 TextInputColumn::make('fees')
-                    ->label(__('orders.shipping_fees'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->label(fn (Table $table) => __('orders.shipping_fees') . ' (' . number_format(self::getHeaderSum($table, 'fees'), 0) . ')')
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
@@ -280,8 +308,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateFees($record, $state)),
 
                 TextInputColumn::make('shipper_fees')
-                    ->label(__('orders.shipper_commission'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->label(fn (Table $table) => __('orders.shipper_commission') . ' (' . number_format(self::getHeaderSum($table, 'shipper_fees'), 0) . ')')
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
@@ -291,8 +318,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
 
                 TextColumn::make('cop')
-                    ->label(__('orders.company_share'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->label(fn (Table $table) => __('orders.company_share') . ' (' . number_format(self::getHeaderSum($table, 'cop'), 0) . ')')
                     ->numeric()
                     ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
@@ -302,8 +328,7 @@ class OrdersTable
                     ->alignCenter(),
 
                 TextColumn::make('cod')
-                    ->label(__('orders.collection_amount'))
-                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label(''))
+                    ->label(fn (Table $table) => __('orders.collection_amount') . ' (' . number_format(self::getHeaderSum($table, 'cod'), 0) . ')')
                     ->numeric()
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewCollectionAmountColumn:Order'))
@@ -1372,7 +1397,7 @@ class OrdersTable
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(100) // ⚡ PERF: reduced from 100
+            ->defaultPaginationPageOption(50) 
                  ->description(new \Illuminate\Support\HtmlString('
                 <style>
                     #orders-table-wrapper .fi-ta-ctn {
@@ -1392,11 +1417,11 @@ class OrdersTable
                     }
                 </style>
             '))
-            ->paginationPageOptions([25, 50, 100]) // ⚡ PERF: removed 250/500/1000
+            ->paginationPageOptions([25, 50])
             ->persistSearchInSession()
             ->persistColumnSearchesInSession()
             ->filtersFormColumns(3)
-            ->searchDebounce(700)        // ⚡ PERF: wait 700ms before firing search query
+            ->searchDebounce(700)        
             ->defaultSort('created_at', 'desc')
             ->persistFiltersInSession()
             ->extraAttributes([
