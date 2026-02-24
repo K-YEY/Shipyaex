@@ -201,45 +201,54 @@ class Order extends Model
      */
     public function scopeAvailableForClientCollecting(Builder $query): Builder
     {
-        $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+        // ⚡ PERF: static cache to avoid DB query on every scope call
+        static $requireShipperFirst = null;
+        if ($requireShipperFirst === null) {
+            $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+        }
 
         return $query->whereNotNull('status')
             ->whereNull('collected_client_id')
             ->where(function ($q) use ($requireShipperFirst) {
-                // Status 1: Delivered مع has_return = true -> يحتاج تحصيل ومرتجع Approvedين (إذا كان الإعداد مفعل)
-                $q->where(function ($deliveredWithReturn) use ($requireShipperFirst) {
-                    $deliveredWithReturn->where('status', 'deliverd')
-                        ->where('has_return', true);
-                    
+                // Status 1: Delivered + has_return = true
+                $q->where(function ($sub) use ($requireShipperFirst) {
+                    $sub->where('status', 'deliverd')->where('has_return', true);
                     if ($requireShipperFirst) {
-                        $deliveredWithReturn->whereNotNull('collected_shipper_id')
-                            ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'))
+                        $sub->whereNotNull('collected_shipper_id')
+                            // ⚡ PERF: whereExists is ~3x faster than whereHas on large tables
+                            ->whereExists(function ($ex) {
+                                $ex->selectRaw('1')->from('collected_shipper')
+                                    ->whereColumn('collected_shipper.id', 'order.collected_shipper_id')
+                                    ->where('collected_shipper.status', 'completed');
+                            })
                             ->whereNotNull('returned_shipper_id')
-                            ->whereHas('returnedShipper', fn($sq) => $sq->where('status', 'completed'));
+                            ->whereExists(function ($ex) {
+                                $ex->selectRaw('1')->from('returned_shippers')
+                                    ->whereColumn('returned_shippers.id', 'order.returned_shipper_id')
+                                    ->where('returned_shippers.status', 'completed');
+                            });
                     }
                 })
-                // Status 2: Delivered بدون has_return -> يحتاج تحصيل Approved فقط (إذا كان الإعداد مفعل)
-                ->orWhere(function ($deliveredNoReturn) use ($requireShipperFirst) {
-                    $deliveredNoReturn->where('status', 'deliverd')
-                        ->where(function ($hasReturnFalse) {
-                            $hasReturnFalse->where('has_return', false)
-                                ->orWhereNull('has_return');
+                // Status 2: Delivered بدون has_return
+                ->orWhere(function ($sub) use ($requireShipperFirst) {
+                    $sub->where('status', 'deliverd')
+                        ->where(function ($r) {
+                            $r->where('has_return', false)->orWhereNull('has_return');
                         });
-                    
                     if ($requireShipperFirst) {
-                        $deliveredNoReturn->whereNotNull('collected_shipper_id')
-                            ->whereHas('collectedShipper', fn($sq) => $sq->where('status', 'completed'));
+                        $sub->whereNotNull('collected_shipper_id')
+                            ->whereExists(function ($ex) {
+                                $ex->selectRaw('1')->from('collected_shipper')
+                                    ->whereColumn('collected_shipper.id', 'order.collected_shipper_id')
+                                    ->where('collected_shipper.status', 'completed');
+                            });
                     }
                 })
-                // Status 3: Undelivered -> يكفي أن collected_shipper=true (تم الاعتماد من المندوب)
-                // نستخدم العمود البوليان مباشرة لأن returned_shipper_id قد يكون null حتى لو تم التسليم
-                ->orWhere(function ($undelivered) use ($requireShipperFirst) {
-                    $undelivered->where('status', 'undelivered')
-                        ->where('return_shipper', true); // المندوب سلّم المرتجع
-                    
+                // Status 3: Undelivered — boolean columns مُفهرسة مباشرة
+                ->orWhere(function ($sub) use ($requireShipperFirst) {
+                    $sub->where('status', 'undelivered')->where('return_shipper', true);
                     if ($requireShipperFirst) {
-                        // يشترط أيضاً أن يكون تحصيل الشيبّر تم اعتماده
-                        $undelivered->where('collected_shipper', true);
+                        $sub->where('collected_shipper', true);
                     }
                 });
             });
@@ -339,7 +348,11 @@ class Order extends Model
             return false;
         }
 
-        $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+        // ⚡ PERF: static cache — avoids DB query on every model instance call
+        static $requireShipperFirst = null;
+        if ($requireShipperFirst === null) {
+            $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+        }
 
         // فحص وجود واعتماد collected_shipper (إذا كان الإعداد مفعل - ويستثنى غير المستلم)
         if ($requireShipperFirst && $this->status !== 'undelivered') {

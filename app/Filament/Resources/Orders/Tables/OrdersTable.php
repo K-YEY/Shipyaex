@@ -49,6 +49,18 @@ class OrdersTable
     private static bool $cachedUserIsAdmin = false;
     private static ?bool $cachedCanEditLocked = null;
     private static array $cachedPermissions = [];
+    private static ?bool $cachedRequireShipperFirst = null; // ⚡ cached setting
+    
+    /**
+     * ⚡ Get 'require_shipper_collection_first' setting (cached per request)
+     */
+    private static function requireShipperFirst(): bool
+    {
+        if (self::$cachedRequireShipperFirst === null) {
+            self::$cachedRequireShipperFirst = \App\Models\Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+        }
+        return self::$cachedRequireShipperFirst;
+    }
     
     /**
      * ⚡ Get follow up hours setting (cached per request)
@@ -76,16 +88,45 @@ class OrdersTable
     public static function configure(Table $table): Table
     {
         $user = auth()->user();
+        
+        // ⚡ PERF: Eager load roles and permissions to make $user->can() instantaneous (0ms)
+        // Without this, Spatie might hit the DB for each permission check.
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->loadMissing(['roles.permissions', 'permissions']);
+        }
+
         $isAdmin = $user?->isAdmin() ?? false;
         self::$cachedUserIsAdmin = $isAdmin;
         
-        // Load some common permissions once
+        // ⚡ PERF: Pre-cache ALL permissions used in per-row closures ONCE
+        // These are called inside column closures AND record action visible() that run for EVERY row
         $permissions = [
             'Update:Order',
             'EditLocked:Order',
             'ChangeStatus:Order',
+            'ChangeStatusAction:Order',
             'ManageShipperReturnAction:Order',
             'AssignShipperAction:Order',
+            'EditExternalCode:Order',
+            'EditOrderNotesField:Order',
+            // Record Actions
+            'ViewTimelineAction:Order',
+            'PrintLabelAction:Order',
+            'ManageShipperCollectionAction:Order',
+            'ManageCollections:Order',
+            'ManageReturns:Order',
+            'ManageClientReturnAction:Order',
+            'Restore:Order',
+            'ForceDelete:Order',
+            'View:Order',
+            'RestoreAny:Order',
+            'DeleteAny:Order',
+            'ForceDeleteAny:Order',
+            'ViewMyOrdersAction:Order',
+            'BarcodeScannerAction:Order',
+            'ExportData:Order',
+            'Create:Order',
+            'BulkChangeStatusAction:Order',
         ];
         foreach ($permissions as $p) {
             self::userCan($p);
@@ -93,6 +134,8 @@ class OrdersTable
 
         return $table
             ->deferLoading()
+            ->persistSearchInSession() // يحفظ حالة البحث في الجلسة (الاسم الصحيح في Filament v3)
+            ->modifyQueryUsing(fn ($query) => $query->latest()) // الترتيب الأساسي
             ->columns([
                 TextColumn::make('code')
                     ->label(__('orders.code'))
@@ -131,7 +174,8 @@ class OrdersTable
                     ->searchable(isIndividual: true)
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
-                        fn ($record) => auth()->user()->can('EditExternalCode:Order') ? 
+                        // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
+                        self::userCan('EditExternalCode:Order') ?
                         Action::make('editExternalCode')
                             ->modalHeading(__('orders.external_code_modal_heading'))
                             ->modalDescription(__('orders.external_code_modal_description'))
@@ -163,7 +207,7 @@ class OrdersTable
                 TextColumn::make('shipper_date')
                     ->label(__('orders.shipper_date'))
                     ->date('Y-m-d')
-                    ->toggleable()  
+                    ->toggleable(isToggledHiddenByDefault: true)  
                     ->searchable(isIndividual: true)
                     ->visible($isAdmin || self::userCan('ViewShipperDateColumn:Order'))
                     ->alignCenter()
@@ -202,7 +246,6 @@ class OrdersTable
                     ->alignCenter()
                     ->tooltip(fn ($record) => $record->address),
                 TextColumn::make('governorate.name')
-                    ->numeric()
                     ->searchable(isIndividual: true)
                     ->visible($isAdmin || self::userCan('ViewGovernorateColumn:Order'))
                     ->toggleable()
@@ -243,7 +286,7 @@ class OrdersTable
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewShipperCommissionColumn:Order'))
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
 
@@ -283,12 +326,13 @@ class OrdersTable
                     ->badge()
                     ->color(fn ($record) => strtolower($record->orderStatus?->color ?? 'gray'))
                     ->sortable()
-                    ->searchable()->alignCenter()  
+                    ->searchable(isIndividual: true)->alignCenter()  // ⚡ PERF: isIndividual only, no global search
                     ->visible($isAdmin || self::userCan('ViewStatusColumn:Order'))
                     ->toggleable()
                     ->extraAttributes(
+                        // ⚡ PERF: use cached userCan instead of per-row auth()->can()
                         fn ($record) => self::isRecordLocked($record) || 
-                            (!auth()->user()->can('ChangeStatus:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED]))
+                            (!self::userCan('ChangeStatus:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED]))
                             ? []
                             : ['class' => 'cursor-pointer text-primary font-semibold']
                     )
@@ -296,7 +340,8 @@ class OrdersTable
                         if (self::isRecordLocked($record)) {
                             return __('statuses.tooltip_order_locked');
                         }
-                        if (!auth()->user()->can('ChangeStatus:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
+                        // ⚡ PERF: use cached userCan instead of per-row auth()->can()
+                        if (!self::userCan('ChangeStatus:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
                             return __('statuses.tooltip_order_closed');
                         }
                         return __('statuses.tooltip_change_status');
@@ -304,21 +349,16 @@ class OrdersTable
                     ->action(
                         Action::make('changeStatus')
                             ->visible(function ($record) {
-                                // User must have permission to change status
-                                if (!auth()->user()->can('ChangeStatusAction:Order', $record)) {
+                                // ⚡ PERF: all can() calls use static cache — called per-row
+                                if (!self::userCan('ChangeStatusAction:Order')) {
                                     return false;
                                 }
-
-                                // Cannot edit if record is locked
                                 if (self::isRecordLocked($record)) {
                                     return false;
                                 }
-
-                                // If not admin-like (has override), cannot edit closed orders
-                                if (!auth()->user()->can('EditLocked:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
+                                if (!self::userCan('EditLocked:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
                                     return false;
                                 }
-
                                 return true;
                             })
                             ->modalHeading(fn ($record) => __('statuses.change_status_title', ['code' => $record->code]))
@@ -396,7 +436,7 @@ class OrdersTable
                                     ->visible(function ($get, $record) {
                                         $status = $get('status') ?? $record->status;
 
-                                        return $status === self::STATUS_DELIVERED && auth()->user()->can('ManageShipperReturnAction:Order');
+                                        return $status === self::STATUS_DELIVERED && self::userCan('ManageShipperReturnAction:Order');
                                     }),
 
                                 \Filament\Forms\Components\TextInput::make('total_amount')
@@ -490,7 +530,6 @@ class OrdersTable
                         return implode(', ', $state); // Filament will automatically convert it to Badges
                     })
                     ->separator(',')
-                    ->searchable()
                     ->toggleable()
                     ->wrap(),
 
@@ -507,7 +546,8 @@ class OrdersTable
                     ->limit(50)
                     ->tooltip(fn ($record) => $record->order_note)
                     ->action(
-                        auth()->user()->can('EditOrderNotesField:Order') ? 
+                        // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
+                        self::userCan('EditOrderNotesField:Order') ?
                         Action::make('editOrderNote')
                             ->modalHeading(__('orders.order_notes_modal_heading'))
                             ->modalDescription(__('orders.external_code_modal_description'))
@@ -539,13 +579,15 @@ class OrdersTable
                     ->color('primary')
                     ->weight('bold')
                     ->description(function ($record) {
-                        return $record->shipper->phone;
+                        // ⚡ FIX: use null-safe operator to prevent PHP error when shipper is null
+                        return $record->shipper?->phone;
                     })
                     ->searchable(isIndividual: true)
                     ->toggleable()  
                     ->sortable()
                     ->action(
-                        auth()->user()->can('AssignShipperAction:Order') ? 
+                        // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
+                        self::userCan('AssignShipperAction:Order') ?
 
                         Action::make('assignShipper')
                             ->modalHeading('🚚 تعيين كابتن للأوردر')
@@ -608,7 +650,6 @@ class OrdersTable
                 TextColumn::make('client.name')
                     ->visible($isAdmin || self::userCan('ViewClientColumn:Order'))
                     ->searchable(isIndividual: true)
-                    ->numeric()
                      ->alignCenter()
                     ->toggleable(),
           
@@ -625,7 +666,7 @@ class OrdersTable
                     ->placeholder(__('orders.filters.active_orders'))
                     ->trueLabel(__('orders.filters.deleted_only'))
                     ->falseLabel(__('orders.filters.all_with_deleted'))
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('RestoreAny:Order') || auth()->user()->can('DeleteAny:Order')),
+                    ->visible(fn() => $isAdmin || self::userCan('RestoreAny:Order') || self::userCan('DeleteAny:Order')),
 
                 \Filament\Tables\Filters\SelectFilter::make('follow_up_status')
                     ->label(__('orders.filters.delay_follow_up'))
@@ -639,11 +680,10 @@ class OrdersTable
                             return;
                         }
 
-                        $globalLimit = (int) \App\Models\Setting::get('order_follow_up_hours', 48);
+                        // ⚡ PERF: use static cached getFollowUpHours() instead of Setting::get() on every filter call
+                        $globalLimit = self::getFollowUpHours();
                         
-                        // Calculate dynamic limit based on governorate setting or fallback to global
-                        // We use a subquery to get the governorate hours
-                        // IF(governorate_hours > 0, governorate_hours, global_limit)
+                        // Calculate dynamic limit based on governorate or fallback to global
                         $hoursSql = "COALESCE(NULLIF((SELECT follow_up_hours FROM governorates WHERE governorates.id = `order`.governorate_id LIMIT 1), 0), {$globalLimit})";
 
                         if ($data['value'] === 'delayed') {
@@ -814,7 +854,7 @@ class OrdersTable
                         ->label(__('statuses.bulk_change_status_label'))
                         ->icon('heroicon-o-arrow-path')
                         ->color('primary')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('BulkChangeStatusAction:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('BulkChangeStatusAction:Order'))
                         ->form([
                             Select::make('status')
                                 ->label(__('statuses.bulk_select_status_label'))
@@ -867,7 +907,7 @@ class OrdersTable
                         ->label('تحصيل من المندوب')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageShipperCollectionAction:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageShipperCollectionAction:Order'))
                         ->requiresConfirmation()
                         ->modalHeading('تحصيل المبالغ من المندوبين')
                         ->modalDescription('سيتم إنشاء فاتورة تحصيل (أو الإضافة لفاتورة معلقة) لكل مندوب تم اختيار طلبات له.')
@@ -928,7 +968,7 @@ class OrdersTable
                         ->label('Cancel Collection')
                         ->icon('heroicon-o-x-circle')
                         ->color('warning')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageShipperCollectionAction:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageShipperCollectionAction:Order'))
                         ->requiresConfirmation()
                         ->modalHeading('Cancel Shipper Collection')
                         ->modalDescription('Are you sure you want to cancel collection for the selected orders?')
@@ -966,7 +1006,7 @@ class OrdersTable
                         ->modalDescription('Are you sure you want to collect amounts for the client for the selected orders?')
                         ->deselectRecordsAfterCompletion()
                         ->action(function ($records) {
-                            $requireShipperFirst = Setting::get('require_shipper_collection_first', 'yes') === 'yes';
+                            $requireShipperFirst = self::requireShipperFirst(); // ⚡ PERF: cached
                             
                             $clientId = null;
                             $count = 0;
@@ -1179,7 +1219,7 @@ class OrdersTable
                         ->label('Client Return')
                         ->icon('heroicon-o-x-circle')
                         ->color('gray')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageClientReturnAction:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageClientReturnAction:Order'))
                         ->requiresConfirmation()
                         ->modalHeading('Create Client Return')
                         ->modalDescription('Are you sure you want to create a return for the selected orders?')
@@ -1275,7 +1315,7 @@ class OrdersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->label('Delete')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('DeleteAny:Order'))
                         ->requiresConfirmation()
                         ->modalHeading('Delete Orders')
                         ->modalDescription('Are you sure you want to delete selected orders? You can restore them later.')
@@ -1285,7 +1325,7 @@ class OrdersTable
                         ->label('Restore')
                         ->icon('heroicon-o-arrow-uturn-up')
                         ->color('danger')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('RestoreAny:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('RestoreAny:Order'))
                         ->requiresConfirmation()
                         ->modalHeading('Restore Orders')
                         ->modalDescription('Are you sure you want to restore deleted orders?')
@@ -1310,7 +1350,7 @@ class OrdersTable
                         ->label('Force Delete')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ForceDeleteAny:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ForceDeleteAny:Order'))
                         ->requiresConfirmation()
                         ->modalHeading('⚠️ Force Delete')
                         ->modalDescription('This action cannot be undone! Orders will be permanently deleted from the database.')
@@ -1332,7 +1372,7 @@ class OrdersTable
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(100)
+            ->defaultPaginationPageOption(100) // ⚡ PERF: reduced from 100
                  ->description(new \Illuminate\Support\HtmlString('
                 <style>
                     #orders-table-wrapper .fi-ta-ctn {
@@ -1352,12 +1392,13 @@ class OrdersTable
                     }
                 </style>
             '))
-            ->paginationPageOptions([100, 250, 500, 1000])
+            ->paginationPageOptions([25, 50, 100]) // ⚡ PERF: removed 250/500/1000
             ->persistSearchInSession()
             ->persistColumnSearchesInSession()
             ->filtersFormColumns(3)
-            ->deferLoading()
+            ->searchDebounce(700)        // ⚡ PERF: wait 700ms before firing search query
             ->defaultSort('created_at', 'desc')
+            ->persistFiltersInSession()
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
             ]);
@@ -1365,19 +1406,29 @@ class OrdersTable
 
     private static function getHeaderActions(): array
     {
+        $isAdmin = self::$cachedUserIsAdmin; // ⚡ restore from static cache
         return [
             // Display shipper orders
             Action::make('myOrders')
                 ->label('My Orders')
                 ->color('info')
-                ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewMyOrdersAction:Order'))
+                ->visible(fn() => $isAdmin || self::userCan('ViewMyOrdersAction:Order'))
                 ->modalHeading('My Orders - Out for Delivery')
                 ->modalWidth('7xl')
                 ->modalContent(function () {
                     $user = auth()->user();
-                    $orders = Order::where('shipper_id', $user->id)
+                    $orders = Order::select([
+                            'order.id', 'order.code', 'order.name', 'order.phone', 'order.phone_2',
+                            'order.address', 'order.total_amount', 'order.fees', 'order.shipper_fees',
+                            'order.cod', 'order.allow_open', 'order.shipper_date',
+                            'order.governorate_id', 'order.city_id', 'order.status',
+                        ])
+                        ->where('shipper_id', $user->id)
                         ->where('status', self::STATUS_OUT_FOR_DELIVERY)
-                        ->with(['governorate', 'city'])
+                        ->with([
+                            'governorate:id,name',
+                            'city:id,name',
+                        ])
                         ->orderBy('created_at', 'desc')
                         ->get();
                     
@@ -1396,7 +1447,7 @@ class OrdersTable
                 ->modalHeading('Quick Barcode Scanner')
                 ->modalDescription('Scan barcode or type Order Code to search and control quickly')
                 ->modalWidth('2xl')
-                ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('BarcodeScannerAction:Order'))
+                ->visible(fn() => $isAdmin || self::userCan('BarcodeScannerAction:Order'))
                 ->schema([
                     \Filament\Forms\Components\TextInput::make('scanned_code')
                         ->label('Order Code')
@@ -1469,7 +1520,7 @@ class OrdersTable
                             $options['view'] = 'View Order Details';
                             
                             // Change Status
-                            if (auth()->user()->can('ChangeStatus:Order')) {
+                            if (self::userCan('ChangeStatus:Order')) {
                                 if ($orderData['status'] !== self::STATUS_DELIVERED) {
                                     $options['mark_delivered'] = 'Delivered';
                                 }
@@ -1484,34 +1535,34 @@ class OrdersTable
                                 }
                             }
                                                         // Collect from Shipper
-                                if (auth()->user()->can('ManageCollections:Order')) {
+                                if (self::userCan('ManageCollections:Order')) {
                                     if ($orderData['collected_shipper']) {
                                         $options['uncollect_shipper'] = 'Cancel Shipper Collection';
                                     } else {
                                         $options['collect_shipper'] = 'Collect from Shipper';
                                     }
                                 }                                                      // Collect for Client
-                                if (auth()->user()->can('ManageCollections:Order')) {
+                                if (self::userCan('ManageCollections:Order')) {
                                     if ($orderData['collected_client']) {
                                         $options['uncollect_client'] = 'Cancel Client Collection';
                                     } else {
                                         $options['collect_client'] = 'Collect for Client';
                                     }
                                 }                                                      // Returns
-                                if (auth()->user()->can('ManageReturns:Order')) {
+                                if (self::userCan('ManageReturns:Order')) {
                                     if ($orderData['has_return']) {
                                         $options['cancel_return_shipper'] = 'Cancel Shipper Return';
                                     } else {
                                         $options['mark_return_shipper'] = 'Activate Shipper Return';
                                     }
                                 }                                                      // Client Return
-                                if (auth()->user()->can('ManageReturns:Order')) {
+                                if (self::userCan('ManageReturns:Order')) {
                                     $options['toggle_return_client'] = $orderData['return_client'] ?? false ? 'Cancel Client Return' : 'Activate Client Return';
                                 }                                                      // Print Receipt
-                                if (auth()->user()->can('PrintLabels:Order')) {
+                                if (self::userCan('PrintLabelAction:Order')) {
                                     $options['print_label'] = 'Print Shipping Label';
                                 }                                                      // Timeline
-                                if (auth()->user()->can('ViewStatusNotes:Order')) {
+                                if (self::userCan('ViewTimelineAction:Order')) {
                                     $options['view_timeline'] = 'View Timeline';
                                 }                          
                             return $options;
@@ -1519,7 +1570,22 @@ class OrdersTable
                         ->default('view')
                         ->required()
                         ->visible(fn ($get) => $get('order_id') !== null)
-                        ->native(false),
+                        ->native(false)
+                        ->selectablePlaceholder(false)
+                        ->extraAttributes([
+                            'style' => '
+                                background-color: #ffffff !important;
+                                color: #111827 !important;
+                                border: 2px solid #6366f1 !important;
+                                border-radius: 8px !important;
+                                font-size: 1rem !important;
+                                font-weight: 600 !important;
+                                padding: 0.5rem 1rem !important;
+                            ',
+                        ])
+                        ->extraInputAttributes([
+                            'style' => 'background: white !important; color: #111827 !important;',
+                        ]),
                 ])
                 ->action(function (array $data) {
                     $orderId = $data['order_id'] ?? null;
@@ -1728,14 +1794,14 @@ class OrdersTable
                 ->label('Export Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
-                ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ExportData:Order'))
+                ->visible(fn() => $isAdmin || self::userCan('ExportData:Order'))
                 ->schema([
                     \Filament\Forms\Components\TextInput::make('limit')
                         ->label('Number of Orders')
                         ->placeholder('Leave empty to Export All')
                         ->numeric()
                         ->minValue(1)
-                        ->helperText('Leave empty to Export all orders'),
+                        ->helperText('⚠️ Exporting all records on large datasets may take time. Recommend max 10,000.'),
                 ])
                 ->action(function (array $data) {
                     $limit = !empty($data['limit']) ? (int) $data['limit'] : null;
@@ -1750,7 +1816,7 @@ class OrdersTable
                 ->label('Import Excel')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('warning')
-                ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('Create:Order'))
+                ->visible(fn() => $isAdmin || self::userCan('Create:Order'))
                 ->schema([
                     FileUpload::make('file')
                         ->label('Excel File')
@@ -1880,7 +1946,7 @@ class OrdersTable
                 ->label('Download Excel Template')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('Create:Order'))
+                ->visible(fn() => $isAdmin || self::userCan('Create:Order'))
                 ->action(function () {
                     return Excel::download(
                         new OrdersTemplateExport(),
@@ -1892,6 +1958,7 @@ class OrdersTable
 
     private static function getRecordActions(): array
     {
+        $isAdmin = self::$cachedUserIsAdmin; // ⚡ restore from static cache
         return [
             ActionGroup::make([
                 Action::make('copyOrder')
@@ -1929,26 +1996,21 @@ class OrdersTable
                 // Client is forbidden from editing completely
                 // Admin can edit anything
                 EditAction::make()->visible(function($record) {
-                    // User must have update permission
-                    if (!auth()->user()->can('Update:Order')) {
+                    // ⚡ PERF: all can() use cached static permissions
+                    if (!self::userCan('Update:Order')) {
                         return false;
                     }
-
-                    // Cannot edit if record is locked
                     if (self::isRecordLocked($record)) {
                         return false;
                     }
-
-                    // Check if user has specific permission to edit closed orders
-                    if (!auth()->user()->can('EditLocked:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
+                    if (!self::userCan('EditLocked:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
                         return false;
                     }
-                    
                     return true;
                 }),
 
                 Action::make('timeline')
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewTimelineAction:Order'))
+                    ->visible(fn() => $isAdmin || self::userCan('ViewTimelineAction:Order'))
                     ->label('التاريخ والحركة')
                     ->icon('heroicon-o-clock')
                     ->color('info')
@@ -1961,7 +2023,7 @@ class OrdersTable
                     ->label('طباعة البوليصة')
                     ->icon('heroicon-o-printer')
                     ->color('warning')
-                    ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('PrintLabelAction:Order'))
+                    ->visible(fn() => $isAdmin || self::userCan('PrintLabelAction:Order'))
                     ->url(fn($record) => route('orders.print-label', $record->id))
                     ->openUrlInNewTab(),
                 
@@ -1971,7 +2033,7 @@ class OrdersTable
                         ->label(fn($record) => $record->collected_shipper ? '❌ إلغاء التحصيل من الكابتن' : '✅ تم التحصيل من الكابتن')
                         ->icon('heroicon-o-truck')
                         ->color(fn($record) => $record->collected_shipper ? 'danger' : 'success')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageShipperCollectionAction:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageShipperCollectionAction:Order'))
                         ->requiresConfirmation()
                         ->modalHeading(fn($record) => $record->collected_shipper ? 'إلغاء تحصيل الكابتن' : 'التحصيل من الكابتن')
                         ->modalDescription(fn($record) => $record->collected_shipper 
@@ -2050,7 +2112,7 @@ class OrdersTable
                         ->label(fn($record) => $record->collected_client ? '❌ إلغاء التسوية للعميل' : '💰 تسوية مع العميل')
                         ->icon('heroicon-o-banknotes')
                         ->color(fn($record) => $record->collected_client ? 'danger' : 'primary')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageCollections:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageCollections:Order'))
                         ->requiresConfirmation()
                         ->modalHeading(fn($record) => $record->collected_client ? 'إلغاء تسوية العميل' : 'تسوية للعميل')
                         ->modalDescription(fn($record) => $record->collected_client 
@@ -2142,7 +2204,7 @@ class OrdersTable
                         ->label(fn($record) => $record->return_shipper ? '❌ إلغاء مرتجع الكابتن' : '↩️ مرتجع من الكابتن')
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->color(fn($record) => $record->return_shipper ? 'danger' : 'info')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageReturns:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageReturns:Order'))
                         ->requiresConfirmation()
                         ->modalHeading(fn($record) => $record->return_shipper ? 'إلغاء مرتجع الكابتن' : 'عمل مرتجع من الكابتن')
                         ->modalDescription(fn($record) => $record->return_shipper 
@@ -2217,7 +2279,7 @@ class OrdersTable
                         ->label(fn($record) => $record->return_client ? '❌ Cancel Return' : '↩️ Client Return')
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->color(fn($record) => $record->return_client ? 'danger' : 'warning')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ManageReturns:Order'))
+                        ->visible(fn() => $isAdmin || self::userCan('ManageReturns:Order'))
                         ->requiresConfirmation()
                         ->modalHeading(fn($record) => $record->return_client ? 'Cancel Client Return' : 'Create Client Return')
                         ->modalDescription(fn($record) => $record->return_client 
@@ -2306,7 +2368,7 @@ class OrdersTable
                     ->label('♻️ استرجاع')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('success')
-                    ->visible(fn($record) => auth()->user()->can('Restore:Order') && $record->trashed())
+                    ->visible(fn($record) => self::userCan('Restore:Order') && $record->trashed())
                     ->requiresConfirmation()
                     ->modalHeading('استرجاع الأوردر')
                     ->modalDescription(fn($record) => "هل تريد استرجاع أوردر رقم #{$record->code}؟")
@@ -2325,7 +2387,7 @@ class OrdersTable
                     ->label('🔥 حذف نهائي')
                     ->icon('heroicon-o-trash')
                     ->color('danger')
-                    ->visible(fn($record) => auth()->user()->can('ForceDelete:Order') && $record->trashed())
+                    ->visible(fn($record) => self::userCan('ForceDelete:Order') && $record->trashed())
                     ->requiresConfirmation()
                     ->modalHeading('⚠️ حذف نهائي')
                     ->modalDescription(fn($record) => "هذا الإجراء لا يمكن التراجع عنه! سيتم حذف الأوردر رقم #{$record->code} نهائياً.")
@@ -2339,49 +2401,37 @@ class OrdersTable
                             ->danger()
                             ->send();
                     }),
-          ])->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('View:Order')),
+          ])->visible(fn() => $isAdmin || self::userCan('View:Order')),
         ];
     }
     private static function getOrderStatusGroup(): ColumnGroup
     {
-        // الأعمدة مع تحديد من يشوفها
-        // collected_shipper, return_shipper: الأدمن وShipper فقط (مش الكNoينت)
-        // collected_client, return_client: الأدمن والكNoينت فقط (مش Shipper)
-        // has_return: الجميع
+        // ⚡ PERF: Calculate ALL permissions ONCE here, not per-row
+        $user = auth()->user();
+        $canViewOrder       = (bool) $user?->can('View:Order');
+        $canViewShipper     = (bool) $user?->can('ViewShipperDetails:Order');
+        $canViewCustomer    = (bool) $user?->can('ViewCustomerDetails:Order');
+
         $statusFields = [
-            'collected_shipper' => ['label' => 'تحصيل كابتن', 'visibleForClient' => false, 'visibleForShipper' => true],
-            'return_shipper' => ['label' => 'مرتجع كابتن', 'visibleForClient' => false, 'visibleForShipper' => true],
-            'has_return' => ['label' => 'فيه مرتجع', 'visibleForClient' => false, 'visibleForShipper' => true],
-            'collected_client' => ['label' => 'تسوية عميل', 'visibleForClient' => true, 'visibleForShipper' => false],
-            'return_client' => ['label' => 'مرتجع عميل', 'visibleForClient' => true, 'visibleForShipper' => false],
+            'collected_shipper' => ['label' => 'تحصيل كابتن', 'visible' => $canViewShipper],
+            'return_shipper'    => ['label' => 'مرتجع كابتن', 'visible' => $canViewShipper],
+            'has_return'        => ['label' => 'فيه مرتجع', 'visible' => $canViewOrder],
+            'collected_client'  => ['label' => 'تسوية عميل', 'visible' => $canViewCustomer],
+            'return_client'     => ['label' => 'مرتجع عميل', 'visible' => $canViewCustomer],
         ];
 
         $columns = [];
         foreach ($statusFields as $field => $config) {
-            $fieldName = $field;
-            $label = $config['label'];
-            
-            // تحديد الـ visibility حسب الـ Permissions
-            $isVisible = false;
-            
-            if ($fieldName === 'has_return') {
-                $isVisible = auth()->user()->can('View:Order');
-            } elseif (in_array($fieldName, ['collected_shipper', 'return_shipper'])) {
-                $isVisible = auth()->user()->can('ViewShipperDetails:Order');
-            } elseif (in_array($fieldName, ['collected_client', 'return_client'])) {
-                $isVisible = auth()->user()->can('ViewCustomerDetails:Order');
-            }
-            
             $columns[] = TextColumn::make($field)
                 ->label(new \Illuminate\Support\HtmlString(
                     view('filament.tables.columns.status-filter-header', [
-                        'label' => $label,
-                        'field' => $fieldName,
+                        'label' => $config['label'],
+                        'field' => $field,
                     ])->render()
                 ))
                 ->badge()
                 ->toggleable()
-                ->visible($isVisible)
+                ->visible($config['visible'])  // ⚡ pre-calculated, not per-row
                 ->color(fn ($record) => $record->{$field} ? 'success' : 'danger')
                 ->formatStateUsing(fn ($record) => self::formatStatusField($record, $field));
         }

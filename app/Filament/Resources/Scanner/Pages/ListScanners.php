@@ -239,10 +239,18 @@ class ListScanners extends ListRecords
             case 'return_client':
                 // يستخدم صلاحية Scanner أو Order
                 if ($user->can('ReturnClient:Scanner') || $user->can('ManageClientReturnAction:Order') || $user->isAdmin()) {
+                    // ✅ يُسمح فقط إذا كانت الحالة delivered أو undelivered
+                    if (!in_array($order->status, ['deliverd', 'undelivered'])) {
+                        Notification::make()
+                            ->title('⚠️ لا يمكن تسجيل المرتجع')
+                            ->body("حالة الأوردر الحالية ({$order->status}) لا تسمح بتسجيل مرتجع العميل — يجب أن تكون (تم التسليم) أو (مرتجع)")
+                            ->warning()
+                            ->send();
+                        break;
+                    }
                     $order->update([
                         'return_client' => true,
                         'return_client_date' => now(),
-                        'status' => 'undelivered'
                     ]);
                     Notification::make()->title('✅ تم تسجيل مرتجع العميل')->success()->send();
                 } else {
@@ -254,7 +262,6 @@ class ListScanners extends ListRecords
                 if (($user->can('AssignShipper:Scanner') || $user->can('AssignShipper:Order') || $user->isAdmin()) && $this->targetShipperId) {
                     $order->update([
                         'shipper_id' => $this->targetShipperId,
-                        'status' => 'out for delivery'
                     ]);
                 } else {
                     Notification::make()->title('❌ لا تملك صلاحية إسناد المندوب')->danger()->send();

@@ -115,7 +115,7 @@ class OrderObserver
         // 2. لو تم Assign Shipper جديد (أو تغير Shipper)
         if ($order->isDirty('shipper_id') && $order->shipper_id) {
             $oldShipperId = $order->getOriginal('shipper_id');
-            $oldShipper = $oldShipperId ? User::find($oldShipperId)?->name : null;
+            $oldShipper = $oldShipperId ? User::select('id', 'name')->find($oldShipperId)?->name : null;
             $newShipper = $order->shipper?->name;
 
             OrderStatusHistory::create([
@@ -285,16 +285,33 @@ class OrderObserver
             return 'فارغ';
         }
 
-        // تنسيق حسب نوع الحقل
+        // ⚡ Static cache to avoid repeated DB queries for the same IDs in the same request
+        static $cache = [];
+
         switch ($field) {
             case 'governorate_id':
-                return $value ? (\App\Models\Governorate::find($value)?->name ?? $value) : 'فارغ';
+                if (!$value) return 'فارغ';
+                $cacheKey = "gov_{$value}";
+                if (!isset($cache[$cacheKey])) {
+                    $cache[$cacheKey] = \App\Models\Governorate::select('id', 'name')->find($value)?->name ?? $value;
+                }
+                return $cache[$cacheKey];
             
             case 'city_id':
-                return $value ? (\App\Models\City::find($value)?->name ?? $value) : 'فارغ';
+                if (!$value) return 'فارغ';
+                $cacheKey = "city_{$value}";
+                if (!isset($cache[$cacheKey])) {
+                    $cache[$cacheKey] = \App\Models\City::select('id', 'name')->find($value)?->name ?? $value;
+                }
+                return $cache[$cacheKey];
             
             case 'client_id':
-                return $value ? (User::find($value)?->name ?? $value) : 'فارغ';
+                if (!$value) return 'فارغ';
+                $cacheKey = "user_{$value}";
+                if (!isset($cache[$cacheKey])) {
+                    $cache[$cacheKey] = User::select('id', 'name')->find($value)?->name ?? $value;
+                }
+                return $cache[$cacheKey];
             
             case 'allow_open':
             case 'has_return':

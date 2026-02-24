@@ -101,3 +101,69 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(100, 100, 100, 0.4) transparent;
 }
+
+/* ========== Barcode Scanner Modal - Select Fix ========== */
+@layer utilities {
+
+    /* Filament v4 custom select trigger - light mode */
+    .fi-modal .fi-fo-field-wrp button[role="combobox"] {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        border: 2px solid #6366f1 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        min-height: 2.8rem !important;
+    }
+
+    /* Dark mode */
+    .dark .fi-modal .fi-fo-field-wrp button[role="combobox"] {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: #6366f1 !important;
+    }
+
+    /* Dropdown options list */
+    .fi-modal [role="listbox"] {
+        background-color: #ffffff !important;
+        color: #111827 !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .dark .fi-modal [role="listbox"] {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    /* Each option */
+    .fi-modal [role="option"] {
+        color: #111827 !important;
+        font-weight: 500 !important;
+    }
+
+    .dark .fi-modal [role="option"] {
+        color: #f1f5f9 !important;
+    }
+
+    /* Hovered / selected option */
+    .fi-modal [role="option"]:hover,
+    .fi-modal [role="option"][aria-selected="true"] {
+        background-color: #ede9fe !important;
+        color: #4f46e5 !important;
+    }
+
+    .dark .fi-modal [role="option"]:hover,
+    .dark .fi-modal [role="option"][aria-selected="true"] {
+        background-color: #312e81 !important;
+        color: #a5b4fc !important;
+    }
+
+    /* Text inside trigger */
+    .fi-modal .fi-fo-field-wrp button[role="combobox"] span {
+        color: inherit !important;
+    }
+
+}

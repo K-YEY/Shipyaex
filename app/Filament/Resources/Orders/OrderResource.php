@@ -72,16 +72,53 @@ class OrderResource extends Resource
     {
         $query = parent::getEloquentQuery()->whereNotNull('status');
         
-        // ⚡ PERFORMANCE OPTIMIZATION: Load necessary relationships
-        $query->with([
-            'client:id,name,phone,email',
+        // ⚡ PERFORMANCE: Only eager-load relations actually DISPLAYED in table columns
+        // collectedShipper/returnedShipper are loaded on-demand in Actions, not in table rows
+        $query->select([
+            'order.id',
+            'order.code',
+            'order.external_code',
+            'order.name',
+            'order.phone',
+            'order.phone_2',
+            'order.address',
+            'order.governorate_id',
+            'order.city_id',
+            'order.total_amount',
+            'order.fees',
+            'order.shipper_fees',
+            'order.cop',
+            'order.cod',
+            'order.status',
+            'order.status_note',
+            'order.order_note',
+            'order.shipper_id',
+            'order.client_id',
+            'order.collected_shipper',
+            'order.collected_shipper_date',
+            'order.collected_shipper_id',
+            'order.return_shipper',
+            'order.return_shipper_date',
+            'order.has_return',
+            'order.has_return_date',
+            'order.collected_client',
+            'order.collected_client_date',
+            'order.collected_client_id',
+            'order.return_client',
+            'order.return_client_date',
+            'order.returned_shipper_id',
+            'order.returned_client_id',
+            'order.shipper_date',
+            'order.allow_open',
+            'order.created_at',
+            'order.updated_at',
+            'order.deleted_at',
+        ])->with([
+            'client:id,name,phone',
             'shipper:id,name,phone,commission',
             'governorate:id,name,follow_up_hours',
-            'city:id,name,governorate_id',
-            'orderStatus:id,slug,color',
-            'collectedShipper:id,status,created_at',
-            'collectedClient:id,status,created_at',
-            'returnedShipper:id,status,created_at',
+            'city:id,name',
+            'orderStatus:id,slug,color,name',
         ]);
         
         $user = auth()->user();
@@ -120,7 +157,7 @@ class OrderResource extends Resource
 
         $cacheKey = 'nav_badge_orders_' . $user->id;
 
-        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($user) {
+        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 120, function () use ($user) {
             $query = Order::whereNotNull('status');
             if ($user->isAdmin() || $user->can('ViewAll:Order')) {
                 return $query->count();
