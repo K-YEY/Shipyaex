@@ -164,9 +164,20 @@ class OrdersTable
         return $table
             ->persistSearchInSession()
             ->modifyQueryUsing(fn ($query) => $query->latest())
-            ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple) // ⚡ PERF: Much faster than regular pagination (skips COUNT query)
+            ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
+            ->persistFiltersInSession()
+            ->searchDebounce(700)
+            ->defaultSort('created_at', 'desc')
+            ->filtersFormColumns(3)
+            ->extraAttributes([
+                'id' => 'orders-table-wrapper',
+                'class' => 'orders-table-container',
+                'style' => 'max-height: calc(100vh - 190px); overflow: auto !important; position: relative;',
+            ])
             ->columns([
                 TextColumn::make('code')
                     ->label(__('orders.code'))
@@ -1397,38 +1408,7 @@ class OrdersTable
                 ])->label('🗑️ Delete'),
             ])->recordAction(null)->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
-            ->filtersFormMaxHeight('400px')
-            ->defaultPaginationPageOption(100) 
-                 ->description(new \Illuminate\Support\HtmlString('
-                <style>
-                    #orders-table-wrapper .fi-ta-ctn {
-                        max-height: calc(100vh - 190px);
-                        overflow: auto !important;
-                        position: relative;
-                        border: 1px solid rgb(var(--gray-200));
-                        border-radius: 0.5rem;
-                    }
-                    .dark #orders-table-wrapper .fi-ta-ctn {
-                        border-color: rgb(var(--gray-700));
-                    }
-                    /* Fix for Toggle Columns Dropdown to prevent screen overflow */
-                    .fi-dropdown-panel {
-                        max-height: 45vh !important;
-                        overflow-y: auto !important;
-                    }
-                </style>
-            '))
-            ->paginationPageOptions([100])
-            ->defaultPaginationPageOption(100)
-            ->persistSearchInSession()
-            ->persistColumnSearchesInSession()
-            ->filtersFormColumns(3)
-            ->searchDebounce(700)        
-            ->defaultSort('created_at', 'desc')
-            ->persistFiltersInSession()
-            ->extraAttributes([
-                'id' => 'orders-table-wrapper',
-            ]);
+            ->filtersFormMaxHeight('400px');
     }
 
     private static function getHeaderActions(): array

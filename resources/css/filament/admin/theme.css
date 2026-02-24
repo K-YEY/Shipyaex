@@ -41,6 +41,12 @@
     border-color: rgb(var(--gray-700));
 }
 
+/* Fix for Toggle Columns Dropdown to prevent screen overflow */
+.fi-dropdown-panel {
+    max-height: 45vh !important;
+    overflow-y: auto !important;
+}
+
 #orders-table-wrapper thead.fi-ta-header {
     position: sticky !important;
     top: 0;

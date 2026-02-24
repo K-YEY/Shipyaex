@@ -97,7 +97,28 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->viteTheme('resources/css/filament/admin/theme.css');
+    }
 
-
+    public function boot(): void
+    {
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            \Filament\View\PanelsRenderHook::HEAD_END,
+            fn (): string => '<style>
+                /* Force Table Scroll Styles safely */
+                #orders-table-wrapper .fi-ta-ctn {
+                    max-height: calc(100vh - 190px) !important;
+                    overflow: auto !important;
+                    position: relative !important;
+                }
+                /* Fix for Toggle Columns Dropdown scroll */
+                .fi-dropdown-panel {
+                    max-height: 45vh !important;
+                    overflow-y: auto !important;
+                }
+                .fi-ta-content {
+                    overflow-x: auto !important;
+                }
+            </style>',
+        );
     }
 }
