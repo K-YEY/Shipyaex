@@ -50,47 +50,10 @@ class OrdersTable
     private static ?bool $cachedCanEditLocked = null;
     private static array $cachedPermissions = [];
     private static ?bool $cachedRequireShipperFirst = null; // ⚡ cached setting
-    private static ?object $cachedHeaderSums = null; // ⚡ cached sums for column headers
 
-    /**
-     * ⚡ Get Sum of a column from the filtered result (cached per request)
-     */
-    /**
-     * ⚡ Get Sum of a column from the CURRENTLY DISPLAYED records only
-     */
-    private static function getHeaderSum(Table $table, string $column): float
-    {
-        if (self::$cachedHeaderSums === null) {
-            try {
-                // Get the records currently being displayed on the page
-                $livewire = $table->getLivewire();
-                if (!method_exists($livewire, 'getTableRecords')) {
-                    return 0;
-                }
-                
-                $records = $livewire->getTableRecords();
 
-                // Convert to collection depending on pagination type
-                $items = ($records instanceof \Illuminate\Contracts\Pagination\Paginator || $records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)
-                    ? collect($records->items())
-                    : collect($records);
-
-                self::$cachedHeaderSums = (object)[
-                    'total_amount' => (float) $items->sum('total_amount'),
-                    'fees'         => (float) $items->sum('fees'),
-                    'shipper_fees' => (float) $items->sum('shipper_fees'),
-                    'cop'          => (float) $items->sum('cop'),
-                    'cod'          => (float) $items->sum('cod'),
-                ];
-            } catch (\Throwable $e) {
-                self::$cachedHeaderSums = (object)[
-                    'total_amount' => 0, 'fees' => 0, 'shipper_fees' => 0, 'cop' => 0, 'cod' => 0
-                ];
-            }
-        }
-        return (float) (self::$cachedHeaderSums->$column ?? 0);
-    }
     
+
     /**
      * ⚡ Get 'require_shipper_collection_first' setting (cached per request)
      */
@@ -141,29 +104,63 @@ class OrdersTable
         // ⚡ PERF: Pre-cache ALL permissions used in per-row closures ONCE
         // These are called inside column closures AND record action visible() that run for EVERY row
         $permissions = [
-            'update_order',
-            'edit_locked_order',
-            'change_status_order',
-            'change_status_action_order',
-            'manage_shipper_return_action_order',
-            'assign_shipper_action_order',
-            'edit_external_code_order',
-            'edit_order_notes_field_order',
-            'view_timeline_action_order',
-            'print_label_action_order',
-            'manage_shipper_collection_action_order',
-            'manage_shipper_return_action_order',
-            'restore_order',
-            'force_delete_order',
-            'view_order',
-            'restore_any_order',
-            'delete_any_order',
-            'force_delete_any_order',
-            'view_my_orders_action_order',
-            'barcode_scanner_action_order',
-            'export_data_order',
-            'create_order',
-            'bulk_change_status_action_order',
+            'Update:Order',
+            'EditLocked:Order',
+            'ChangeStatus:Order',
+            'ChangeStatusAction:Order',
+            'ManageShipperReturnAction:Order',
+            'AssignShipperAction:Order',
+            'EditExternalCode:Order',
+            'EditOrderNotesField:Order',
+            'ViewTimelineAction:Order',
+            'PrintLabelAction:Order',
+            'ManageShipperCollectionAction:Order',
+            'ManageCollections:Order',
+            'ManageReturns:Order',
+            'ManageClientReturnAction:Order',
+            'Restore:Order',
+            'ForceDelete:Order',
+            'View:Order',
+            'RestoreAny:Order',
+            'DeleteAny:Order',
+            'ForceDeleteAny:Order',
+            'ViewMyOrdersAction:Order',
+            'BarcodeScannerAction:Order',
+            'ExportData:Order',
+            'Create:Order',
+            'BulkChangeStatusAction:Order',
+            // Column visibility
+            'ViewCodeColumn:Order',
+            'ViewExternalCodeColumn:Order',
+            'ViewRegistrationDateColumn:Order',
+            'ViewShipperDateColumn:Order',
+            'ViewRecipientNameColumn:Order',
+            'ViewPhoneColumn:Order',
+            'ViewAddressColumn:Order',
+            'ViewGovernorateColumn:Order',
+            'ViewCityColumn:Order',
+            'ViewTotalAmountColumn:Order',
+            'ViewShippingFeesColumn:Order',
+            'ViewShipperCommissionColumn:Order',
+            'ViewCompanyShareColumn:Order',
+            'ViewCollectionAmountColumn:Order',
+            'ViewStatusColumn:Order',
+            'ViewStatusNotesColumn:Order',
+            'ViewOrderNotesColumn:Order',
+            'ViewShipperColumn:Order',
+            'ViewClientColumn:Order',
+            'ViewDatesColumn:Order',
+            'ViewShipperDetails:Order',
+            'ViewCustomerDetails:Order',
+            'ViewShipperDetailsColumn:Order',
+            // Filters
+            'ViewDelayedFollowUpFilter:Order',
+            'ViewStatusFilter:Order',
+            'ViewCollectedFromShipperFilter:Order',
+            'ViewReturnedFromShipperFilter:Order',
+            'ViewHasReturnFilter:Order',
+            'ViewSettledWithClientFilter:Order',
+            'ViewReturnedToClientFilter:Order',
         ];
         foreach ($permissions as $p) {
             self::userCan($p);
@@ -210,20 +207,20 @@ class OrdersTable
                     ->sortable()
                     ->toggleable()
                     ->alignCenter()
-                    ->visible($isAdmin || self::userCan('ViewCode_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
                     ->searchable( isIndividual: true,),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
                     ->color('warning')
                     ->badge()
                     ->sortable() ->alignCenter()
-                    ->visible($isAdmin || self::userCan('ViewExternalCode_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(isIndividual: true)
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
                         // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
-                        self::userCan('EditExternalCode_order') ?
+                        self::userCan('EditExternalCode:Order') ?
                         Action::make('editExternalCode')
                             ->modalHeading(__('orders.external_code_modal_heading'))
                             ->modalDescription(__('orders.external_code_modal_description'))
@@ -250,20 +247,20 @@ class OrdersTable
                     ->sortable()
                     ->searchable(isIndividual: true)
                     ->alignCenter()
-                    ->visible($isAdmin || self::userCan('ViewRegistrationDate_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewRegistrationDateColumn:Order'))
                     ->toggleable(),
                 TextColumn::make('shipper_date')
                     ->label(__('orders.shipper_date'))
                     ->date('Y-m-d')
                     ->searchable(isIndividual: true)
-                    ->visible($isAdmin || self::userCan('ViewShipperDate_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewShipperDateColumn:Order'))
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
                     ->searchable(isIndividual: true)
                     ->alignCenter()
-                    ->visible($isAdmin || self::userCan('ViewRecipientName_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
                     ->toggleable(),
                 TextColumn::make('customer_phones')
                     ->label(__('orders.phone'))
@@ -277,7 +274,7 @@ class OrdersTable
                             ->join('<br>')
                     )
                     ->html() // very important
-                    ->visible($isAdmin || self::userCan('ViewPhone_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
                     ->searchable(
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where('phone', 'like', "%{$search}%")
@@ -286,7 +283,7 @@ class OrdersTable
                     ->toggleable()->alignCenter(),
                 TextColumn::make('address')
                     ->label(__('orders.address'))
-                    ->visible($isAdmin || self::userCan('ViewAddress_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewAddressColumn:Order'))
                     ->toggleable()
                     ->searchable(isIndividual: true)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
@@ -294,60 +291,60 @@ class OrdersTable
                     ->tooltip(fn ($record) => $record->address),
                 TextColumn::make('governorate.name')
                     ->searchable(isIndividual: true)
-                    ->visible($isAdmin || self::userCan('ViewGovernorate_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewGovernorateColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('city.name')
                     ->searchable(isIndividual: true)
-                    ->visible($isAdmin || self::userCan('ViewCity_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewCityColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
                     ->sortable(),
                 TextInputColumn::make('total_amount')
-                    ->label(fn (Table $table) => __('orders.total_amount') . ' (' . number_format(self::getHeaderSum($table, 'total_amount'), 0) . ')')
+                    ->label(__('orders.total_amount'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->prefix(__('statuses.currency'))
                     ->sortable()
                     ->toggleable()
                     ->searchable(isIndividual: true)
-                    ->visible($isAdmin || self::userCan('ViewTotalAmount_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewTotalAmountColumn:Order'))
                     ->afterStateUpdated(fn ($record, $state) => self::updateTotalAmount($record, $state)),
 
                 TextInputColumn::make('fees')
-                    ->label(fn (Table $table) => __('orders.shipping_fees') . ' (' . number_format(self::getHeaderSum($table, 'fees'), 0) . ')')
+                    ->label(__('orders.shipping_fees'))
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
-                    ->visible($isAdmin || self::userCan('ViewShippingFees_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewShippingFeesColumn:Order'))
                     ->searchable(isIndividual: true)
                     ->toggleable()
                     ->afterStateUpdated(fn ($record, $state) => self::updateFees($record, $state)),
 
                 TextInputColumn::make('shipper_fees')
-                    ->label(fn (Table $table) => __('orders.shipper_commission') . ' (' . number_format(self::getHeaderSum($table, 'shipper_fees'), 0) . ')')
+                    ->label(__('orders.shipper_commission'))
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
-                    ->visible($isAdmin || self::userCan('ViewShipperCommission_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewShipperCommissionColumn:Order'))
                     ->searchable(isIndividual: true)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
 
                 TextColumn::make('cop')
-                    ->label(fn (Table $table) => __('orders.company_share') . ' (' . number_format(self::getHeaderSum($table, 'cop'), 0) . ')')
+                    ->label(__('orders.company_share'))
                     ->numeric()
                     ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->searchable(isIndividual: true)
-                    ->visible($isAdmin || self::userCan('ViewCompanyShare_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewCompanyShareColumn:Order'))
                     ->toggleable()
                     ->alignCenter(),
 
                 TextColumn::make('cod')
-                    ->label(fn (Table $table) => __('orders.collection_amount') . ' (' . number_format(self::getHeaderSum($table, 'cod'), 0) . ')')
+                    ->label(__('orders.collection_amount'))
                     ->numeric()
                     ->sortable()
-                    ->visible($isAdmin || self::userCan('ViewCollectionAmount_column_order'))
+                    ->visible($isAdmin || self::userCan('ViewCollectionAmountColumn:Order'))
                     ->searchable(isIndividual: true)
                     ->toggleable()
                     ->alignCenter(),
@@ -356,42 +353,36 @@ class OrdersTable
                     ->badge()
                     ->color(fn ($record) => strtolower($record->orderStatus?->color ?? 'gray'))
                     ->sortable()
-                    ->searchable(isIndividual: true)->alignCenter()  // ⚡ PERF: isIndividual only, no global search
-                    ->visible($isAdmin || self::userCan('ViewStatusColumn_order'))
+                    ->searchable(isIndividual: true)->alignCenter()
+                    ->visible($isAdmin || self::userCan('ViewStatusColumn:Order'))
                     ->toggleable()
                     ->extraAttributes(
-                        // ⚡ PERF: use cached userCan instead of per-row auth()->can()
-                        fn ($record) => self::isRecordLocked($record) || 
-                            (!self::userCan('ChangeStatus_order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED]))
+                        fn ($record) => (!self::$cachedUserIsAdmin && self::isRecordLocked($record))
                             ? []
-                            : ['class' => 'cursor-pointer text-primary font-semibold']
+                            : ['class' => 'cursor-pointer text-primary font-semibold', 'title' => __('statuses.tooltip_change_status')]
                     )
-                    ->tooltip(function ($record) {
-                        if (self::isRecordLocked($record)) {
-                            return __('statuses.tooltip_order_locked');
-                        }
-                        // ⚡ PERF: use cached userCan instead of per-row auth()->can()
-                        if (!self::userCan('ChangeStatus_order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
-                            return __('statuses.tooltip_order_closed');
-                        }
-                        return __('statuses.tooltip_change_status');
-                    })
                     ->action(
                         Action::make('changeStatus')
                             ->visible(function ($record) {
-                                // ⚡ PERF: all can() calls use static cache — called per-row
-                                if (!self::userCan('ChangeStatusAction_order')) {
+                                // ✅ Admin دايماً يقدر يغير الحالة
+                                if (self::$cachedUserIsAdmin) {
+                                    return true;
+                                }
+                                // المستخدمين العاديين بيتحققوا من الصلاحية
+                                if (!self::userCan('ChangeStatusAction:Order')) {
                                     return false;
                                 }
+                                // الأوردر مقفول؟
                                 if (self::isRecordLocked($record)) {
                                     return false;
                                 }
-                                if (!self::userCan('EditLocked_order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
+                                // حالة delivered/undelivered بتحتاج صلاحية خاصة
+                                if (!self::userCan('EditLocked:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
                                     return false;
                                 }
                                 return true;
                             })
-                            ->modalHeading(fn ($record) => __('statuses.change_status_title', ['code' => $record->code]))
+                            ->modalHeading(fn ($record) => '🔄 تغيير حالة الأوردر: #' . $record->code)
                             ->schema([
                                 Select::make('status')
                                     ->label(__('statuses.new_status_label'))
@@ -466,7 +457,8 @@ class OrdersTable
                                     ->visible(function ($get, $record) {
                                         $status = $get('status') ?? $record->status;
 
-                                        return $status === self::STATUS_DELIVERED && self::userCan('ManageShipperReturnAction_order');
+                                        return $status === self::STATUS_DELIVERED
+                                            && (self::$cachedUserIsAdmin || self::userCan('ManageShipperReturnAction:Order'));
                                     }),
 
                                 \Filament\Forms\Components\TextInput::make('total_amount')
@@ -526,7 +518,7 @@ class OrdersTable
                     ->label(__('orders.status_notes'))
                     ->badge()                    
                     ->alignCenter()
-                    ->visible($isAdmin || self::userCan('ViewStatusNotesColumn_order'))
+                    ->visible($isAdmin || self::userCan('ViewStatusNotesColumn:Order'))
                     ->extraHeaderAttributes(['style' => 'min-width: 200px'])
                     ->searchable(isIndividual: true)
                     ->color(function ($state) {
@@ -569,7 +561,7 @@ class OrdersTable
                     ->badge()
                     ->sortable()
                     ->alignCenter()
-                    ->visible($isAdmin || self::userCan('ViewOrderNotesColumn_order'))
+                    ->visible($isAdmin || self::userCan('ViewOrderNotesColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(isIndividual: true)
                     ->placeholder(__('orders.order_notes_placeholder'))
@@ -577,7 +569,7 @@ class OrdersTable
                     ->tooltip(fn ($record) => $record->order_note)
                     ->action(
                         // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
-                        self::userCan('EditOrderNotesField_order') ?
+                        ($isAdmin || self::userCan('EditOrderNotesField:Order')) ?
                         Action::make('editOrderNote')
                             ->modalHeading(__('orders.order_notes_modal_heading'))
                             ->modalDescription(__('orders.external_code_modal_description'))
@@ -1971,22 +1963,12 @@ class OrdersTable
                         ->send())
                     ->extraAttributes(fn ($record) => [
                         'onclick' => "
-                            const text = `كود: {$record->code}
-                            اسم المستلم: {$record->name}
-                            التليفون: {$record->phone}
-                            المحافظة: " . ($record->governorate?->name ?? '-') . "
-                            المدينة: " . ($record->city?->name ?? '-') . "
-                            العنوان: {$record->address}
-                            المبلغ الإجمالي: {$record->total_amount}`;
-                            navigator.clipboard.writeText(text);
-                        "
+                            const text = `كود: {$record->code}\nاسم المستلم: {$record->name}\nالتليفون: {$record->phone}\nالمحافظة: " . ($record->governorate?->name ?? '-') . "\nالمدينة: " . ($record->city?->name ?? '-') . "\nالعنوان: {$record->address}\nالمبلغ الإجمالي: {$record->total_amount}`;navigator.clipboard.writeText(text);"
                     ]),
 
                 // WhatsApp Action
                 Action::make('whatsapp')
                     ->label('واتساب للعميل')
-                    ->icon(new \Illuminate\Support\HtmlString('<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>')) 
-                    // Or use standard icon: 'heroicon-o-chat-bubble-left-right'
                     ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
                     ->color('success')
                     ->url(fn ($record) => "https://wa.me/+20" . ltrim($record->phone, '0'), shouldOpenInNewTab: true)
@@ -2027,9 +2009,8 @@ class OrdersTable
                     ->url(fn($record) => route('orders.print-label', $record->id))
                     ->openUrlInNewTab(),
                 
-                // Collection actions
-                ActionGroup::make([
-                    Action::make('toggleCollectedShipper')
+                // Collection actions (no nested ActionGroup to avoid CSS issues)
+                Action::make('toggleCollectedShipper')
                         ->label(fn($record) => $record->collected_shipper ? '❌ إلغاء التحصيل من الكابتن' : '✅ تم التحصيل من الكابتن')
                         ->icon('heroicon-o-truck')
                         ->color(fn($record) => $record->collected_shipper ? 'danger' : 'success')
@@ -2359,9 +2340,7 @@ class OrdersTable
                                 ->success()
                                 ->send();
                         }),
-                ])
-                ->label('التحصيل')
-                ->icon('heroicon-o-arrow-left'),
+
                 
                 // ♻️ استرجاع الأوردر الDeleted
                 Action::make('restore')
@@ -2418,6 +2397,20 @@ class OrdersTable
             'has_return'        => ['label' => 'فيه مرتجع', 'visible' => $canViewOrder],
             'collected_client'  => ['label' => 'تسوية عميل', 'visible' => $canViewCustomer],
             'return_client'     => ['label' => 'مرتجع عميل', 'visible' => $canViewCustomer],
+        ];
+
+        $canManageShipperCollection = (bool) $user?->can('ManageShipperCollectionAction:Order');
+        $canManageClientCollection  = (bool) $user?->can('ManageCollections:Order');
+        $canManageReturns           = (bool) $user?->can('ManageReturns:Order');
+        $isAdminUser                = self::$cachedUserIsAdmin;
+
+        // Map each field to the permission that controls it
+        $fieldPermissions = [
+            'collected_shipper' => $isAdminUser || $canManageShipperCollection,
+            'return_shipper'    => $isAdminUser || $canManageReturns,
+            'has_return'        => $isAdminUser || $canManageReturns,
+            'collected_client'  => $isAdminUser || $canManageClientCollection,
+            'return_client'     => $isAdminUser || $canManageReturns,
         ];
 
         $columns = [];
