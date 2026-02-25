@@ -203,9 +203,8 @@ class OrdersTable
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            ->persistSearchInSession()
-            ->persistColumnSearchesInSession()
-            ->persistFiltersInSession()
+            // ❌ تم إزالة persistFiltersInSession و persistSearchInSession
+            // لأنها كانت بتخلي الفلاتر القديمة تتراكم مع السيرش الجديد وتمنع النتائج
             ->searchDebounce(500)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
