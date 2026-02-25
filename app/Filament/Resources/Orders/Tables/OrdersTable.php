@@ -240,8 +240,11 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
-                    // 🔍 Global search: يشمل السيرش العام + عنده search box خاص
-                    ->searchable(isIndividual: true),
+                    // ⚡ Individual search uses prefix LIKE (uses index)
+                    ->searchable(
+                        isIndividual: true,
+                        query: fn ($query, $search) => $query->where('code', 'like', "{$search}%")
+                    ),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
                     ->color('warning')
@@ -249,8 +252,11 @@ class OrdersTable
                     ->sortable() ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
-                    // 🔍 Global search: يشمل السيرش العام + عنده search box خاص
-                    ->searchable(isIndividual: true)
+                    // ⚡ Individual search uses prefix LIKE (uses index)
+                    ->searchable(
+                        isIndividual: true,
+                        query: fn ($query, $search) => $query->where('external_code', 'like', "{$search}%")
+                    )
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
                         // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
@@ -294,8 +300,11 @@ class OrdersTable
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
-                    // 🔍 Global search: يشمل السيرش العام + عنده search box خاص
-                    ->searchable(isIndividual: true)
+                    // ⚡ Individual search uses prefix LIKE (uses index)
+                    ->searchable(
+                        isIndividual: true,
+                        query: fn ($query, $search) => $query->where('name', 'like', "{$search}%")
+                    )
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
                     ->toggleable(),
@@ -312,11 +321,12 @@ class OrdersTable
                     )
                     ->html() // very important
                     ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
-                    // 🔍 Global search (custom query for phone + phone_2)
+                    // ⚡ Individual FULLTEXT search on phone + phone_2 (exact/prefix)
                     ->searchable(
                         isIndividual: true,
-                        query: fn ($query, $search) => $query->where('phone', 'like', "%{$search}%")
-                            ->orWhere('phone_2', 'like', "%{$search}%")
+                        query: fn ($query, $search) => $query
+                            ->where('phone', 'like', "{$search}%")
+                            ->orWhere('phone_2', 'like', "{$search}%")
                     )
                     ->toggleable()->alignCenter(),
                 TextColumn::make('address')
