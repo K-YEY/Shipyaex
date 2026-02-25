@@ -239,8 +239,11 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
-                    // ⚡ Individual search uses prefix LIKE (uses index)
+                    // ⚡ Global + Individual search: prefix LIKE uses index
+                    // isGlobal: true  → global search bar at top of table
+                    // isIndividual: true → per-column search box in header
                     ->searchable(
+                        isGlobal: true,
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where('code', 'like', "{$search}%")
                     ),
@@ -251,8 +254,9 @@ class OrdersTable
                     ->sortable() ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
-                    // ⚡ Individual search uses prefix LIKE (uses index)
+                    // ⚡ Global + Individual search: prefix LIKE uses index
                     ->searchable(
+                        isGlobal: true,
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where('external_code', 'like', "{$search}%")
                     )
@@ -299,8 +303,9 @@ class OrdersTable
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
-                    // ⚡ Individual search uses prefix LIKE (uses index)
+                    // ⚡ Global + Individual search: prefix LIKE uses index
                     ->searchable(
+                        isGlobal: true,
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where('name', 'like', "{$search}%")
                     )
@@ -320,12 +325,15 @@ class OrdersTable
                     )
                     ->html() // very important
                     ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
-                    // ⚡ Individual FULLTEXT search on phone + phone_2 (exact/prefix)
+                    // ⚡ Global + Individual search on phone + phone_2 (prefix LIKE)
+                    // Wrapped in a closure so OR doesn't escape its group when ANDed with filters
                     ->searchable(
+                        isGlobal: true,
                         isIndividual: true,
-                        query: fn ($query, $search) => $query
-                            ->where('phone', 'like', "{$search}%")
-                            ->orWhere('phone_2', 'like', "{$search}%")
+                        query: fn ($query, $search) => $query->where(
+                            fn ($q) => $q->where('phone', 'like', "{$search}%")
+                                        ->orWhere('phone_2', 'like', "{$search}%")
+                        )
                     )
                     ->toggleable()->alignCenter(),
                 TextColumn::make('address')
