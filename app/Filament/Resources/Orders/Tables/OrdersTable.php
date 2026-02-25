@@ -50,9 +50,38 @@ class OrdersTable
     private static ?bool $cachedCanEditLocked = null;
     private static array $cachedPermissions = [];
     private static ?bool $cachedRequireShipperFirst = null; // ⚡ cached setting
+    private static ?object $cachedHeaderSums = null; // ⚡ cached sums for column headers
 
-
-    
+    /**
+     * ⚡ Get Sum of a column from the CURRENTLY DISPLAYED records only
+     */
+    private static function getHeaderSum(Table $table, string $column): float
+    {
+        if (self::$cachedHeaderSums === null) {
+            try {
+                $livewire = $table->getLivewire();
+                if (!method_exists($livewire, 'getTableRecords')) {
+                    return 0;
+                }
+                $records = $livewire->getTableRecords();
+                $items = ($records instanceof \Illuminate\Contracts\Pagination\Paginator || $records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)
+                    ? collect($records->items())
+                    : collect($records);
+                self::$cachedHeaderSums = (object)[
+                    'total_amount' => (float) $items->sum('total_amount'),
+                    'fees'         => (float) $items->sum('fees'),
+                    'shipper_fees' => (float) $items->sum('shipper_fees'),
+                    'cop'          => (float) $items->sum('cop'),
+                    'cod'          => (float) $items->sum('cod'),
+                ];
+            } catch (\Throwable $e) {
+                self::$cachedHeaderSums = (object)[
+                    'total_amount' => 0, 'fees' => 0, 'shipper_fees' => 0, 'cop' => 0, 'cod' => 0
+                ];
+            }
+        }
+        return (float) (self::$cachedHeaderSums->{$column} ?? 0);
+    }
 
     /**
      * ⚡ Get 'require_shipper_collection_first' setting (cached per request)
@@ -302,7 +331,7 @@ class OrdersTable
                     ->alignCenter()
                     ->sortable(),
                 TextInputColumn::make('total_amount')
-                    ->label(__('orders.total_amount'))
+                    ->label(fn (Table $table) => __('orders.total_amount') . ' (' . number_format(self::getHeaderSum($table, 'total_amount'), 0) . ')')
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->prefix(__('statuses.currency'))
                     ->sortable()
@@ -312,7 +341,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateTotalAmount($record, $state)),
 
                 TextInputColumn::make('fees')
-                    ->label(__('orders.shipping_fees'))
+                    ->label(fn (Table $table) => __('orders.shipping_fees') . ' (' . number_format(self::getHeaderSum($table, 'fees'), 0) . ')')
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
@@ -322,7 +351,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateFees($record, $state)),
 
                 TextInputColumn::make('shipper_fees')
-                    ->label(__('orders.shipper_commission'))
+                    ->label(fn (Table $table) => __('orders.shipper_commission') . ' (' . number_format(self::getHeaderSum($table, 'shipper_fees'), 0) . ')')
                     ->prefix(__('statuses.currency'))
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
@@ -331,7 +360,7 @@ class OrdersTable
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
 
                 TextColumn::make('cop')
-                    ->label(__('orders.company_share'))
+                    ->label(fn (Table $table) => __('orders.company_share') . ' (' . number_format(self::getHeaderSum($table, 'cop'), 0) . ')')
                     ->numeric()
                     ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
@@ -341,7 +370,7 @@ class OrdersTable
                     ->alignCenter(),
 
                 TextColumn::make('cod')
-                    ->label(__('orders.collection_amount'))
+                    ->label(fn (Table $table) => __('orders.collection_amount') . ' (' . number_format(self::getHeaderSum($table, 'cod'), 0) . ')')
                     ->numeric()
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewCollectionAmountColumn:Order'))
