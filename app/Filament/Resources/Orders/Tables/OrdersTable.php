@@ -196,14 +196,17 @@ class OrdersTable
         }
 
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->latest())
+            ->modifyQueryUsing(fn ($query) => $query
+                ->with(['governorate', 'city', 'shipper', 'client', 'orderStatus'])
+                ->latest()
+            )
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
             ->persistSearchInSession()
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession()
-            ->searchDebounce(700)
+            ->searchDebounce(500)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
@@ -237,7 +240,7 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
-                    ->searchable( isIndividual: true,),
+                    ->searchable(isIndividual: true),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
                     ->color('warning')
