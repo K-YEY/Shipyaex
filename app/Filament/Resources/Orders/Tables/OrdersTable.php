@@ -339,15 +339,23 @@ class OrdersTable
                     ->alignCenter()
                     ->tooltip(fn ($record) => $record->address),
                 TextColumn::make('governorate.name')
-                    // 📋 Individual only
-                    ->searchable(isIndividual: true, isGlobal: false)
+                    // 📋 Individual only - uses whereHas to search related table
+                    ->searchable(
+                        isIndividual: true,
+                        isGlobal: false,
+                        query: fn ($query, $search) => $query->whereHas('governorate', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    )
                     ->visible($isAdmin || self::userCan('ViewGovernorateColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('city.name')
-                    // 📋 Individual only
-                    ->searchable(isIndividual: true, isGlobal: false)
+                    // 📋 Individual only - uses whereHas to search related table
+                    ->searchable(
+                        isIndividual: true,
+                        isGlobal: false,
+                        query: fn ($query, $search) => $query->whereHas('city', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    )
                     ->visible($isAdmin || self::userCan('ViewCityColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
@@ -576,7 +584,10 @@ class OrdersTable
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewStatusNotesColumn:Order'))
                     ->extraHeaderAttributes(['style' => 'min-width: 200px'])
-                    ->searchable(isIndividual: true)
+                    ->searchable(
+                        isIndividual: true,
+                        query: fn ($query, $search) => $query->where('status_note', 'like', "%{$search}%")
+                    )
                     ->color(function ($state) {
                         // Available Filament colors
                         $colors = [
@@ -660,7 +671,10 @@ class OrdersTable
                         // ⚡ FIX: use null-safe operator to prevent PHP error when shipper is null
                         return $record->shipper?->phone;
                     })
-                    ->searchable(isIndividual: true)
+                    ->searchable(
+                        isIndividual: true,
+                        query: fn ($query, $search) => $query->whereHas('shipper', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    )
                     ->toggleable()  
                     ->sortable()
                     ->action(
@@ -727,8 +741,11 @@ class OrdersTable
                 self::getOrderStatusGroup(),
                 TextColumn::make('client.name')
                     ->visible($isAdmin || self::userCan('ViewClientColumn:Order'))
-                    ->searchable(isIndividual: true)
-                     ->alignCenter()
+                    ->searchable(
+                        isIndividual: true,
+                        query: fn ($query, $search) => $query->whereHas('client', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    )
+                    ->alignCenter()
                     ->toggleable(),
           
 
