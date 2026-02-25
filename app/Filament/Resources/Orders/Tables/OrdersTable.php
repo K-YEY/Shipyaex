@@ -240,6 +240,7 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
+                    // 🔍 Global search: يشمل السيرش العام + عنده search box خاص
                     ->searchable(isIndividual: true),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
@@ -248,6 +249,7 @@ class OrdersTable
                     ->sortable() ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
+                    // 🔍 Global search: يشمل السيرش العام + عنده search box خاص
                     ->searchable(isIndividual: true)
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
@@ -277,19 +279,22 @@ class OrdersTable
                     ->label(__('orders.registration_date'))
                     ->date('Y-m-d')
                     ->sortable()
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only: search box خاص فقط - لا يظهر في السيرش العام
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRegistrationDateColumn:Order'))
                     ->toggleable(),
                 TextColumn::make('shipper_date')
                     ->label(__('orders.shipper_date'))
                     ->date('Y-m-d')
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->visible($isAdmin || self::userCan('ViewShipperDateColumn:Order'))
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
+                    // 🔍 Global search: يشمل السيرش العام + عنده search box خاص
                     ->searchable(isIndividual: true)
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
@@ -307,6 +312,7 @@ class OrdersTable
                     )
                     ->html() // very important
                     ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
+                    // 🔍 Global search (custom query for phone + phone_2)
                     ->searchable(
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where('phone', 'like', "%{$search}%")
@@ -317,18 +323,21 @@ class OrdersTable
                     ->label(__('orders.address'))
                     ->visible($isAdmin || self::userCan('ViewAddressColumn:Order'))
                     ->toggleable()
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
                     ->alignCenter()
                     ->tooltip(fn ($record) => $record->address),
                 TextColumn::make('governorate.name')
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->visible($isAdmin || self::userCan('ViewGovernorateColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('city.name')
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->visible($isAdmin || self::userCan('ViewCityColumn:Order'))
                     ->toggleable()
                     ->alignCenter()
@@ -339,7 +348,8 @@ class OrdersTable
                     ->prefix(__('statuses.currency'))
                     ->sortable()
                     ->toggleable()
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->visible($isAdmin || self::userCan('ViewTotalAmountColumn:Order'))
                     ->afterStateUpdated(fn ($record, $state) => self::updateTotalAmount($record, $state)),
 
@@ -349,7 +359,8 @@ class OrdersTable
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewShippingFeesColumn:Order'))
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->toggleable()
                     ->afterStateUpdated(fn ($record, $state) => self::updateFees($record, $state)),
 
@@ -359,7 +370,8 @@ class OrdersTable
                     ->disabled(fn ($record) => self::isFieldDisabled($record))
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewShipperCommissionColumn:Order'))
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->afterStateUpdated(fn ($record, $state) => self::updateShipperFees($record, $state)),
 
                 TextColumn::make('cop')
@@ -367,7 +379,8 @@ class OrdersTable
                     ->numeric()
                     ->state(fn ($record) => number_format($record->cop, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->visible($isAdmin || self::userCan('ViewCompanyShareColumn:Order'))
                     ->toggleable()
                     ->alignCenter(),
@@ -377,7 +390,8 @@ class OrdersTable
                     ->numeric()
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewCollectionAmountColumn:Order'))
-                    ->searchable(isIndividual: true)
+                    // 📋 Individual only
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->toggleable()
                     ->alignCenter(),
                 TextColumn::make('status')
