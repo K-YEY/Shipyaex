@@ -15,12 +15,21 @@ use Illuminate\Validation\ValidationException;
 */
 
 // Captain Login
+Route::get('/login', function () {
+    return response()->json([
+        'message' => 'This endpoint requires a POST request with username, password, and device_name.',
+        'status' => 'waiting_for_post'
+    ]);
+});
+
 Route::post('/login', function (Request $request) {
     $request->validate([
         'username' => 'required',
         'password' => 'required',
-        'device_name' => 'required',
+        'device_name' => 'nullable',
     ]);
+
+    $deviceName = $request->device_name ?? $request->header('User-Agent', 'Unknown Device');
 
     $user = User::where('username', $request->username)
         ->orWhere('phone', $request->username)
@@ -45,7 +54,7 @@ Route::post('/login', function (Request $request) {
     }
 
     return response()->json([
-        'token' => $user->createToken($request->device_name)->plainTextToken,
+        'token' => $user->createToken($deviceName)->plainTextToken,
         'user' => $user
     ]);
 });
