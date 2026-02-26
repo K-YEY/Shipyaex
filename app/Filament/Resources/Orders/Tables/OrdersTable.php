@@ -115,6 +115,32 @@ class OrdersTable
         }
         return self::$cachedPermissions[$permission];
     }
+
+    /**
+     * 🔍 تطبيق البحث المزدوج (AND logic between words)
+     * يركز على: رقم الأوردر، رقم الهاتف، اسم الزبون، الكود الخارجي
+     */
+    public static function applyGlobalSearch(\Illuminate\Database\Eloquent\Builder $query, string $search): \Illuminate\Database\Eloquent\Builder
+    {
+        $search = trim($search);
+        if (empty($search)) return $query;
+
+        // تقسيم جملة البحث لكلمات للتعامل بمنطق AND بين الكلمات
+        $terms = array_filter(explode(' ', $search));
+
+        return $query->where(function ($q) use ($terms) {
+            foreach ($terms as $term) {
+                // كل كلمة لازم تلاقي تطابق في حقل واحد على الأقل من الـ 4 حقول الرئيسية
+                $q->where(function ($sub) use ($term) {
+                    $sub->where('order.code', 'like', "%{$term}%")
+                        ->orWhere('order.external_code', 'like', "%{$term}%")
+                        ->orWhere('order.name', 'like', "%{$term}%")
+                        ->orWhere('order.phone', 'like', "%{$term}%")
+                        ->orWhere('order.phone_2', 'like', "%{$term}%");
+                });
+            }
+        });
+    }
     
     
     public static function configure(Table $table): Table
@@ -245,7 +271,7 @@ class OrdersTable
                     ->searchable(
                         isGlobal: true,
                         isIndividual: true,
-                        query: fn ($query, $search) => $query->where('code', 'like', "{$search}%")
+                        query: fn ($query, $search) => self::applyGlobalSearch($query, $search)
                     ),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
@@ -258,7 +284,7 @@ class OrdersTable
                     ->searchable(
                         isGlobal: true,
                         isIndividual: true,
-                        query: fn ($query, $search) => $query->where('external_code', 'like', "{$search}%")
+                        query: fn ($query, $search) => $query->where('external_code', 'like', "%{$search}%")
                     )
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
@@ -307,7 +333,7 @@ class OrdersTable
                     ->searchable(
                         isGlobal: true,
                         isIndividual: true,
-                        query: fn ($query, $search) => $query->where('name', 'like', "{$search}%")
+                        query: fn ($query, $search) => $query->where('name', 'like', "%{$search}%")
                     )
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
@@ -331,8 +357,8 @@ class OrdersTable
                         isGlobal: true,
                         isIndividual: true,
                         query: fn ($query, $search) => $query->where(
-                            fn ($q) => $q->where('phone', 'like', "{$search}%")
-                                        ->orWhere('phone_2', 'like', "{$search}%")
+                            fn ($q) => $q->where('phone', 'like', "%{$search}%")
+                                        ->orWhere('phone_2', 'like', "%{$search}%")
                         )
                     )
                     ->toggleable()->alignCenter(),
@@ -424,7 +450,7 @@ class OrdersTable
                     ->badge()
                     ->color(fn ($record) => strtolower($record->orderStatus?->color ?? 'gray'))
                     ->sortable()
-                    ->searchable(isIndividual: true)->alignCenter()
+                    ->searchable(isIndividual: true, isGlobal: false)->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewStatusColumn:Order'))
                     ->toggleable()
                     ->extraAttributes(
@@ -593,6 +619,7 @@ class OrdersTable
                     ->extraHeaderAttributes(['style' => 'min-width: 200px'])
                     ->searchable(
                         isIndividual: true,
+                        isGlobal: false,
                         query: fn ($query, $search) => $query->where('status_note', 'like', "%{$search}%")
                     )
                     ->color(function ($state) {
@@ -637,7 +664,7 @@ class OrdersTable
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewOrderNotesColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
-                    ->searchable(isIndividual: true)
+                    ->searchable(isIndividual: true, isGlobal: false)
                     ->placeholder(__('orders.order_notes_placeholder'))
                     ->limit(50)
                     ->tooltip(fn ($record) => $record->order_note)
@@ -680,6 +707,7 @@ class OrdersTable
                     })
                     ->searchable(
                         isIndividual: true,
+                        isGlobal: false,
                         query: fn ($query, $search) => $query->whereHas('shipper', fn ($q) => $q->where('name', 'like', "%{$search}%"))
                     )
                     ->toggleable()  
@@ -750,6 +778,7 @@ class OrdersTable
                     ->visible($isAdmin || self::userCan('ViewClientColumn:Order'))
                     ->searchable(
                         isIndividual: true,
+                        isGlobal: false,
                         query: fn ($query, $search) => $query->whereHas('client', fn ($q) => $q->where('name', 'like', "%{$search}%"))
                     )
                     ->alignCenter()
