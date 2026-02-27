@@ -138,8 +138,10 @@ class OrderResource extends Resource
         }
 
         // ✅ 3. Shipper: Sees only ASSIGNED orders (where they are the delivery person)
+        // AND hiding collected orders as requested
         if ($user->isShipper() || $user->can('ViewAssigned:Order')) {
-            return $query->where('shipper_id', $user->id);
+            return $query->where('shipper_id', $user->id)
+                         ->where('collected_shipper', false);
         }
 
         // Default: Fail Closed (User sees nothing if no role/permission matches)
@@ -166,7 +168,9 @@ class OrderResource extends Resource
                 return $query->where('client_id', $user->id)->count();
             }
             if ($user->isShipper() || $user->can('ViewAssigned:Order')) {
-                return $query->where('shipper_id', $user->id)->count();
+                return $query->where('shipper_id', $user->id)
+                             ->where('collected_shipper', false)
+                             ->count();
             }
             return 0;
         });

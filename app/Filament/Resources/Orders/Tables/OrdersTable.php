@@ -1564,10 +1564,18 @@ class OrdersTable
                         ->afterStateUpdated(function ($state, \Filament\Schemas\Components\Utilities\Set $set) {
                             if ($state && strlen($state) >= 2) {
                                 // Optimized search with Eager Loading
-                                $order = Order::with(['client', 'shipper', 'governorate', 'city'])
-                                    ->where('code', $state)
-                                    ->orWhere('code', 'like', "%{$state}%")
-                                    ->first();
+                                $query = Order::with(['client', 'shipper', 'governorate', 'city']);
+                                
+                                $user = auth()->user();
+                                if ($user->isShipper()) {
+                                    $query->where('shipper_id', $user->id)
+                                          ->where('collected_shipper', false);
+                                }
+
+                                $order = $query->where(function($q) use ($state) {
+                                    $q->where('code', $state)
+                                      ->orWhere('code', 'like', "%{$state}%");
+                                })->first();
                                 
                                 if ($order) {
                                     $set('order_id', $order->id);

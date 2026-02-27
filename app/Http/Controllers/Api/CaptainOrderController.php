@@ -22,6 +22,7 @@ class CaptainOrderController extends Controller
         }
 
         $orders = Order::where('shipper_id', $user->id)
+            ->where('collected_shipper', false)
             ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
             })
@@ -45,7 +46,9 @@ class CaptainOrderController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
-        $order = Order::where('shipper_id', $user->id)->findOrFail($id);
+        $order = Order::where('shipper_id', $user->id)
+            ->where('collected_shipper', false)
+            ->findOrFail($id);
         
         $order->load(['client', 'governorate', 'city', 'statusHistories.user']);
 
