@@ -77,12 +77,15 @@ class CaptainOrderController extends Controller
         $oldStatus = $order->status;
         $newStatus = $request->status;
 
-        // Check if status exists
-        if (!OrderStatus::where('slug', $newStatus)->exists()) {
+        // Map dashes to spaces for enum compatibility (e.g., 'out-for-delivery' to 'out for delivery')
+        $normalizedStatus = str_replace('-', ' ', $newStatus);
+
+        // Check if status exists (check both original and normalized)
+        if (!OrderStatus::where('slug', $newStatus)->orWhere('slug', $normalizedStatus)->exists()) {
              return response()->json(['message' => 'Invalid status slug'], 422);
         }
 
-        $order->status = $newStatus;
+        $order->status = $normalizedStatus;
         
         // Handle status note array
         if ($request->filled('status_note')) {
@@ -113,10 +116,10 @@ class CaptainOrderController extends Controller
 
         // Log history as per app patterns
         $order->statusHistories()->create([
-            'status' => $newStatus,
+            'status' => $normalizedStatus,
             'old_status' => $oldStatus,
             'changed_by' => $user->id,
-            'note' => $request->status_note,
+            'note' => $request->status_note ?? '',
             'action_type' => 'status_changed',
         ]);
 
@@ -132,6 +135,6 @@ class CaptainOrderController extends Controller
      */
     public function getStatuses()
     {
-        return response()->json(OrderStatus::active()->ordered()->get());
+        return response()->json(OrderStatus::active()->ordered()->with('refusedReasons:id,name,slug')->get());
     }
 }
