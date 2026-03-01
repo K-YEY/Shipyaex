@@ -632,7 +632,8 @@ class OrdersTable
                             'gray',
                         ];
 
-                        return $colors[crc32($state) % count($colors)];
+                        $stateString = is_array($state) ? json_encode($state) : (string) ($state ?? '');
+                        return $colors[abs(crc32($stateString)) % count($colors)];
                     })
                     ->formatStateUsing(function ($state) {
                         if (empty($state)) {
