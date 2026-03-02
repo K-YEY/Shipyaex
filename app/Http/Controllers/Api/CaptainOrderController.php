@@ -89,14 +89,19 @@ class CaptainOrderController extends Controller
         
         // Handle status note array
         if ($request->filled('status_note')) {
-            $currentNotes = is_array($order->status_note) ? $order->status_note : [];
-            $currentNotes[] = [
-                'note' => $request->status_note,
-                'status' => $newStatus,
-                'user' => $user->name,
-                'date' => Carbon::now()->toDateTimeString(),
-            ];
-            $order->status_note = $currentNotes;
+            // Get order status object to check for clear_refused_reasons
+            $orderStatusObj = OrderStatus::where('slug', $newStatus)->orWhere('slug', $normalizedStatus)->first();
+            
+            if ($orderStatusObj && $orderStatusObj->clear_refused_reasons) {
+                $order->status_note = [$request->status_note];
+            } else {
+                $currentNotes = is_array($order->status_note) ? $order->status_note : [];
+                // Store only the note string for consistency with Filament and cleaner data
+                if (!in_array($request->status_note, $currentNotes)) {
+                    $currentNotes[] = $request->status_note;
+                }
+                $order->status_note = $currentNotes;
+            }
         }
 
         // Handle return flag
