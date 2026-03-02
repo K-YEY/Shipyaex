@@ -135,6 +135,6 @@ class CaptainOrderController extends Controller
      */
     public function getStatuses()
     {
-        return response()->json(OrderStatus::active()->ordered()->with('refusedReasons:id,name,slug')->get());
+        return response()->json(OrderStatus::active()->ordered()->with('status_note:id,name,slug')->get());
     }
 }

@@ -63,13 +63,21 @@ class OrderStatus extends Model
     }
 
     /**
-     * Get the refused reasons associated with this order status
+     * Get the refused reasons (aliased as status_note for API)
      */
-    public function refusedReasons()
+    public function status_note()
     {
         return $this->belongsToMany(RefusedReason::class, 'order_status_refused_reason')
             ->withTimestamps()
             ->orderBy('sort_order')
             ->orderBy('name');
+    }
+
+    /**
+     * Get the refused reasons associated with this order status
+     */
+    public function refusedReasons()
+    {
+        return $this->status_note();
     }
 }
