@@ -492,6 +492,23 @@ class Order extends Model
 
         // ⚡ PERFORMANCE OPTIMIZATION: Clear cache when order is saved
         static::saved(function (Order $order) {
+            // Check if price-related fields or link fields changed
+            $priceFields = ['total_amount', 'fees', 'shipper_fees', 'cop', 'cod'];
+            $linkFields = ['collected_client_id', 'collected_shipper_id', 'returned_client_id', 'returned_shipper_id'];
+            
+            // If order was just linked to a collection/return, or prices changed
+            if ($order->wasChanged($priceFields) || $order->wasChanged($linkFields) || $order->wasRecentlyCreated) {
+                // Recalculate Collected Client
+                if ($order->collected_client_id && $order->collectedClient) {
+                    $order->collectedClient->recalculateAmounts();
+                }
+                
+                // Recalculate Collected Shipper
+                if ($order->collected_shipper_id && $order->collectedShipper) {
+                    $order->collectedShipper->recalculateAmounts();
+                }
+            }
+
             // Check if CachedOrderService exists before using it
             if (class_exists(\App\Services\CachedOrderService::class)) {
                 \App\Services\CachedOrderService::clearCache();
@@ -505,10 +522,33 @@ class Order extends Model
             }
         });
 
-        // ⚡ PERFORMANCE OPTIMIZATION: Clear cache when order is deleted
+        // ⚡ Ensure settlements are updated when an order is deleted
         static::deleted(function (Order $order) {
+            // Recalculate Collected Client
+            if ($order->collected_client_id && $order->collectedClient) {
+                $order->collectedClient->recalculateAmounts();
+            }
+            
+            // Recalculate Collected Shipper
+            if ($order->collected_shipper_id && $order->collectedShipper) {
+                $order->collectedShipper->recalculateAmounts();
+            }
+
             if (class_exists(\App\Services\CachedOrderService::class)) {
                 \App\Services\CachedOrderService::clearCache();
+            }
+        });
+
+        // ⚡ Ensure settlements are updated when an order is restored
+        static::restored(function (Order $order) {
+            // Recalculate Collected Client
+            if ($order->collected_client_id && $order->collectedClient) {
+                $order->collectedClient->recalculateAmounts();
+            }
+            
+            // Recalculate Collected Shipper
+            if ($order->collected_shipper_id && $order->collectedShipper) {
+                $order->collectedShipper->recalculateAmounts();
             }
         });
     }

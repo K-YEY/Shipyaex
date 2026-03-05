@@ -72,7 +72,7 @@ class ReturnedShipperResource extends Resource
     }
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->withSum('orders', 'total_amount')->withSum('orders', 'fees');
         $user = auth()->user();
 
         if ($user->isAdmin() || $user->can('ViewAll:ReturnedShipper')) {

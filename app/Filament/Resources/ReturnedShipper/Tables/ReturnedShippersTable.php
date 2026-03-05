@@ -49,6 +49,22 @@ class ReturnedShippersTable
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:ReturnedShipper'))
                     ->badge(),
                 
+                TextColumn::make('orders_sum_total_amount')
+                    ->label('قيمة المرتجعات')
+                    ->numeric(2)
+                    ->suffix(' ' . __('statuses.currency'))
+                    ->color('danger')
+                    ->sortable()
+                    ->alignEnd(),
+
+                TextColumn::make('orders_sum_fees')
+                    ->label('مصاريف الشحن')
+                    ->numeric(2)
+                    ->suffix(' ' . __('statuses.currency'))
+                    ->color('warning')
+                    ->sortable()
+                    ->alignEnd(),
+                
                 TextColumn::make('status')
                     ->label('الحالة')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewStatusColumn:ReturnedShipper'))
