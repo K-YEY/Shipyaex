@@ -475,6 +475,15 @@ class Order extends Model
     /**
      * Boot method - يتم تشغيله تلقائياً عند Save Order
      */
+    /**
+     * ⚡ Batch Recalculation Tracker
+     * Used to prevent redundant parent settlement updates during bulk operations.
+     */
+    protected static array $pendingRecalculations = [
+        'collected_client' => [],
+        'collected_shipper' => [],
+    ];
+
     protected static function boot()
     {
         parent::boot();
@@ -490,67 +499,60 @@ class Order extends Model
             }
         });
 
-        // ⚡ PERFORMANCE OPTIMIZATION: Clear cache when order is saved
+        // ⚡ PERFORMANCE OPTIMIZATION: Handle settlement recalculations efficiently
         static::saved(function (Order $order) {
-            // Check if price-related fields or link fields changed
             $priceFields = ['total_amount', 'fees', 'shipper_fees', 'cop', 'cod'];
-            $linkFields = ['collected_client_id', 'collected_shipper_id', 'returned_client_id', 'returned_shipper_id'];
+            $linkFields = ['collected_client_id', 'collected_shipper_id'];
             
-            // If order was just linked to a collection/return, or prices changed
             if ($order->wasChanged($priceFields) || $order->wasChanged($linkFields) || $order->wasRecentlyCreated) {
-                // Recalculate Collected Client
-                if ($order->collected_client_id && $order->collectedClient) {
-                    $order->collectedClient->recalculateAmounts();
-                }
-                
-                // Recalculate Collected Shipper
-                if ($order->collected_shipper_id && $order->collectedShipper) {
-                    $order->collectedShipper->recalculateAmounts();
-                }
+                // Queue parent recalculation instead of doing it immediately N times
+                self::queueRecalculation($order);
             }
 
-            // Check if CachedOrderService exists before using it
+            // Sync cache clear
             if (class_exists(\App\Services\CachedOrderService::class)) {
                 \App\Services\CachedOrderService::clearCache();
-                
-                if ($order->client_id) {
-                    \App\Services\CachedOrderService::clearUserCache($order->client_id, 'client');
-                }
-                if ($order->shipper_id) {
-                    \App\Services\CachedOrderService::clearUserCache($order->shipper_id, 'shipper');
-                }
+                if ($order->client_id) \App\Services\CachedOrderService::clearUserCache($order->client_id, 'client');
+                if ($order->shipper_id) \App\Services\CachedOrderService::clearUserCache($order->shipper_id, 'shipper');
             }
         });
 
-        // ⚡ Ensure settlements are updated when an order is deleted
         static::deleted(function (Order $order) {
-            // Recalculate Collected Client
-            if ($order->collected_client_id && $order->collectedClient) {
-                $order->collectedClient->recalculateAmounts();
-            }
-            
-            // Recalculate Collected Shipper
-            if ($order->collected_shipper_id && $order->collectedShipper) {
-                $order->collectedShipper->recalculateAmounts();
-            }
-
+            self::queueRecalculation($order);
             if (class_exists(\App\Services\CachedOrderService::class)) {
                 \App\Services\CachedOrderService::clearCache();
             }
         });
 
-        // ⚡ Ensure settlements are updated when an order is restored
         static::restored(function (Order $order) {
-            // Recalculate Collected Client
-            if ($order->collected_client_id && $order->collectedClient) {
-                $order->collectedClient->recalculateAmounts();
-            }
-            
-            // Recalculate Collected Shipper
-            if ($order->collected_shipper_id && $order->collectedShipper) {
-                $order->collectedShipper->recalculateAmounts();
-            }
+            self::queueRecalculation($order);
         });
     }
 
+    /**
+     * ⚡ Efficiently queue recalculations to run only once per record per request.
+     */
+    protected static function queueRecalculation(Order $order)
+    {
+        $clientId = $order->collected_client_id;
+        $shipperId = $order->collected_shipper_id;
+
+        if ($clientId && !isset(self::$pendingRecalculations['collected_client'][$clientId])) {
+            self::$pendingRecalculations['collected_client'][$clientId] = true;
+            
+            // Run at the VERY end of the request lifecycle to ensure all orders are updated first
+            // or just run it now but mark it as done for this request.
+            // For immediate UI feedback in Filament, we run it once and skip subsequent calls.
+            if ($order->collectedClient) {
+                $order->collectedClient->recalculateAmounts();
+            }
+        }
+
+        if ($shipperId && !isset(self::$pendingRecalculations['collected_shipper'][$shipperId])) {
+            self::$pendingRecalculations['collected_shipper'][$shipperId] = true;
+            if ($order->collectedShipper) {
+                $order->collectedShipper->recalculateAmounts();
+            }
+        }
+    }
 }

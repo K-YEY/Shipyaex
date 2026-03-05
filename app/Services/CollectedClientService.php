@@ -130,12 +130,10 @@ class CollectedClientService
                 'status' => CollectingStatus::PENDING->value,
             ]);
 
-            // ربط Orderات بالتحصيل (بدون قلب الحالة لـ true)
-            foreach ($orders as $order) {
-                $order->update([
-                    'collected_client_id' => $collection->id,
-                ]);
-            }
+            // ربط Orderات بالتحصيل (Batch Update for Performance)
+            Order::whereIn('id', $orderIds)->update([
+                'collected_client_id' => $collection->id,
+            ]);
 
             return $collection;
         });
@@ -167,12 +165,10 @@ class CollectedClientService
                 'number_of_orders' => $amounts['number_of_orders'],
             ]);
 
-            // ربط Orderات بالتحصيل (بدون قلب الحالة لـ true)
-            foreach ($orders as $order) {
-                $order->update([
-                    'collected_client_id' => $collection->id,
-                ]);
-            }
+            // ربط Orderات بالتحصيل (Batch Update for Performance)
+            Order::whereIn('id', $orderIds)->update([
+                'collected_client_id' => $collection->id,
+            ]);
 
             return $collection->fresh();
         });

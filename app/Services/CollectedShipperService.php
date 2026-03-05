@@ -164,12 +164,10 @@ class CollectedShipperService
                 'notes' => 'العملاء: ' . $amounts['client_names'],
             ]);
 
-            // ربط Orderات بالتحصيل
-            foreach ($orders as $order) {
-                $order->update([
-                    'collected_shipper_id' => $collection->id,
-                ]);
-            }
+            // ربط Orderات بالتحصيل (Batch Update for Performance)
+            Order::whereIn('id', $orderIds)->update([
+                'collected_shipper_id' => $collection->id,
+            ]);
 
             return $collection;
         });
@@ -230,12 +228,10 @@ class CollectedShipperService
                     'notes' => 'عميل: ' . ($clientOrders->first()->client?->name ?? 'بدون عميل'),
                 ]);
 
-                // ربط أوردرات هذا العميل بالتحصيل
-                foreach ($clientOrders as $order) {
-                    $order->update([
-                        'collected_shipper_id' => $collection->id,
-                    ]);
-                }
+                // ربط أوردرات هذا العميل بالتحصيل (Batch Update for Performance)
+                Order::whereIn('id', $clientOrderIds)->update([
+                    'collected_shipper_id' => $collection->id,
+                ]);
 
                 $collections[] = $collection;
             }
