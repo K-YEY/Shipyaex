@@ -476,12 +476,13 @@ class Order extends Model
      * Boot method - يتم تشغيله تلقائياً عند Save Order
      */
     /**
-     * ⚡ Batch Recalculation Tracker
-     * Used to prevent redundant parent settlement updates during bulk operations.
+     * ⚡ Batch Operations Tracker
+     * Used to prevent redundant parent settlement updates and cache flushes.
      */
-    protected static array $pendingRecalculations = [
+    protected static array $requestTracker = [
         'collected_client' => [],
         'collected_shipper' => [],
+        'cache_cleared' => false,
     ];
 
     protected static function boot()
@@ -509,17 +510,17 @@ class Order extends Model
                 self::queueRecalculation($order);
             }
 
-            // Sync cache clear
-            if (class_exists(\App\Services\CachedOrderService::class)) {
+            // Sync cache clear - ONCE per request to avoid I/O bottleneck
+            if (!self::$requestTracker['cache_cleared'] && class_exists(\App\Services\CachedOrderService::class)) {
+                self::$requestTracker['cache_cleared'] = true;
                 \App\Services\CachedOrderService::clearCache();
-                if ($order->client_id) \App\Services\CachedOrderService::clearUserCache($order->client_id, 'client');
-                if ($order->shipper_id) \App\Services\CachedOrderService::clearUserCache($order->shipper_id, 'shipper');
             }
         });
 
         static::deleted(function (Order $order) {
             self::queueRecalculation($order);
-            if (class_exists(\App\Services\CachedOrderService::class)) {
+            if (!self::$requestTracker['cache_cleared'] && class_exists(\App\Services\CachedOrderService::class)) {
+                self::$requestTracker['cache_cleared'] = true;
                 \App\Services\CachedOrderService::clearCache();
             }
         });
@@ -537,19 +538,15 @@ class Order extends Model
         $clientId = $order->collected_client_id;
         $shipperId = $order->collected_shipper_id;
 
-        if ($clientId && !isset(self::$pendingRecalculations['collected_client'][$clientId])) {
-            self::$pendingRecalculations['collected_client'][$clientId] = true;
-            
-            // Run at the VERY end of the request lifecycle to ensure all orders are updated first
-            // or just run it now but mark it as done for this request.
-            // For immediate UI feedback in Filament, we run it once and skip subsequent calls.
+        if ($clientId && !isset(self::$requestTracker['collected_client'][$clientId])) {
+            self::$requestTracker['collected_client'][$clientId] = true;
             if ($order->collectedClient) {
                 $order->collectedClient->recalculateAmounts();
             }
         }
 
-        if ($shipperId && !isset(self::$pendingRecalculations['collected_shipper'][$shipperId])) {
-            self::$pendingRecalculations['collected_shipper'][$shipperId] = true;
+        if ($shipperId && !isset(self::$requestTracker['collected_shipper'][$shipperId])) {
+            self::$requestTracker['collected_shipper'][$shipperId] = true;
             if ($order->collectedShipper) {
                 $order->collectedShipper->recalculateAmounts();
             }

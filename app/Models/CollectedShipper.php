@@ -202,43 +202,33 @@ class CollectedShipper extends Model
     }
 
     /**
-     * إعادة حساب المبالغ
+     * إعادة حساب المبالغ - تحسين الأداء باستخدام SQL
      */
     public function recalculateAmounts(): void
     {
-        $orders = $this->orders()->with('client')->get();
-        $totalAmount = 0;
-        $shipperFees = 0;
-        $fees = 0;
-        $clientNames = [];
+        $stats = $this->orders()
+            ->selectRaw('SUM(total_amount) as total_amount')
+            ->selectRaw('SUM(shipper_fees) as shipper_fees')
+            ->selectRaw('SUM(fees) as fees')
+            ->selectRaw('COUNT(*) as count')
+            ->first();
 
-        foreach ($orders as $order) {
-            // Sum total_amount for all orders in the collection
-            $totalAmount += $order->total_amount ?? 0;
+        // تجنب تكرار جلب العملاء في العمليات الضخمة إلا لو احتجناها
+        // إذا كان هناك عدد كبير من العملاء، يفضل تخزين القائمة في حقل منفصل أو تركها فارغة في الـ Bulk
+        $clientNames = $this->orders()->with('client:id,name')->get()->pluck('client.name')->unique()->filter()->implode(', ');
 
-            // عمولة المندوب تحسب دائماً (سواء سلم أو لم يسلم)
-            $shipperFees += $order->shipper_fees ?? 0;
-            
-            // مصاريف الشحن للشركة
-            $fees += $order->fees ?? 0;
-
-            if ($order->client?->name) {
-                $clientNames[] = $order->client->name;
-            }
-        }
-
-        $uniqueClients = array_unique($clientNames);
-        $clientsList = implode(', ', $uniqueClients);
+        $totalAmount = (float) ($stats->total_amount ?? 0);
+        $shipperFees = (float) ($stats->shipper_fees ?? 0);
+        $fees = (float) ($stats->fees ?? 0);
         
-        // الصافي = المجموع المحصل - عمولات المندوب
-        $this->total_amount = $totalAmount;
-        $this->shipper_fees = $shipperFees;
-        $this->fees = $fees;
-        $this->net_amount = $totalAmount - $shipperFees;
-        $this->number_of_orders = $orders->count();
-        $this->notes = "العملاء: " . $clientsList;
-        
-        $this->save();
+        $this->update([
+            'total_amount' => $totalAmount,
+            'shipper_fees' => $shipperFees,
+            'fees' => $fees,
+            'net_amount' => $totalAmount - $shipperFees,
+            'number_of_orders' => (int) ($stats->count ?? 0),
+            'notes' => "العملاء: " . $clientNames,
+        ]);
     }
 
     /**

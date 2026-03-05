@@ -200,27 +200,24 @@ class CollectedClient extends Model
     }
 
     /**
-     * إعادة حساب المبالغ
+     * إعادة حساب المبالغ - تحسين الأداء باستخدام SQL
      */
     public function recalculateAmounts(): void
     {
-        $orders = $this->orders;
-        
-        $totalAmount = 0;
-        $fees = 0;
+        $stats = $this->orders()
+            ->selectRaw('SUM(CASE WHEN status IN ("deliverd", "undelivered") THEN total_amount ELSE 0 END) as total_amount')
+            ->selectRaw('SUM(fees) as fees')
+            ->selectRaw('COUNT(*) as count')
+            ->first();
 
-        foreach ($orders as $order) {
-            if ($order->status === 'deliverd' || $order->status === 'undelivered') {
-                $totalAmount += $order->total_amount ?? 0;
-            }
-            $fees += $order->fees ?? 0;
-        }
+        $totalAmount = (float) ($stats->total_amount ?? 0);
+        $fees = (float) ($stats->fees ?? 0);
 
         $this->update([
             'total_amount' => $totalAmount,
             'fees' => $fees,
             'net_amount' => $totalAmount - $fees,
-            'number_of_orders' => $orders->count(),
+            'number_of_orders' => (int) ($stats->count ?? 0),
         ]);
     }
 
