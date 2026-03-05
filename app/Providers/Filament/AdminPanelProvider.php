@@ -8,6 +8,10 @@ use App\Filament\Widgets\OrdersStatsOverview;
 use App\Filament\Widgets\OrdersByGovernorateChart;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
+use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Orders\DeliveredOrderResource;
+use App\Filament\Resources\Orders\UndeliveredOrderResource;
+use App\Filament\Resources\Orders\OtherOrdersResource;
 
 use Moataz01\FilamentNotificationSound\FilamentNotificationSoundPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -47,6 +51,12 @@ class AdminPanelProvider extends PanelProvider
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->resources([
+                OrderResource::class,
+                DeliveredOrderResource::class,
+                UndeliveredOrderResource::class,
+                OtherOrdersResource::class,
+            ])
             ->pages([
                 Dashboard::class,
             ])
