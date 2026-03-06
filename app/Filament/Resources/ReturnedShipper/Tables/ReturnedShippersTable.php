@@ -19,6 +19,37 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ReturnedShippersTable
 {
+    private static ?object $cachedHeaderSums = null;
+
+    /**
+     * ⚡ Get Sum of a column from the CURRENTLY DISPLAYED records only
+     */
+    private static function getHeaderSum(Table $table, string $column): float
+    {
+        if (self::$cachedHeaderSums === null) {
+            try {
+                $livewire = $table->getLivewire();
+                if (!method_exists($livewire, 'getTableRecords')) {
+                    return 0;
+                }
+                $records = $livewire->getTableRecords();
+                $items = ($records instanceof \Illuminate\Contracts\Pagination\Paginator || $records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)
+                    ? collect($records->items())
+                    : collect($records);
+                self::$cachedHeaderSums = (object)[
+                    'orders_sum_fees'         => (float) $items->sum('orders_sum_fees'),
+                    'orders_sum_total_amount' => (float) $items->sum('orders_sum_total_amount'),
+                    'number_of_orders'        => (float) $items->sum('number_of_orders'),
+                ];
+            } catch (\Throwable $e) {
+                self::$cachedHeaderSums = (object)[
+                    'orders_sum_fees' => 0, 'orders_sum_total_amount' => 0, 'number_of_orders' => 0
+                ];
+            }
+        }
+        return (float) (self::$cachedHeaderSums->{$column} ?? 0);
+    }
+
     public static function configure(Table $table): Table
     {
         $user = auth()->user();
@@ -45,25 +76,28 @@ class ReturnedShippersTable
                     ->sortable(),
                 
                 TextColumn::make('number_of_orders')
-                    ->label('عدد الطلبات')
+                    ->label(fn (Table $table) => 'عدد الطلبات' . ' (' . number_format(self::getHeaderSum($table, 'number_of_orders'), 0) . ')')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:ReturnedShipper'))
                     ->badge(),
+
                 
                 TextColumn::make('orders_sum_total_amount')
-                    ->label('قيمة المرتجعات')
+                    ->label(fn (Table $table) => 'قيمة المرتجعات' . ' (' . number_format(self::getHeaderSum($table, 'orders_sum_total_amount'), 0) . ')')
                     ->numeric(2)
                     ->suffix(' ' . __('statuses.currency'))
                     ->color('danger')
                     ->sortable()
                     ->alignEnd(),
 
+
                 TextColumn::make('orders_sum_fees')
-                    ->label('مصاريف الشحن')
+                    ->label(fn (Table $table) => 'مصاريف الشحن' . ' (' . number_format(self::getHeaderSum($table, 'orders_sum_fees'), 0) . ')')
                     ->numeric(2)
                     ->suffix(' ' . __('statuses.currency'))
                     ->color('warning')
                     ->sortable()
                     ->alignEnd(),
+
                 
                 TextColumn::make('status')
                     ->label('الحالة')

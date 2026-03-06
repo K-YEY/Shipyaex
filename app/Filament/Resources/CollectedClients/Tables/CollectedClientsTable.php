@@ -23,6 +23,38 @@ use Illuminate\Database\Eloquent\Collection;
 
 class CollectedClientsTable
 {
+    private static ?object $cachedHeaderSums = null;
+
+    /**
+     * ⚡ Get Sum of a column from the CURRENTLY DISPLAYED records only
+     */
+    private static function getHeaderSum(Table $table, string $column): float
+    {
+        if (self::$cachedHeaderSums === null) {
+            try {
+                $livewire = $table->getLivewire();
+                if (!method_exists($livewire, 'getTableRecords')) {
+                    return 0;
+                }
+                $records = $livewire->getTableRecords();
+                $items = ($records instanceof \Illuminate\Contracts\Pagination\Paginator || $records instanceof \Illuminate\Contracts\Pagination\CursorPaginator)
+                    ? collect($records->items())
+                    : collect($records);
+                self::$cachedHeaderSums = (object)[
+                    'fees'             => (float) $items->sum('fees'),
+                    'total_amount'     => (float) $items->sum('total_amount'),
+                    'net_amount'       => (float) $items->sum('net_amount'),
+                    'number_of_orders' => (float) $items->sum('number_of_orders'),
+                ];
+            } catch (\Throwable $e) {
+                self::$cachedHeaderSums = (object)[
+                    'fees' => 0, 'total_amount' => 0, 'net_amount' => 0, 'number_of_orders' => 0
+                ];
+            }
+        }
+        return (float) (self::$cachedHeaderSums->{$column} ?? 0);
+    }
+
     public static function configure(Table $table): Table
     {
         $user = auth()->user();
@@ -53,37 +85,41 @@ class CollectedClientsTable
                     ->icon('heroicon-o-calendar'),
 
                 TextColumn::make('number_of_orders')
-                    ->label('عدد الطلبات')
+                    ->label(fn (Table $table) => 'عدد الطلبات' . ' (' . number_format(self::getHeaderSum($table, 'number_of_orders'), 0) . ')')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersCountColumn:CollectedClient'))
                     ->sortable()
                     ->alignCenter()
                     ->badge()
                     ->color('info'),
 
+
                 TextColumn::make('total_amount')
-                    ->label('الإجمالي')
+                    ->label(fn (Table $table) => 'الإجمالي' . ' (' . number_format(self::getHeaderSum($table, 'total_amount'), 0) . ')')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewTotalAmountColumn:CollectedClient'))
                     ->state(fn ($record) => number_format($record->total_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
                     ->color('primary'),
 
+
                 TextColumn::make('fees')
-                    ->label('مصاريف الشحن')
+                    ->label(fn (Table $table) => 'مصاريف الشحن' . ' (' . number_format(self::getHeaderSum($table, 'fees'), 0) . ')')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewFeesColumn:CollectedClient'))
                     ->state(fn ($record) => number_format($record->fees, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
                     ->color('warning'),
 
+
                 TextColumn::make('net_amount')
-                    ->label('الصافي')
+                    ->label(fn (Table $table) => 'الصافي' . ' (' . number_format(self::getHeaderSum($table, 'net_amount'), 0) . ')')
                     ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewNetAmountColumn:CollectedClient'))
                     ->state(fn ($record) => number_format($record->net_amount, 2) . ' ' . __('statuses.currency'))
                     ->sortable()
                     ->alignEnd()
                     ->weight('bold')
                     ->color('success'),
+
 
                 TextColumn::make('status')
                     ->label('الحالة')
