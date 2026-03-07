@@ -116,40 +116,6 @@ class OrdersTable
         return self::$cachedPermissions[$permission];
     }
 
-    /**
-     * 🔍 البحث الشامل المتقدم (Tokenized Multi-Field Search)
-     * يطبق منطق AND بين الكلمات: كل كلمة يكتبها المستخدم لازم تلاقي تطابق في حقل ما
-     * الحقول المشمولة: الكود، الاسم، التليفونات، الكود الخارجي، العنوان، المحافظة، المنطقة، المندوب، والعميل.
-     */
-    public static function applyGlobalSearch(\Illuminate\Database\Eloquent\Builder $query, string $search): \Illuminate\Database\Eloquent\Builder
-    {
-        $search = trim($search);
-        if (empty($search)) return $query;
-
-        // تقسيم جملة البحث لركلمات (Tokens) للتعامل بمنطق AND بينها
-        $terms = array_filter(explode(' ', $search));
-
-        return $query->where(function ($q) use ($terms) {
-            foreach ($terms as $term) {
-                // كل كلمة لازم يتحقق فيها شرط واحد على الأقل من الحقول التالية (OR داخل الكلمة الواحدة)
-                $q->where(function ($sub) use ($term) {
-                    $sub->where('order.code', 'like', "%{$term}%")
-                        ->orWhere('order.external_code', 'like', "%{$term}%")
-                        ->orWhere('order.name', 'like', "%{$term}%")
-                        ->orWhere('order.phone', 'like', "%{$term}%")
-                        ->orWhere('order.phone_2', 'like', "%{$term}%")
-                        ->orWhere('order.address', 'like', "%{$term}%")
-                        // البحث في العلاقات (المحافظة والمنطقة والعميل والمندوب)
-                        ->orWhereHas('governorate', fn($gov) => $gov->where('name', 'like', "%{$term}%"))
-                        ->orWhereHas('city', fn($city) => $city->where('name', 'like', "%{$term}%"))
-                        ->orWhereHas('client', fn($client) => $client->where('name', 'like', "%{$term}%"))
-                        ->orWhereHas('shipper', fn($shipper) => $shipper->where('name', 'like', "%{$term}%"));
-                });
-            }
-        });
-    }
-    
-    
     public static function configure(Table $table): Table
     {
         $user = auth()->user();
@@ -236,17 +202,15 @@ class OrdersTable
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            // ⚡ searchDebounce: 1000ms عشان يستنى لما المستخدم يخلص كتابة
-            ->searchDebounce(1000)
+            // ⚡ searchDebounce: 500ms هو الوضع الطبيعي والاستجابة كويسة
+            ->searchDebounce(500)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
                 'class' => 'orders-table-container',
             ])
-            // 🚀 GLOBAL SEARCH: منطق AND بين الكلمات وبحث شامل في العلاقات
-            ->searchable(true)
-            ->searchUsing(fn ($query, $search) => self::applyGlobalSearch($query, $search))
+            // 🚀 البحث "الطبيعي" لـ Filament مع تفعيل الـ Global على حقول محددة
             ->searchPlaceholder(__('orders.search_placeholder'))
             ->columns([
                 TextColumn::make('code')
@@ -275,12 +239,8 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
-                    // 📋 Individual only: بحث في code فقط — Global search يتم عبر searchUsing
-                    ->searchable(
-                        isIndividual: true,
-                        isGlobal: false,
-                        query: fn ($query, $search) => $query->where('order.code', 'like', "%{$search}%")
-                    ),
+                    // 📋 Global + Individual: الكود هو المفتاح الرئيسي للبحث
+                    ->searchable(isGlobal: true, isIndividual: true),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
                     ->color('warning')
@@ -288,12 +248,8 @@ class OrdersTable
                     ->sortable() ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
-                    // 📋 Individual only: بحث في external_code فقط
-                    ->searchable(
-                        isIndividual: true,
-                        isGlobal: false,
-                        query: fn ($query, $search) => $query->where('order.external_code', 'like', "%{$search}%")
-                    )
+                    // 📋 Global + Individual
+                    ->searchable(isGlobal: true, isIndividual: true)
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
                         // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
@@ -337,12 +293,8 @@ class OrdersTable
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
-                    // 📋 Individual only: بحث في الاسم فقط
-                    ->searchable(
-                        isIndividual: true,
-                        isGlobal: false,
-                        query: fn ($query, $search) => $query->where('order.name', 'like', "%{$search}%")
-                    )
+                    // 📋 Global + Individual
+                    ->searchable(isGlobal: true, isIndividual: true)
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
                     ->toggleable(),
@@ -359,22 +311,22 @@ class OrdersTable
                     )
                     ->html() // very important
                     ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
-                    // 📋 Individual only: بحث في phone + phone_2
+                    // 📋 Global + Individual: البحث في أرقام التليفونات
                     ->searchable(
-                        isIndividual: true,
-                        isGlobal: false,
-                        query: fn ($query, $search) => $query->where(
-                            fn ($q) => $q->where('order.phone', 'like', "%{$search}%")
-                                        ->orWhere('order.phone_2', 'like', "%{$search}%")
-                        )
+                        isGlobal: true, 
+                        isIndividual: true, 
+                        query: fn ($query, $search) => $query->where(function($q) use ($search) {
+                            $q->where('order.phone', 'like', "%{$search}%")
+                              ->orWhere('order.phone_2', 'like', "%{$search}%");
+                        })
                     )
                     ->toggleable()->alignCenter(),
                 TextColumn::make('address')
                     ->label(__('orders.address'))
                     ->visible($isAdmin || self::userCan('ViewAddressColumn:Order'))
                     ->toggleable()
-                    // 📋 Individual only
-                    ->searchable(isIndividual: true, isGlobal: false)
+                    // 📋 Global + Individual
+                    ->searchable(isGlobal: true, isIndividual: true)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
                     ->alignCenter()
                     ->tooltip(fn ($record) => $record->address),
