@@ -41,6 +41,7 @@ return [
     'shipper_success' => '✅ Shipper assigned successfully',
     
     'client' => 'Client',
+    'search_placeholder' => 'Search by code, name, phone, external code...',
     
     'filters' => [
         'deleted_orders' => 'Deleted Orders',

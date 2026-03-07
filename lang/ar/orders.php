@@ -41,6 +41,7 @@ return [
     'shipper_success' => '✅ الكابتن اتعين بنجاح',
     
     'client' => 'العميل',
+    'search_placeholder' => 'بحث بالكود، الاسم، الموبايل، الكود الخارجي...',
     
     'filters' => [
         'deleted_orders' => 'الأوردرات الممسوحة',

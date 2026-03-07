@@ -117,27 +117,44 @@ class OrdersTable
     }
 
     /**
-     * 🔍 تطبيق البحث المزدوج (AND logic between words)
-     * يركز على: رقم الأوردر، رقم الهاتف، اسم الزبون، الكود الخارجي
+     * 🔍 البحث العام السريع باستخدام FULLTEXT MATCH AGAINST
+     * يبحث في: code, name, phone, phone_2, external_code
+     * ⚡ FULLTEXT أسرع 10-100x من LIKE '%...%' لأنه بيستخدم inverted index
+     * مع fallback لـ LIKE لو FULLTEXT مش متاح
      */
     public static function applyGlobalSearch(\Illuminate\Database\Eloquent\Builder $query, string $search): \Illuminate\Database\Eloquent\Builder
     {
         $search = trim($search);
         if (empty($search)) return $query;
 
-        // تقسيم جملة البحث لكلمات للتعامل بمنطق AND بين الكلمات
-        $terms = array_filter(explode(' ', $search));
+        // ⚡ تنظيف المدخلات من الأحرف الخاصة بـ FULLTEXT
+        $cleanSearch = preg_replace('/[+\-<>()~*\"@]/', ' ', $search);
+        $cleanSearch = trim(preg_replace('/\s+/', ' ', $cleanSearch));
+        
+        if (empty($cleanSearch)) return $query;
 
-        return $query->where(function ($q) use ($terms) {
-            foreach ($terms as $term) {
-                // كل كلمة لازم تلاقي تطابق في حقل واحد على الأقل من الـ 4 حقول الرئيسية
-                $q->where(function ($sub) use ($term) {
-                    $sub->where('order.code', 'like', "%{$term}%")
-                        ->orWhere('order.external_code', 'like', "%{$term}%")
-                        ->orWhere('order.name', 'like', "%{$term}%")
-                        ->orWhere('order.phone', 'like', "%{$term}%")
-                        ->orWhere('order.phone_2', 'like', "%{$term}%");
-                });
+        return $query->where(function ($q) use ($search, $cleanSearch) {
+            // 🚀 محاولة استخدام FULLTEXT أولاً (الأسرع)
+            try {
+                // بناء BOOLEAN MODE query: كل كلمة تبقا مطلوبة (+)
+                $terms = array_filter(explode(' ', $cleanSearch));
+                $booleanQuery = implode(' ', array_map(fn($t) => '+' . $t . '*', $terms));
+                
+                $q->whereRaw(
+                    'MATCH(`code`, `name`, `phone`, `phone_2`, `external_code`) AGAINST(? IN BOOLEAN MODE)',
+                    [$booleanQuery]
+                );
+            } catch (\Throwable $e) {
+                // 🔄 Fallback لـ LIKE لو FULLTEXT مش متاح
+                foreach (array_filter(explode(' ', $search)) as $term) {
+                    $q->where(function ($sub) use ($term) {
+                        $sub->where('code', 'like', "%{$term}%")
+                            ->orWhere('external_code', 'like', "%{$term}%")
+                            ->orWhere('name', 'like', "%{$term}%")
+                            ->orWhere('phone', 'like', "%{$term}%")
+                            ->orWhere('phone_2', 'like', "%{$term}%");
+                    });
+                }
             }
         });
     }
@@ -229,15 +246,20 @@ class OrdersTable
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            // ❌ تم إزالة persistFiltersInSession و persistSearchInSession
-            // لأنها كانت بتخلي الفلاتر القديمة تتراكم مع السيرش الجديد وتمنع النتائج
-            ->searchDebounce(500)
+            // ⚡ searchDebounce: 300ms بدل 500ms — أسرع استجابة مع FULLTEXT
+            ->searchDebounce(300)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
                 'class' => 'orders-table-container',
             ])
+            // 🚀 GLOBAL SEARCH: استخدام searchUsing للـ override الكامل
+            // بدل ما Filament يعمل loop على كل column ويبحث بـ LIKE
+            // بنوجه كل الـ global search لـ FULLTEXT MATCH AGAINST مباشرة
+            ->searchable(true)
+            ->searchUsing(fn ($query, $search) => self::applyGlobalSearch($query, $search))
+            ->searchPlaceholder(__('orders.search_placeholder'))
             ->columns([
                 TextColumn::make('code')
                     ->label(__('orders.code'))
@@ -265,13 +287,11 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
-                    // ⚡ Global + Individual search: prefix LIKE uses index
-                    // isGlobal: true  → global search bar at top of table
-                    // isIndividual: true → per-column search box in header
+                    // 📋 Individual only: بحث في code فقط — Global search يتم عبر searchUsing
                     ->searchable(
-                        isGlobal: true,
                         isIndividual: true,
-                        query: fn ($query, $search) => self::applyGlobalSearch($query, $search)
+                        isGlobal: false,
+                        query: fn ($query, $search) => $query->where('code', 'like', "%{$search}%")
                     ),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
@@ -280,10 +300,10 @@ class OrdersTable
                     ->sortable() ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
-                    // ⚡ Global + Individual search: prefix LIKE uses index
+                    // 📋 Individual only: بحث في external_code فقط
                     ->searchable(
-                        isGlobal: true,
                         isIndividual: true,
+                        isGlobal: false,
                         query: fn ($query, $search) => $query->where('external_code', 'like', "%{$search}%")
                     )
                     ->placeholder(__('orders.external_code_placeholder'))
@@ -329,10 +349,10 @@ class OrdersTable
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
-                    // ⚡ Global + Individual search: prefix LIKE uses index
+                    // 📋 Individual only: بحث في الاسم فقط
                     ->searchable(
-                        isGlobal: true,
                         isIndividual: true,
+                        isGlobal: false,
                         query: fn ($query, $search) => $query->where('name', 'like', "%{$search}%")
                     )
                     ->alignCenter()
@@ -351,11 +371,10 @@ class OrdersTable
                     )
                     ->html() // very important
                     ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
-                    // ⚡ Global + Individual search on phone + phone_2 (prefix LIKE)
-                    // Wrapped in a closure so OR doesn't escape its group when ANDed with filters
+                    // 📋 Individual only: بحث في phone + phone_2
                     ->searchable(
-                        isGlobal: true,
                         isIndividual: true,
+                        isGlobal: false,
                         query: fn ($query, $search) => $query->where(
                             fn ($q) => $q->where('phone', 'like', "%{$search}%")
                                         ->orWhere('phone_2', 'like', "%{$search}%")
