@@ -236,8 +236,8 @@ class OrdersTable
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            // ⚡ searchDebounce: 300ms بدل 500ms — أسرع استجابة مع FULLTEXT
-            ->searchDebounce(300)
+            // ⚡ searchDebounce: 1000ms عشان يستنى لما المستخدم يخلص كتابة
+            ->searchDebounce(1000)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
