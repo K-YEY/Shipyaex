@@ -117,44 +117,34 @@ class OrdersTable
     }
 
     /**
-     * 🔍 البحث العام السريع باستخدام FULLTEXT MATCH AGAINST
-     * يبحث في: code, name, phone, phone_2, external_code
-     * ⚡ FULLTEXT أسرع 10-100x من LIKE '%...%' لأنه بيستخدم inverted index
-     * مع fallback لـ LIKE لو FULLTEXT مش متاح
+     * 🔍 البحث الشامل المتقدم (Tokenized Multi-Field Search)
+     * يطبق منطق AND بين الكلمات: كل كلمة يكتبها المستخدم لازم تلاقي تطابق في حقل ما
+     * الحقول المشمولة: الكود، الاسم، التليفونات، الكود الخارجي، العنوان، المحافظة، المنطقة، المندوب، والعميل.
      */
     public static function applyGlobalSearch(\Illuminate\Database\Eloquent\Builder $query, string $search): \Illuminate\Database\Eloquent\Builder
     {
         $search = trim($search);
         if (empty($search)) return $query;
 
-        // ⚡ تنظيف المدخلات من الأحرف الخاصة بـ FULLTEXT
-        $cleanSearch = preg_replace('/[+\-<>()~*\"@]/', ' ', $search);
-        $cleanSearch = trim(preg_replace('/\s+/', ' ', $cleanSearch));
-        
-        if (empty($cleanSearch)) return $query;
+        // تقسيم جملة البحث لركلمات (Tokens) للتعامل بمنطق AND بينها
+        $terms = array_filter(explode(' ', $search));
 
-        return $query->where(function ($q) use ($search, $cleanSearch) {
-            // 🚀 محاولة استخدام FULLTEXT أولاً (الأسرع)
-            try {
-                // بناء BOOLEAN MODE query: كل كلمة تبقا مطلوبة (+)
-                $terms = array_filter(explode(' ', $cleanSearch));
-                $booleanQuery = implode(' ', array_map(fn($t) => '+' . $t . '*', $terms));
-                
-                $q->whereRaw(
-                    'MATCH(`code`, `name`, `phone`, `phone_2`, `external_code`) AGAINST(? IN BOOLEAN MODE)',
-                    [$booleanQuery]
-                );
-            } catch (\Throwable $e) {
-                // 🔄 Fallback لـ LIKE لو FULLTEXT مش متاح
-                foreach (array_filter(explode(' ', $search)) as $term) {
-                    $q->where(function ($sub) use ($term) {
-                        $sub->where('code', 'like', "%{$term}%")
-                            ->orWhere('external_code', 'like', "%{$term}%")
-                            ->orWhere('name', 'like', "%{$term}%")
-                            ->orWhere('phone', 'like', "%{$term}%")
-                            ->orWhere('phone_2', 'like', "%{$term}%");
-                    });
-                }
+        return $query->where(function ($q) use ($terms) {
+            foreach ($terms as $term) {
+                // كل كلمة لازم يتحقق فيها شرط واحد على الأقل من الحقول التالية (OR داخل الكلمة الواحدة)
+                $q->where(function ($sub) use ($term) {
+                    $sub->where('order.code', 'like', "%{$term}%")
+                        ->orWhere('order.external_code', 'like', "%{$term}%")
+                        ->orWhere('order.name', 'like', "%{$term}%")
+                        ->orWhere('order.phone', 'like', "%{$term}%")
+                        ->orWhere('order.phone_2', 'like', "%{$term}%")
+                        ->orWhere('order.address', 'like', "%{$term}%")
+                        // البحث في العلاقات (المحافظة والمنطقة والعميل والمندوب)
+                        ->orWhereHas('governorate', fn($gov) => gov->where('name', 'like', "%{$term}%"))
+                        ->orWhereHas('city', fn($city) => $city->where('name', 'like', "%{$term}%"))
+                        ->orWhereHas('client', fn($client) => $client->where('name', 'like', "%{$term}%"))
+                        ->orWhereHas('shipper', fn($shipper) => $shipper->where('name', 'like', "%{$term}%"));
+                });
             }
         });
     }
@@ -254,9 +244,7 @@ class OrdersTable
                 'id' => 'orders-table-wrapper',
                 'class' => 'orders-table-container',
             ])
-            // 🚀 GLOBAL SEARCH: استخدام searchUsing للـ override الكامل
-            // بدل ما Filament يعمل loop على كل column ويبحث بـ LIKE
-            // بنوجه كل الـ global search لـ FULLTEXT MATCH AGAINST مباشرة
+            // 🚀 GLOBAL SEARCH: منطق AND بين الكلمات وبحث شامل في العلاقات
             ->searchable(true)
             ->searchUsing(fn ($query, $search) => self::applyGlobalSearch($query, $search))
             ->searchPlaceholder(__('orders.search_placeholder'))
@@ -291,7 +279,7 @@ class OrdersTable
                     ->searchable(
                         isIndividual: true,
                         isGlobal: false,
-                        query: fn ($query, $search) => $query->where('code', 'like', "%{$search}%")
+                        query: fn ($query, $search) => $query->where('order.code', 'like', "%{$search}%")
                     ),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
@@ -304,7 +292,7 @@ class OrdersTable
                     ->searchable(
                         isIndividual: true,
                         isGlobal: false,
-                        query: fn ($query, $search) => $query->where('external_code', 'like', "%{$search}%")
+                        query: fn ($query, $search) => $query->where('order.external_code', 'like', "%{$search}%")
                     )
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
@@ -353,7 +341,7 @@ class OrdersTable
                     ->searchable(
                         isIndividual: true,
                         isGlobal: false,
-                        query: fn ($query, $search) => $query->where('name', 'like', "%{$search}%")
+                        query: fn ($query, $search) => $query->where('order.name', 'like', "%{$search}%")
                     )
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
@@ -376,8 +364,8 @@ class OrdersTable
                         isIndividual: true,
                         isGlobal: false,
                         query: fn ($query, $search) => $query->where(
-                            fn ($q) => $q->where('phone', 'like', "%{$search}%")
-                                        ->orWhere('phone_2', 'like', "%{$search}%")
+                            fn ($q) => $q->where('order.phone', 'like', "%{$search}%")
+                                        ->orWhere('order.phone_2', 'like', "%{$search}%")
                         )
                     )
                     ->toggleable()->alignCenter(),
