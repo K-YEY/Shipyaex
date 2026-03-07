@@ -140,7 +140,7 @@ class OrdersTable
                         ->orWhere('order.phone_2', 'like', "%{$term}%")
                         ->orWhere('order.address', 'like', "%{$term}%")
                         // البحث في العلاقات (المحافظة والمنطقة والعميل والمندوب)
-                        ->orWhereHas('governorate', fn($gov) => gov->where('name', 'like', "%{$term}%"))
+                        ->orWhereHas('governorate', fn($gov) => $gov->where('name', 'like', "%{$term}%"))
                         ->orWhereHas('city', fn($city) => $city->where('name', 'like', "%{$term}%"))
                         ->orWhereHas('client', fn($client) => $client->where('name', 'like', "%{$term}%"))
                         ->orWhereHas('shipper', fn($shipper) => $shipper->where('name', 'like', "%{$term}%"));
