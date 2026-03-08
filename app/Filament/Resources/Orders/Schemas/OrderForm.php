@@ -166,7 +166,7 @@ class OrderForm
                     ->searchable()
                     ->reactive()
                     ->disabled(fn (Get $get) => ! $get('client_id') || !auth()->user()->can('EditCustomerDetails:Order'))
-                    ->required(fn (Get $get) => (bool) $get('client_id'))
+                    ->nullable()
                     ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('ViewCustomerDetailsSection:Order')),
 
                 Select::make('governorate_id')
