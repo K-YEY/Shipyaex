@@ -65,27 +65,24 @@ class CollectedClientsExport implements FromCollection, WithHeadings, WithMappin
                     'order_status' => $order->status,
                     'status_note' => (function () use ($order) {
 
-                                $note = $order->status_note;
+                        $note = $order->status_note;
 
-                                // لو array
-                                if (is_array($note)) {
-                                    return implode(' - ', $note);
-                                }
+                        if (is_string($note)) {
+                            $decoded = json_decode($note, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $note = $decoded;
+                            }
+                        }
 
-                                // لو string ممكن يكون JSON
-                                if (is_string($note)) {
-                                    $decoded = json_decode($note, true);
+                        if (is_array($note)) {
+                            return implode(' - ', array_map(function ($item) {
+                                return is_array($item) ? json_encode($item) : $item;
+                            }, $note));
+                        }
 
-                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                        return implode(' - ', $decoded);
-                                    }
+                        return $note ?? '';
 
-                                    return $note;
-                                }
-
-                                return '';
-
-                            })(),
+                    })(),
                     'total_amount' => $order->total_amount,
                     'fees' => $order->fees,
                     'cod' => $order->cod,
