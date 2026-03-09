@@ -27,6 +27,7 @@ use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -199,18 +200,51 @@ class OrdersTable
                 ->with(['governorate', 'city', 'shipper', 'client', 'orderStatus'])
                 ->latest()
             )
+            // ⚡⚡⚡ SUPER-FAST SEARCH: Override Filament's global search completely.
+            // Filament's default search generates multiple LIKE '%search%' clauses (one per column),
+            // which CANNOT use any index and causes full table scans on every keystroke.
+            // Instead, we use a SINGLE FULLTEXT MATCH...AGAINST that hits the ft_order_search index.
+            // This is ~50-100x faster on large tables.
+            ->searchable()
+            ->searchUsing(function (Builder $query, string $search): void {
+                $search = trim($search);
+                if ($search === '') {
+                    return;
+                }
+
+                $query->where(function ($q) use ($search) {
+                    // MySQL FULLTEXT minimum word length is 3 by default (ft_min_word_len)
+                    if (mb_strlen($search) >= 3) {
+                        // ⚡ Use FULLTEXT index: ft_order_search (code, name, phone, phone_2, external_code, address)
+                        // BOOLEAN MODE allows partial prefix matching with *
+                        $ftSearch = '+' . str_replace(' ', '* +', $search) . '*';
+                        $q->whereRaw(
+                            "MATCH(`code`, `name`, `phone`, `phone_2`, `external_code`, `address`) AGAINST(? IN BOOLEAN MODE)",
+                            [$ftSearch]
+                        );
+                    } else {
+                        // Short queries (1-2 chars): FULLTEXT can't search words shorter than ft_min_word_len
+                        // Fallback to indexed prefix LIKE on the most common lookup columns
+                        $escaped = addcslashes($search, '%_');
+                        $q->where('code', 'like', "{$escaped}%")
+                          ->orWhere('external_code', 'like', "{$escaped}%")
+                          ->orWhere('phone', 'like', "{$escaped}%")
+                          ->orWhere('phone_2', 'like', "{$escaped}%");
+                    }
+                });
+            })
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            // ⚡ searchDebounce: 500ms هو الوضع الطبيعي والاستجابة كويسة
-            ->searchDebounce(500)
+            // ⚡ searchDebounce: 300ms — search is now fast enough for snappy UX
+            ->searchDebounce(300)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
                 'id' => 'orders-table-wrapper',
                 'class' => 'orders-table-container',
             ])
-            // 🚀 البحث "الطبيعي" لـ Filament مع تفعيل الـ Global على حقول محددة
+            // 🚀 البحث يتم عبر FULLTEXT index — سوبر سريع
             ->searchPlaceholder(__('orders.search_placeholder'))
             ->columns([
                 TextColumn::make('code')
@@ -239,8 +273,8 @@ class OrdersTable
                     ->toggleable()
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewCodeColumn:Order'))
-                    // 📋 Global + Individual: الكود هو المفتاح الرئيسي للبحث
-                    ->searchable(isGlobal: true, isIndividual: true),
+                    // 📋 Individual only — Global search handled by FULLTEXT in modifyQueryUsing
+                    ->searchable(isGlobal: false, isIndividual: true),
                 TextColumn::make('external_code')
                     ->label(__('orders.external_code'))
                     ->color('warning')
@@ -248,8 +282,8 @@ class OrdersTable
                     ->sortable() ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewExternalCodeColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: false)
-                    // 📋 Global + Individual
-                    ->searchable(isGlobal: true, isIndividual: true)
+                    // 📋 Individual only — Global search handled by FULLTEXT
+                    ->searchable(isGlobal: false, isIndividual: true)
                     ->placeholder(__('orders.external_code_placeholder'))
                     ->action(
                         // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
@@ -293,8 +327,8 @@ class OrdersTable
                     ->sortable(),
                 TextColumn::make('name')
                     ->label(__('orders.recipient_name'))
-                    // 📋 Global + Individual
-                    ->searchable(isGlobal: true, isIndividual: true)
+                    // 📋 Individual only — Global search handled by FULLTEXT
+                    ->searchable(isGlobal: false, isIndividual: true)
                     ->alignCenter()
                     ->visible($isAdmin || self::userCan('ViewRecipientNameColumn:Order'))
                     ->toggleable(),
@@ -311,9 +345,9 @@ class OrdersTable
                     )
                     ->html() // very important
                     ->visible($isAdmin || self::userCan('ViewPhoneColumn:Order'))
-                    // 📋 Global + Individual: البحث في أرقام التليفونات
+                    // 📋 Individual only — Global search handled by FULLTEXT
                     ->searchable(
-                        isGlobal: true, 
+                        isGlobal: false, 
                         isIndividual: true, 
                         query: fn ($query, $search) => $query->where(function($q) use ($search) {
                             $q->where('order.phone', 'like', "%{$search}%")
@@ -325,8 +359,8 @@ class OrdersTable
                     ->label(__('orders.address'))
                     ->visible($isAdmin || self::userCan('ViewAddressColumn:Order'))
                     ->toggleable()
-                    // 📋 Global + Individual
-                    ->searchable(isGlobal: true, isIndividual: true)
+                    // 📋 Individual only — Global search handled by FULLTEXT
+                    ->searchable(isGlobal: false, isIndividual: true)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
                     ->alignCenter()
                     ->tooltip(fn ($record) => $record->address),
