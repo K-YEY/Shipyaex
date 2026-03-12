@@ -236,8 +236,8 @@ class OrdersTable
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            // ⚡ searchDebounce: 1000ms — Increased to prevent resetting while typing phone numbers
-            ->searchDebounce(1000)
+            // ⚡ searchOnBlur: يجعل البحث يعمل فقط عند الضغط على Enter أو فقدان التركيز (يشيل الفوكس)
+            ->searchOnBlur()
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
