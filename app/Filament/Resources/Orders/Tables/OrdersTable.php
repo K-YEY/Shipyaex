@@ -350,8 +350,8 @@ class OrdersTable
                         isGlobal: false, 
                         isIndividual: true, 
                         query: fn ($query, $search) => $query->where(function($q) use ($search) {
-                            $q->where('orders.phone', 'like', "%{$search}%")
-                              ->orWhere('orders.phone_2', 'like', "%{$search}%");
+                            $q->where('order.phone', 'like', "%{$search}%")
+                              ->orWhere('order.phone_2', 'like', "%{$search}%");
                         })
                     )
                     ->toggleable()->alignCenter(),
