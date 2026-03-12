@@ -151,32 +151,23 @@ class OrderResource extends Resource
         return $query->whereRaw('1 = 0');
     }
 
-    /**
-     * Badge للعدد في القائمة الجانبية
-     * ⚡ Cached for 60s to avoid a DB query on every request
-     */
     public static function getNavigationBadge(): ?string
     {
         $user = auth()->user();
         if (!$user) return null;
 
-        $cacheKey = 'nav_badge_orders_' . $user->id;
-
-        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 120, function () use ($user) {
-            $query = Order::whereNotNull('status');
-            if ($user->isAdmin() || $user->can('ViewAll:Order')) {
-                return $query->count();
-            }
-            if ($user->isClient() || $user->can('ViewOwn:Order')) {
-                return $query->where('client_id', $user->id)->count();
-            }
-            if ($user->isShipper() || $user->can('ViewAssigned:Order')) {
-                return $query->where('shipper_id', $user->id)
-                             ->where('collected_shipper', false)
-                             ->count();
-            }
-            return 0;
-        });
+        $query = Order::whereNotNull('status');
+        if ($user->isAdmin() || $user->can('ViewAll:Order')) {
+            $count = $query->count();
+        } elseif ($user->isClient() || $user->can('ViewOwn:Order')) {
+            $count = $query->where('client_id', $user->id)->count();
+        } elseif ($user->isShipper() || $user->can('ViewAssigned:Order')) {
+            $count = $query->where('shipper_id', $user->id)
+                         ->where('collected_shipper', false)
+                         ->count();
+        } else {
+            $count = 0;
+        }
 
         return $count ?: null;
     }

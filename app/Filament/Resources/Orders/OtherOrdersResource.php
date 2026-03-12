@@ -55,24 +55,20 @@ class OtherOrdersResource extends OrderResource
         $user = auth()->user();
         if (!$user) return null;
 
-        $cacheKey = 'nav_badge_other_orders_' . $user->id;
+        $query = Order::whereNotIn('status', ['deliverd', 'undelivered']);
+        
+        if ($user->isAdmin() || $user->can('ViewAll:Order')) {
+            $count = $query->count();
+        } elseif ($user->isClient() || $user->can('ViewOwn:Order')) {
+            $count = $query->where('client_id', $user->id)->count();
+        } elseif ($user->isShipper() || $user->can('ViewAssigned:Order')) {
+            $count = $query->where('shipper_id', $user->id)
+                  ->where('collected_shipper', false)->count();
+        } else {
+            $count = 0;
+        }
 
-        return Cache::remember($cacheKey, 120, function () use ($user) {
-            $query = Order::whereNotIn('status', ['deliverd', 'undelivered']);
-            
-            if ($user->isAdmin() || $user->can('ViewAll:Order')) {
-                // Admin
-            } elseif ($user->isClient() || $user->can('ViewOwn:Order')) {
-                $query->where('client_id', $user->id);
-            } elseif ($user->isShipper() || $user->can('ViewAssigned:Order')) {
-                $query->where('shipper_id', $user->id)
-                      ->where('collected_shipper', false);
-            } else {
-                return 0;
-            }
-
-            return $query->count();
-        }) ?: null;
+        return $count ?: null;
     }
 
     public static function getPages(): array
