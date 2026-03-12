@@ -236,8 +236,8 @@ class OrdersTable
             ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             ->paginationPageOptions([100])
             ->defaultPaginationPageOption(100)
-            // ⚡ searchDebounce: 300ms — search is now fast enough for snappy UX
-            ->searchDebounce(300)
+            // ⚡ searchDebounce: 1000ms — Increased to prevent resetting while typing phone numbers
+            ->searchDebounce(1000)
             ->defaultSort('created_at', 'desc')
             ->filtersFormColumns(3)
             ->extraAttributes([
@@ -350,8 +350,8 @@ class OrdersTable
                         isGlobal: false, 
                         isIndividual: true, 
                         query: fn ($query, $search) => $query->where(function($q) use ($search) {
-                            $q->where('order.phone', 'like', "%{$search}%")
-                              ->orWhere('order.phone_2', 'like', "%{$search}%");
+                            $q->where('orders.phone', 'like', "%{$search}%")
+                              ->orWhere('orders.phone_2', 'like', "%{$search}%");
                         })
                     )
                     ->toggleable()->alignCenter(),
