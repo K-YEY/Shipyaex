@@ -126,11 +126,26 @@ class OrdersTable
     public static function configure(Table $table): Table
     {
         $user = auth()->user();
+        self::$currentUser = $user;
         
-        // ⚡ PERF: Eager load roles and permissions to make $user->can() instantaneous (0ms)
-        // Without this, Spatie might hit the DB for each permission check.
-        if ($user && !$user->relationLoaded('roles')) {
-            $user->loadMissing(['roles.permissions', 'permissions']);
+        // ⚡ PERFORMANCE BOOSTER: Pre-cache ALL permissions in one go.
+        // This avoids calling Spatie/Auth internals inside 100 column closures.
+        $permissionsToBootstrap = [
+            'Update:Order', 'Delete:Order', 'View:Order', 'AssignShipper:Order', 
+            'ChangeStatusAction:Order', 'ManageShipperCollectionAction:Order', 
+            'ManageShipperReturnAction:Order', 'ManageClientCollectionAction:Order',
+            'ManageClientReturnAction:Order', 'ViewTimelineAction:Order', 'PrintLabelAction:Order',
+            'Restore:Order', 'ForceDelete:Order', 'RestoreAny:Order', 'DeleteAny:Order',
+            // Columns
+            'ViewCodeColumn:Order', 'ViewExternalCodeColumn:Order', 'ViewRecipientNameColumn:Order',
+            'ViewPhoneColumn:Order', 'ViewAddressColumn:Order', 'ViewTotalAmountColumn:Order', 
+            'ViewStatusColumn:Order', 'ViewShipperColumn:Order', 'ViewClientColumn:Order',
+            // Filters
+            'ViewStatusFilter:Order', 'ViewHasReturnFilter:Order'
+        ];
+        
+        foreach ($permissionsToBootstrap as $p) {
+            self::userCan($p);
         }
 
         $isAdmin = $user?->isAdmin() ?? false;
