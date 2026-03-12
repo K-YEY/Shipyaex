@@ -18,14 +18,14 @@ class OrderObserver
         $user = auth()->user();
         
         // ✅ تسجيل إنشاء الأوردر في السجل
-        // OrderStatusHistory::create([
+        /* OrderStatusHistory::create([
             'order_id' => $order->id,
             'status' => $order->status,
             'old_status' => null,
             'note' => 'تم إنشاء أوردر جديد',
             'changed_by' => $user?->id,
             'action_type' => 'created',
-        ]);
+        ]); */
 
         // 1. لو Client هو اللي عمل الأوردر -> إشعار للأدمن
         if ($user && $user->isClient()) {
@@ -68,14 +68,14 @@ class OrderObserver
             $newStatus = $order->status;
             
             // ✅ تسجيل تغيير الحالة في السجل
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $newStatus,
                 'old_status' => $oldStatus,
                 'note' => "تم تغيير الحالة من ({$oldStatus}) إلى ({$newStatus})",
                 'changed_by' => $user?->id,
                 'action_type' => 'status_changed',
-            ]);
+            ]); */
 
             // إشعار للعميل
             if ($order->client) {
@@ -118,7 +118,7 @@ class OrderObserver
             $oldShipper = $oldShipperId ? User::select('id', 'name')->find($oldShipperId)?->name : null;
             $newShipper = $order->shipper?->name;
 
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
@@ -127,57 +127,57 @@ class OrderObserver
                     : "تم تعيين الكابتن ({$newShipper})",
                 'changed_by' => $user?->id,
                 'action_type' => 'shipper_assigned',
-            ]);
+            ]); */
 
             $this->notifyShipper($order);
         }
 
         // 3. تسجيل التحصيل من الكابتن
         if ($order->isDirty('collected_shipper') && $order->collected_shipper) {
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
                 'note' => 'تم تحصيل المبلغ من الكابتن',
                 'changed_by' => $user?->id,
                 'action_type' => 'collected_shipper',
-            ]);
+            ]); */
         }
 
         // 4. تسجيل الCollect for Client
         if ($order->isDirty('collected_client') && $order->collected_client) {
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
                 'note' => 'تم تحصيل المبلغ للعميل',
                 'changed_by' => $user?->id,
                 'action_type' => 'collected_client',
-            ]);
+            ]); */
         }
 
         // 5. تسجيل مرتجع الكابتن
         if ($order->isDirty('return_shipper') && $order->return_shipper) {
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
                 'note' => 'تم تفعيل مرتجع الكابتن',
                 'changed_by' => $user?->id,
                 'action_type' => 'return_shipper',
-            ]);
+            ]); */
         }
 
         // 6. تسجيل مرتجع العميل
         if ($order->isDirty('return_client') && $order->return_client) {
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
                 'note' => 'تم تفعيل مرتجع العميل',
                 'changed_by' => $user?->id,
                 'action_type' => 'return_client',
-            ]);
+            ]); */
         }
 
         // ✅ 7. تسجيل كل التغييرات الأخرى (أي حقل تغير)
@@ -265,14 +265,14 @@ class OrderObserver
             $oldValueFormatted = $this->formatValue($field, $oldValue, $order);
             $newValueFormatted = $this->formatValue($field, $newValue, $order);
 
-            // OrderStatusHistory::create([
+            /* OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
                 'note' => "تم تغيير {$fieldLabel} من ({$oldValueFormatted}) إلى ({$newValueFormatted})",
                 'changed_by' => $user?->id,
                 'action_type' => 'field_updated',
-            ]);
+            ]); */
         }
     }
 
