@@ -479,15 +479,11 @@ class OrdersTable
                                 Select::make('status')
                                     ->label(__('statuses.new_status_label'))
                                     ->options(function () {
-                                        // ⚡ PERF: Static caching prevents executing and instantiating this array N times
-                                        static $cachedStatuses = null;
-                                        if ($cachedStatuses === null) {
-                                            $cachedStatuses = \App\Models\OrderStatus::active()
-                                                ->ordered()
-                                                ->pluck('name', 'slug')
-                                                ->toArray();
-                                        }
-                                        return $cachedStatuses;
+                                        // Get active order statuses from database
+                                        return \App\Models\OrderStatus::active()
+                                            ->ordered()
+                                            ->pluck('name', 'slug')
+                                            ->toArray();
                                     })
                                     ->default(fn ($record) => $record->status)
                                     ->reactive()
@@ -503,56 +499,46 @@ class OrdersTable
                                 TagsInput::make('status_note')
                                     ->label(__('statuses.refused_reasons_notes_label'))
                                     ->placeholder(__('statuses.refused_reasons_placeholder'))
-                                    ->suggestions(function ($get) {
-                                        static $cachedReasons = [];
+                                    ->suggestions(function (\Filament\Forms\Get $get) {
                                         $selectedStatus = $get('status');
                                         
                                         if (!$selectedStatus) {
                                             return [];
                                         }
 
-                                        if (!isset($cachedReasons[$selectedStatus])) {
-                                            $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)
-                                                ->with('refusedReasons')
-                                                ->first();
-                                                
-                                            $cachedReasons[$selectedStatus] = $orderStatus ? $orderStatus->refusedReasons()
-                                                ->active()
-                                                ->ordered()
-                                                ->pluck('name')
-                                                ->toArray() : [];
+                                        // Get order status and its associated refused reasons
+                                        $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)
+                                            ->with('refusedReasons')
+                                            ->first();
+
+                                        if (!$orderStatus) {
+                                            return [];
                                         }
 
-                                        return $cachedReasons[$selectedStatus];
+                                        // Return associated refused reasons as suggestions
+                                        return $orderStatus->refusedReasons()
+                                            ->active()
+                                            ->ordered()
+                                            ->pluck('name')
+                                            ->toArray();
                                     })
                                     ->default(fn ($record) => (array) $record->status_note)
                                     ->reorderable()
                                     ->splitKeys(['Enter', ','])
-                                    ->helperText(function ($get) {
-                                        static $cachedHelpers = [];
+                                    ->helperText(function (\Filament\Forms\Get $get) {
                                         $selectedStatus = $get('status');
+                                        $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)->first();
                                         
-                                        if (isset($cachedHelpers[$selectedStatus])) {
-                                            return $cachedHelpers[$selectedStatus];
+                                        if ($orderStatus && $orderStatus->clear_refused_reasons) {
+                                            return __('statuses.clear_reasons_warning');
                                         }
                                         
-                                        $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)->first();
-                                        $isClear = $orderStatus && $orderStatus->clear_refused_reasons;
-                                        
-                                        $cachedHelpers[$selectedStatus] = $isClear ? __('statuses.clear_reasons_warning') : __('statuses.refused_reasons_helper');
-                                        return $cachedHelpers[$selectedStatus];
+                                        return __('statuses.refused_reasons_helper');
                                     })
-                                    ->disabled(function ($get) {
-                                        static $cachedDisabled = [];
+                                    ->disabled(function (\Filament\Forms\Get $get) {
                                         $selectedStatus = $get('status');
-                                        
-                                        if (isset($cachedDisabled[$selectedStatus])) {
-                                            return $cachedDisabled[$selectedStatus];
-                                        }
-                                        
                                         $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)->first();
-                                        $cachedDisabled[$selectedStatus] = (bool)($orderStatus && $orderStatus->clear_refused_reasons);
-                                        return $cachedDisabled[$selectedStatus];
+                                        return $orderStatus && $orderStatus->clear_refused_reasons;
                                     })
                                     ->columnSpanFull(),
 
@@ -560,7 +546,7 @@ class OrdersTable
                                     ->label(__('statuses.is_return_label'))
                                     ->default(fn ($record) => $record->has_return)
                                     ->live()
-                                    ->visible(function ($get, $record) {
+                                    ->visible(function (\Filament\Forms\Get $get, $record) {
                                         $status = $get('status') ?? $record->status;
 
                                         return $status === self::STATUS_DELIVERED
@@ -573,7 +559,7 @@ class OrdersTable
                                     ->prefix(__('statuses.currency'))
                                     ->default(fn ($record) => $record->total_amount)
                                     ->helperText(__('statuses.total_amount_helper'))
-                                    ->visible(function ($get, $record) {
+                                    ->visible(function (\Filament\Forms\Get $get, $record) {
                                         $status = $get('status') ?? $record->status;
                                         
                                         return $status === self::STATUS_DELIVERED;
@@ -1613,7 +1599,7 @@ class OrdersTable
                     
                     \Filament\Forms\Components\Placeholder::make('order_info')
                         ->label('Order Info')
-                        ->content(function ($get) {
+                        ->content(function (\Filament\Forms\Get $get) {
                             $orderData = $get('order_data');
                             if (!$orderData) {
                                 return '🔍 Waiting for scan...';
@@ -1628,7 +1614,7 @@ class OrdersTable
                     
                     \Filament\Forms\Components\Select::make('action_type')
                         ->label('Action Required')
-                        ->options(function ($get) {
+                        ->options(function (\Filament\Forms\Get $get) {
                             $orderData = $get('order_data');
                             $options = [];
                             
@@ -1689,7 +1675,7 @@ class OrdersTable
                         })
                         ->default('view')
                         ->required()
-                        ->visible(fn ($get) => $get('order_id') !== null)
+                        ->visible(fn (\Filament\Forms\Get $get) => $get('order_id') !== null)
                         ->native(false)
                         ->selectablePlaceholder(false)
                         ->extraAttributes([
