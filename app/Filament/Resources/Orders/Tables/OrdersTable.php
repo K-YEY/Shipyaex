@@ -106,12 +106,21 @@ class OrdersTable
         return self::$cachedFollowUpHours;
     }
     
+    private static ?\Illuminate\Contracts\Auth\Authenticatable $currentUser = null;
+    private static array $checkedPermissions = [];
+
     /**
-     * ⚡ Check user permission (cached per request)
+     * ⚡ Check user permission without touching Database repeatedly.
      */
     private static function userCan(string $permission): bool
     {
-        return (bool) auth()->user()?->can($permission);
+        self::$currentUser ??= auth()->user();
+        
+        if (!isset(self::$checkedPermissions[$permission])) {
+            self::$checkedPermissions[$permission] = (bool) self::$currentUser?->can($permission);
+        }
+        
+        return self::$checkedPermissions[$permission];
     }
 
     public static function configure(Table $table): Table
