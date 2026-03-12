@@ -111,10 +111,7 @@ class OrdersTable
      */
     private static function userCan(string $permission): bool
     {
-        if (!isset(self::$cachedPermissions[$permission])) {
-            self::$cachedPermissions[$permission] = (bool) auth()->user()?->can($permission);
-        }
-        return self::$cachedPermissions[$permission];
+        return (bool) auth()->user()?->can($permission);
     }
 
     public static function configure(Table $table): Table
@@ -130,71 +127,6 @@ class OrdersTable
         $isAdmin = $user?->isAdmin() ?? false;
         self::$cachedUserIsAdmin = $isAdmin;
         
-        // ⚡ PERF: Pre-cache ALL permissions used in per-row closures ONCE
-        // These are called inside column closures AND record action visible() that run for EVERY row
-        $permissions = [
-            'Update:Order',
-            'EditLocked:Order',
-            'ChangeStatus:Order',
-            'ChangeStatusAction:Order',
-            'ManageShipperReturnAction:Order',
-            'AssignShipperAction:Order',
-            'EditExternalCode:Order',
-            'EditOrderNotesField:Order',
-            'ViewTimelineAction:Order',
-            'PrintLabelAction:Order',
-            'ManageShipperCollectionAction:Order',
-            'ManageCollections:Order',
-            'ManageReturns:Order',
-            'ManageClientReturnAction:Order',
-            'Restore:Order',
-            'ForceDelete:Order',
-            'View:Order',
-            'RestoreAny:Order',
-            'DeleteAny:Order',
-            'ForceDeleteAny:Order',
-            'ViewMyOrdersAction:Order',
-            'BarcodeScannerAction:Order',
-            'ExportData:Order',
-            'Create:Order',
-            'BulkChangeStatusAction:Order',
-            // Column visibility
-            'ViewCodeColumn:Order',
-            'ViewExternalCodeColumn:Order',
-            'ViewRegistrationDateColumn:Order',
-            'ViewShipperDateColumn:Order',
-            'ViewRecipientNameColumn:Order',
-            'ViewPhoneColumn:Order',
-            'ViewAddressColumn:Order',
-            'ViewGovernorateColumn:Order',
-            'ViewCityColumn:Order',
-            'ViewTotalAmountColumn:Order',
-            'ViewShippingFeesColumn:Order',
-            'ViewShipperCommissionColumn:Order',
-            'ViewCompanyShareColumn:Order',
-            'ViewCollectionAmountColumn:Order',
-            'ViewStatusColumn:Order',
-            'ViewStatusNotesColumn:Order',
-            'ViewOrderNotesColumn:Order',
-            'ViewShipperColumn:Order',
-            'ViewClientColumn:Order',
-            'ViewDatesColumn:Order',
-            'ViewShipperDetails:Order',
-            'ViewCustomerDetails:Order',
-            'ViewShipperDetailsColumn:Order',
-            // Filters
-            'ViewDelayedFollowUpFilter:Order',
-            'ViewStatusFilter:Order',
-            'ViewCollectedFromShipperFilter:Order',
-            'ViewReturnedFromShipperFilter:Order',
-            'ViewHasReturnFilter:Order',
-            'ViewSettledWithClientFilter:Order',
-            'ViewReturnedToClientFilter:Order',
-        ];
-        foreach ($permissions as $p) {
-            self::userCan($p);
-        }
-
         return $table
             ->modifyQueryUsing(fn ($query) => $query
                 ->with(['governorate', 'city', 'shipper', 'client', 'orderStatus'])
