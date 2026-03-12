@@ -51,10 +51,15 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\CollectedShipper::observe(\App\Observers\CollectedShipperObserver::class);
 
         // ⚡ PERFORMANCE MONITORING (local env only)
-        if (app()->isLocal()) {
             // 1️⃣ Log any query slower than 500ms
             $slowQueryThresholdMs = 500;
             DB::listen(function ($query) use ($slowQueryThresholdMs) {
+                // Temporary trace to catch repetitive Auth user loads
+                if (stripos($query->sql, 'select * from `users` where `id` = 1') !== false) {
+                    $trace = collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS))->pluck('function', 'class')->toJson();
+                    Log::channel('daily')->info('[USER QUERY TRACE]', ['sql' => $query->sql, 'backtrace' => substr($trace, 0, 1000)]);
+                }
+
                 if ($query->time > $slowQueryThresholdMs) {
                     Log::channel('daily')->warning('[SLOW QUERY] {time}ms | {sql}', [
                         'time' => round($query->time),
@@ -67,6 +72,6 @@ class AppServiceProvider extends ServiceProvider
             // 2️⃣ Prevent lazy loading (N+1 detection) — throws exception if accessed without eager loading
             // Comment this out if it's too strict for your workflow:
             Model::preventLazyLoading();
-        }
+        
     }
 }
