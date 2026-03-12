@@ -35,6 +35,20 @@ Route::get('/', function () {
     return view('welcome', ['plans' => $preparedPlans]);
 });
 
+// Clear Cache via URL
+Route::get('/clear-cache', function () {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    
+    return response()->json([
+        'status' => 'success',
+        'message' => 'All caches cleared successfully! Memory is optimized.'
+    ]);
+});
+
 // Language Switcher Route
 
 
