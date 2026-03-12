@@ -121,7 +121,6 @@ class User extends Authenticatable implements FilamentUser
     public function isAdmin(): bool
     {
         return $this->memoizedRoles['admin'] ??= (
-            $this->can('Access:Admin') || 
             $this->hasRole(config('filament-shield.super_admin.name', 'super_admin')) ||
             $this->hasRole('admin')
         );
@@ -129,16 +128,12 @@ class User extends Authenticatable implements FilamentUser
 
     public function isClient(): bool
     {
-        return $this->memoizedRoles['client'] ??= (
-            $this->can('Access:Client') || $this->hasRole('client')
-        );
+        return $this->memoizedRoles['client'] ??= $this->hasRole('client');
     }
 
     public function isShipper(): bool
     {
-        return $this->memoizedRoles['shipper'] ??= (
-            $this->can('Access:Shipper') || $this->hasRole('shipper')
-        );
+        return $this->memoizedRoles['shipper'] ??= $this->hasRole('shipper');
     }
 
     /**
