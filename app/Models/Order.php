@@ -158,10 +158,6 @@ class Order extends Model
         return $this->belongsTo(ShippingContent::class, 'shipping_content');
     }
 
-    public function statusHistories()
-    {
-        return $this->hasMany(OrderStatusHistory::class);
-    }
 
     /**
      * Get the order status model

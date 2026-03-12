@@ -50,7 +50,7 @@ class CaptainOrderController extends Controller
             ->where('collected_shipper', false)
             ->findOrFail($id);
         
-        $order->load(['client', 'governorate', 'city', 'statusHistories.user']);
+        $order->load(['client', 'governorate', 'city']);
 
         return response()->json($order);
     }
@@ -119,19 +119,12 @@ class CaptainOrderController extends Controller
 
         $order->save();
 
-        // Log history as per app patterns
-        $order->statusHistories()->create([
-            'status' => $normalizedStatus,
-            'old_status' => $oldStatus,
-            'changed_by' => $user->id,
-            'note' => $request->status_note ?? '',
-            'action_type' => 'status_changed',
-        ]);
+
 
         return response()->json([
             'status' => 'success',
             'message' => 'Order status updated successfully',
-            'order' => $order->fresh()->load('statusHistories')
+            'order' => $order->fresh()
         ]);
     }
     

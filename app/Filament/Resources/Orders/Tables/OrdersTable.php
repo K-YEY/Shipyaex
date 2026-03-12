@@ -1858,22 +1858,7 @@ class OrdersTable
                                 ->persistent()
                                 ->send();
                             break;
-                            
-                        case 'view_timeline':
-                            $histories = $order->statusHistories()->with('user')->latest()->take(10)->get();
-                            $timelineHtml = '';
-                            foreach ($histories as $history) {
-                                $timelineHtml .= "• {$history->created_at->format('Y-m-d H:i')} - {$history->status} by {$history->user?->name}\n";
-                            }
-                            
-                            Notification::make()
-                                ->title("Timeline - Order #{$order->code}")
-                                ->body($timelineHtml ?: 'No records found')
-                                ->info()
-                                ->persistent()
-                                ->send();
-                            break;
-                            
+
                         default:
                             Notification::make()
                                 ->title("Order Info #{$order->code}")
@@ -2102,16 +2087,6 @@ class OrdersTable
                     return true;
                 }),
 
-                Action::make('timeline')
-                    ->visible(fn() => $isAdmin || self::userCan('ViewTimelineAction:Order'))
-                    ->label('التاريخ والحركة')
-                    ->icon('heroicon-o-clock')
-                    ->color('info')
-                    ->modalHeading('تاريخ تغييرات الأوردر')
-                    ->modalContent(fn($record) => view('filament.orders.timeline', [
-                        'histories' => $record->statusHistories()->with('user')->latest()->get(),
-                    ])),
-           
                 Action::make('printLabel')
                     ->label('طباعة البوليصة')
                     ->icon('heroicon-o-printer')

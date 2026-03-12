@@ -18,7 +18,7 @@ class OrderObserver
         $user = auth()->user();
         
         // ✅ تسجيل إنشاء الأوردر في السجل
-        OrderStatusHistory::create([
+        // OrderStatusHistory::create([
             'order_id' => $order->id,
             'status' => $order->status,
             'old_status' => null,
@@ -68,7 +68,7 @@ class OrderObserver
             $newStatus = $order->status;
             
             // ✅ تسجيل تغيير الحالة في السجل
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $newStatus,
                 'old_status' => $oldStatus,
@@ -118,7 +118,7 @@ class OrderObserver
             $oldShipper = $oldShipperId ? User::select('id', 'name')->find($oldShipperId)?->name : null;
             $newShipper = $order->shipper?->name;
 
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
@@ -134,7 +134,7 @@ class OrderObserver
 
         // 3. تسجيل التحصيل من الكابتن
         if ($order->isDirty('collected_shipper') && $order->collected_shipper) {
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
@@ -146,7 +146,7 @@ class OrderObserver
 
         // 4. تسجيل الCollect for Client
         if ($order->isDirty('collected_client') && $order->collected_client) {
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
@@ -158,7 +158,7 @@ class OrderObserver
 
         // 5. تسجيل مرتجع الكابتن
         if ($order->isDirty('return_shipper') && $order->return_shipper) {
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
@@ -170,7 +170,7 @@ class OrderObserver
 
         // 6. تسجيل مرتجع العميل
         if ($order->isDirty('return_client') && $order->return_client) {
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
@@ -265,7 +265,7 @@ class OrderObserver
             $oldValueFormatted = $this->formatValue($field, $oldValue, $order);
             $newValueFormatted = $this->formatValue($field, $newValue, $order);
 
-            OrderStatusHistory::create([
+            // OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => $order->status,
                 'old_status' => null,
