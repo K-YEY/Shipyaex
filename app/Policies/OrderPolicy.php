@@ -20,7 +20,8 @@ class OrderPolicy
     public function before(AuthUser $authUser, string $ability): ?bool
     {
         // Always allow super_admin and admin
-        if ($authUser->hasRole(config('filament-shield.super_admin.name', 'super_admin')) || $authUser->hasRole('admin')) {
+        // Use our cached property helper instead of Spatie hasRole which hits DB natively
+        if (method_exists($authUser, 'isAdmin') && $authUser->isAdmin()) {
             return true;
         }
 
