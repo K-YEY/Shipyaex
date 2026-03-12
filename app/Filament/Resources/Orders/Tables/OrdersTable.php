@@ -212,24 +212,26 @@ class OrdersTable
                     return;
                 }
 
-                $query->where(function ($q) use ($search) {
-                    // MySQL FULLTEXT minimum word length is 3 by default (ft_min_word_len)
-                    if (mb_strlen($search) >= 3) {
-                        // ⚡ Use FULLTEXT index: ft_order_search (code, name, phone, phone_2, external_code, address)
-                        // BOOLEAN MODE allows partial prefix matching with *
-                        $ftSearch = '+' . str_replace(' ', '* +', $search) . '*';
-                        $q->whereRaw(
-                            "MATCH(`code`, `name`, `phone`, `phone_2`, `external_code`, `address`) AGAINST(? IN BOOLEAN MODE)",
-                            [$ftSearch]
-                        );
-                    } else {
-                        // Short queries (1-2 chars): FULLTEXT can't search words shorter than ft_min_word_len
-                        // Fallback to indexed prefix LIKE on the most common lookup columns
-                        $escaped = addcslashes($search, '%_');
-                        $q->where('code', 'like', "{$escaped}%")
-                          ->orWhere('external_code', 'like', "{$escaped}%")
-                          ->orWhere('phone', 'like', "{$escaped}%")
-                          ->orWhere('phone_2', 'like', "{$escaped}%");
+                $escaped = addcslashes($search, '%_');
+
+                $query->where(function ($q) use ($escaped) {
+                    // ⚡ 1. بحث متطابق (Exact Match) - ده الأسرع على الإطلاق (Binary Search in B-Tree Index)
+                    $q->where('order.phone', '=', $escaped)
+                      ->orWhere('order.phone_2', '=', $escaped)
+                      ->orWhere('order.code', '=', $escaped)
+                      ->orWhere('order.external_code', '=', $escaped)
+                      ->orWhere('order.name', '=', $escaped);
+
+                    // ⚡ 2. بحث جزئي من البداية (Prefix Search) - بيستخدم الـ Index بردو وبيكون سريع جداً
+                    // نعمله لو طول الكلمة أكتر من حرفين عشان الأداء 
+                    if (mb_strlen($escaped) >= 3) {
+                        $q->orWhere('order.phone', 'like', "{$escaped}%")
+                          ->orWhere('order.phone_2', 'like', "{$escaped}%")
+                          ->orWhere('order.code', 'like', "{$escaped}%")
+                          ->orWhere('order.external_code', 'like', "{$escaped}%")
+                          // الاسم والعنوان بستخدم فيهم % في الأول والآخر عشان ييجي من أي مكان في النص
+                          ->orWhere('order.name', 'like', "%{$escaped}%")
+                          ->orWhere('order.address', 'like', "%{$escaped}%");
                     }
                 });
             })
