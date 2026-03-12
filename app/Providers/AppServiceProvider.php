@@ -54,12 +54,6 @@ class AppServiceProvider extends ServiceProvider
             // 1️⃣ Log any query slower than 500ms
             $slowQueryThresholdMs = 500;
             DB::listen(function ($query) use ($slowQueryThresholdMs) {
-                // Temporary trace to catch repetitive Auth user loads
-                if (stripos($query->sql, 'select * from `users` where `id` = 1') !== false) {
-                    $trace = collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS))->pluck('function', 'class')->toJson();
-                    Log::channel('daily')->info('[USER QUERY TRACE]', ['sql' => $query->sql, 'backtrace' => substr($trace, 0, 1000)]);
-                }
-
                 if ($query->time > $slowQueryThresholdMs) {
                     Log::channel('daily')->warning('[SLOW QUERY] {time}ms | {sql}', [
                         'time' => round($query->time),
