@@ -167,7 +167,7 @@ class CollectedClientForm
                             ->default(function (Get $get, $record) use ($user, $isClient) {
                                 // في حالة الEdit، نرجع Orderات المحفوظة
                                 if ($record) {
-                                    return $record->orders->pluck('id')->toArray();
+                                    return $record->orders()->pluck('order.id')->toArray();
                                 }
                                 
                                 // في حالة الإنشاء، نختار كل Orderات المتاحة افتراضياً

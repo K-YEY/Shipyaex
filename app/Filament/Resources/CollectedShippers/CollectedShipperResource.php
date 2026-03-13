@@ -105,6 +105,11 @@ class CollectedShipperResource extends Resource
         return $query->whereRaw('1 = 0');
     }
 
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['shipper']);
+    }
+
     /**
      * Badge للعدد في القائمة الجانبية
      */

@@ -137,6 +137,7 @@ class CollectedShipperForm
                                 }
 
                                 $query = Order::query()
+                                    ->with(['client']) // ⚡ FIX: eager load client to prevent lazy loading error
                                     ->where('shipper_id', $shipperId)
                                     ->availableForShipperCollecting();
 
@@ -199,7 +200,7 @@ class CollectedShipperForm
                             ->default(function (Get $get, $record) use ($user, $isShipper) {
                                 // في حالة الEdit، نرجع Orderات المحفوظة
                                 if ($record) {
-                                    return $record->orders->pluck('id')->toArray();
+                                    return $record->orders()->pluck('order.id')->toArray();
                                 }
                                 
                                 // في حالة الإنشاء، نختار كل Orderات المتاحة افتراضياً

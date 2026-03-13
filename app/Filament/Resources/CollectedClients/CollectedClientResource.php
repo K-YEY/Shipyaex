@@ -105,6 +105,11 @@ class CollectedClientResource extends Resource
         return $query->whereRaw('1 = 0');
     }
 
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['client']);
+    }
+
     /**
      * Badge للعدد في القائمة الجانبية
      */

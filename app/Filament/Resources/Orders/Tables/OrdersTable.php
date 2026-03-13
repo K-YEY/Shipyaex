@@ -911,7 +911,6 @@ class OrdersTable
                                     modifyQueryUsing: fn ($query) => $query->role('shipper')
                                 )
                                 ->searchable()
-                                ->preload()
                                 ->required(),
                         ])
                         ->deselectRecordsAfterCompletion()
