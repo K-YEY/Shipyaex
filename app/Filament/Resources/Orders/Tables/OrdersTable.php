@@ -455,7 +455,7 @@ class OrdersTable
                                 TagsInput::make('status_note')
                                     ->label(__('statuses.refused_reasons_notes_label'))
                                     ->placeholder(__('statuses.refused_reasons_placeholder'))
-                                    ->suggestions(function (\Filament\Forms\Get $get) {
+                                    ->suggestions(function (\Filament\Schemas\Components\Utilities\Get $get) {
                                         $selectedStatus = $get('status');
                                         
                                         if (!$selectedStatus) {
@@ -481,7 +481,7 @@ class OrdersTable
                                     ->default(fn ($record) => (array) $record->status_note)
                                     ->reorderable()
                                     ->splitKeys(['Enter', ','])
-                                    ->helperText(function (\Filament\Forms\Get $get) {
+                                    ->helperText(function (\Filament\Schemas\Components\Utilities\Get $get) {
                                         $selectedStatus = $get('status');
                                         $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)->first();
                                         
@@ -491,7 +491,7 @@ class OrdersTable
                                         
                                         return __('statuses.refused_reasons_helper');
                                     })
-                                    ->disabled(function (\Filament\Forms\Get $get) {
+                                    ->disabled(function (\Filament\Schemas\Components\Utilities\Get $get) {
                                         $selectedStatus = $get('status');
                                         $orderStatus = \App\Models\OrderStatus::where('slug', $selectedStatus)->first();
                                         return $orderStatus && $orderStatus->clear_refused_reasons;
@@ -502,7 +502,7 @@ class OrdersTable
                                     ->label(__('statuses.is_return_label'))
                                     ->default(fn ($record) => $record->has_return)
                                     ->live()
-                                    ->visible(function (\Filament\Forms\Get $get, $record) {
+                                    ->visible(function (\Filament\Schemas\Components\Utilities\Get $get, $record) {
                                         $status = $get('status') ?? $record->status;
 
                                         return $status === self::STATUS_DELIVERED
@@ -515,7 +515,7 @@ class OrdersTable
                                     ->prefix(__('statuses.currency'))
                                     ->default(fn ($record) => $record->total_amount)
                                     ->helperText(__('statuses.total_amount_helper'))
-                                    ->visible(function (\Filament\Forms\Get $get, $record) {
+                                    ->visible(function (\Filament\Schemas\Components\Utilities\Get $get, $record) {
                                         $status = $get('status') ?? $record->status;
                                         
                                         return $status === self::STATUS_DELIVERED;
@@ -1555,7 +1555,7 @@ class OrdersTable
                     
                     \Filament\Forms\Components\Placeholder::make('order_info')
                         ->label('Order Info')
-                        ->content(function (\Filament\Forms\Get $get) {
+                        ->content(function (\Filament\Schemas\Components\Utilities\Get $get) {
                             $orderData = $get('order_data');
                             if (!$orderData) {
                                 return '🔍 Waiting for scan...';
@@ -1570,7 +1570,7 @@ class OrdersTable
                     
                     \Filament\Forms\Components\Select::make('action_type')
                         ->label('Action Required')
-                        ->options(function (\Filament\Forms\Get $get) {
+                        ->options(function (\Filament\Schemas\Components\Utilities\Get $get) {
                             $orderData = $get('order_data');
                             $options = [];
                             
@@ -1631,7 +1631,7 @@ class OrdersTable
                         })
                         ->default('view')
                         ->required()
-                        ->visible(fn (\Filament\Forms\Get $get) => $get('order_id') !== null)
+                        ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('order_id') !== null)
                         ->native(false)
                         ->selectablePlaceholder(false)
                         ->extraAttributes([
