@@ -209,6 +209,8 @@ class OrdersTable
                     ->label(__('orders.code'))
                     ->color(function ($record) {
                         try {
+                            if (!$record) return 'info';
+                            
                             // ⚡ Check governorate specific hours first, then fallback to global setting (cached)
                             $governorateHours = $record->governorate?->follow_up_hours;
                             $limit = ($governorateHours && $governorateHours > 0) 
@@ -321,7 +323,7 @@ class OrdersTable
                     ->searchable(isGlobal: false, isIndividual: true)
                     ->limit(length: 50, end: "\n...")  // put special ending instead of (more)
                     ->alignCenter()
-                    ->tooltip(fn ($record) => $record->address),
+                    ->tooltip(fn ($record) => $record?->address),
                 TextColumn::make('governorate.name')
                     // 📋 Individual only - uses whereHas to search related table
                     ->searchable(
@@ -425,12 +427,12 @@ class OrdersTable
                                     return false;
                                 }
                                 // حالة delivered/undelivered بتحتاج صلاحية خاصة
-                                if (!self::userCan('EditLocked:Order') && in_array($record->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
+                                if (!self::userCan('EditLocked:Order') && in_array($record?->status, [self::STATUS_DELIVERED, self::STATUS_UNDELIVERED])) {
                                     return false;
                                 }
                                 return true;
                             })
-                            ->modalHeading(fn ($record) => '🔄 تغيير حالة الأوردر: #' . $record->code)
+                            ->modalHeading(fn ($record) => '🔄 تغيير حالة الأوردر: #' . ($record?->code ?? ''))
                             ->schema([
                                 Select::make('status')
                                     ->label(__('statuses.new_status_label'))
@@ -441,7 +443,7 @@ class OrdersTable
                                             ->pluck('name', 'slug')
                                             ->toArray();
                                     })
-                                    ->default(fn ($record) => $record->status)
+                                    ->default(fn ($record) => $record?->status)
                                     ->reactive()
                                     ->afterStateUpdated(function ($state, $set) {
                                         // Check if selected status should clear refused reasons
@@ -478,7 +480,7 @@ class OrdersTable
                                             ->pluck('name')
                                             ->toArray();
                                     })
-                                    ->default(fn ($record) => (array) $record->status_note)
+                                    ->default(fn ($record) => (array) ($record?->status_note ?? []))
                                     ->reorderable()
                                     ->splitKeys(['Enter', ','])
                                     ->helperText(function (\Filament\Schemas\Components\Utilities\Get $get) {
@@ -500,10 +502,10 @@ class OrdersTable
 
                                 Toggle::make('has_return')
                                     ->label(__('statuses.is_return_label'))
-                                    ->default(fn ($record) => $record->has_return)
+                                    ->default(fn ($record) => $record?->has_return)
                                     ->live()
                                     ->visible(function (\Filament\Schemas\Components\Utilities\Get $get, $record) {
-                                        $status = $get('status') ?? $record->status;
+                                        $status = $get('status') ?? $record?->status;
 
                                         return $status === self::STATUS_DELIVERED
                                             && (self::$cachedUserIsAdmin || self::userCan('ManageShipperReturnAction:Order'));
@@ -513,10 +515,10 @@ class OrdersTable
                                     ->label(__('statuses.total_amount_label'))
                                     ->numeric()
                                     ->prefix(__('statuses.currency'))
-                                    ->default(fn ($record) => $record->total_amount)
+                                    ->default(fn ($record) => $record?->total_amount)
                                     ->helperText(__('statuses.total_amount_helper'))
                                     ->visible(function (\Filament\Schemas\Components\Utilities\Get $get, $record) {
-                                        $status = $get('status') ?? $record->status;
+                                        $status = $get('status') ?? $record?->status;
                                         
                                         return $status === self::STATUS_DELIVERED;
                                     }),
@@ -619,7 +621,7 @@ class OrdersTable
                     ->searchable(isIndividual: true, isGlobal: false)
                     ->placeholder(__('orders.order_notes_placeholder'))
                     ->limit(50)
-                    ->tooltip(fn ($record) => $record->order_note)
+                    ->tooltip(fn ($record) => $record?->order_note)
                     ->action(
                         // ⚡ PERF: self::userCan() uses static cache — NOT per-row auth()->can() call
                         ($isAdmin || self::userCan('EditOrderNotesField:Order')) ?
@@ -654,8 +656,8 @@ class OrdersTable
                     ->color('primary')
                     ->weight('bold')
                     ->description(function ($record) {
-                        // ⚡ FIX: use null-safe operator to prevent PHP error when shipper is null
-                        return $record->shipper?->phone;
+                        // ⚡ FIX: use null-safe operator to prevent PHP error when record or shipper is null
+                        return $record?->shipper?->phone;
                     })
                     ->searchable(
                         isIndividual: true,
@@ -702,14 +704,14 @@ class OrdersTable
 
 
                                     ->defaultFocusedDate(function ($record) {
-                                        return $record->shipper_date ?? \Carbon\Carbon::now()->format('Y-m-d');
+                                        return $record?->shipper_date ?? \Carbon\Carbon::now()->format('Y-m-d');
                                     })
                                     ->required(),
                             ])
                             ->fillForm(fn ($record) => [
-                                'shipper_id' => $record->shipper_id,
-                                'shipper_fees' => $record->shipper_fees,
-                                'shipper_date' => $record->shipper_date,
+                                'shipper_id' => $record?->shipper_id,
+                                'shipper_fees' => $record?->shipper_fees,
+                                'shipper_date' => $record?->shipper_date,
                             ])
                             ->action(function (Order $record, array $data) {
                                 $record->update([
@@ -2470,7 +2472,7 @@ class OrdersTable
                 ->badge()
                 ->toggleable()
                 ->visible($config['visible'])  // ⚡ pre-calculated, not per-row
-                ->color(fn ($record) => $record->{$field} ? 'success' : 'danger')
+                ->color(fn ($record) => $record?->{$field} ? 'success' : 'danger')
                 ->formatStateUsing(fn ($record) => self::formatStatusField($record, $field));
         }
 
@@ -2527,7 +2529,7 @@ class OrdersTable
 
     private static function formatStatusField($record, string $field): string
     {
-        if (! $record->{$field}) {
+        if (!$record || ! $record->{$field}) {
             return '✗';
         }
 
@@ -2589,6 +2591,9 @@ class OrdersTable
         }
         
         if (self::$cachedCanEditLocked) {
+            return false;
+        }
+        if (!$record) {
             return false;
         }
 
