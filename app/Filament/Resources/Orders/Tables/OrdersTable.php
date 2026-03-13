@@ -744,83 +744,83 @@ class OrdersTable
                     ->visible($isAdmin || self::userCan('ViewDatesColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                \Filament\Tables\Filters\TrashedFilter::make()
-                    ->label(__('orders.filters.deleted_orders'))
-                    ->placeholder(__('orders.filters.active_orders'))
-                    ->trueLabel(__('orders.filters.deleted_only'))
-                    ->falseLabel(__('orders.filters.all_with_deleted'))
-                    ->visible(fn() => $isAdmin || self::userCan('RestoreAny:Order') || self::userCan('DeleteAny:Order')),
+            // ->filters([
+            //     \Filament\Tables\Filters\TrashedFilter::make()
+            //         ->label(__('orders.filters.deleted_orders'))
+            //         ->placeholder(__('orders.filters.active_orders'))
+            //         ->trueLabel(__('orders.filters.deleted_only'))
+            //         ->falseLabel(__('orders.filters.all_with_deleted'))
+            //         ->visible(fn() => $isAdmin || self::userCan('RestoreAny:Order') || self::userCan('DeleteAny:Order')),
 
-                \Filament\Tables\Filters\SelectFilter::make('follow_up_status')
-                    ->label(__('orders.filters.delay_follow_up'))
-                    ->visible($isAdmin || self::userCan('ViewDelayedFollowUpFilter:Order'))
-                    ->options([
-                        'delayed' => __('orders.filters.delayed'),
-                        'on_time' => __('orders.filters.on_time'),
-                    ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
-                        if (empty($data['value'])) {
-                            return;
-                        }
+            //     \Filament\Tables\Filters\SelectFilter::make('follow_up_status')
+            //         ->label(__('orders.filters.delay_follow_up'))
+            //         ->visible($isAdmin || self::userCan('ViewDelayedFollowUpFilter:Order'))
+            //         ->options([
+            //             'delayed' => __('orders.filters.delayed'),
+            //             'on_time' => __('orders.filters.on_time'),
+            //         ])
+            //         ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
+            //             if (empty($data['value'])) {
+            //                 return;
+            //             }
 
-                        // ⚡ PERF: use static cached getFollowUpHours() instead of Setting::get() on every filter call
-                        $globalLimit = self::getFollowUpHours();
+            //             // ⚡ PERF: use static cached getFollowUpHours() instead of Setting::get() on every filter call
+            //             $globalLimit = self::getFollowUpHours();
                         
-                        // Calculate dynamic limit based on governorate or fallback to global
-                        $hoursSql = "COALESCE(NULLIF((SELECT follow_up_hours FROM governorates WHERE governorates.id = `order`.governorate_id LIMIT 1), 0), {$globalLimit})";
+            //             // Calculate dynamic limit based on governorate or fallback to global
+            //             $hoursSql = "COALESCE(NULLIF((SELECT follow_up_hours FROM governorates WHERE governorates.id = `order`.governorate_id LIMIT 1), 0), {$globalLimit})";
 
-                        if ($data['value'] === 'delayed') {
-                            $query->where('status', self::STATUS_OUT_FOR_DELIVERY)
-                                  ->whereRaw("updated_at < DATE_SUB(NOW(), INTERVAL {$hoursSql} HOUR)");
-                        }
+            //             if ($data['value'] === 'delayed') {
+            //                 $query->where('status', self::STATUS_OUT_FOR_DELIVERY)
+            //                       ->whereRaw("updated_at < DATE_SUB(NOW(), INTERVAL {$hoursSql} HOUR)");
+            //             }
                         
-                        if ($data['value'] === 'on_time') {
-                            $query->where('status', self::STATUS_OUT_FOR_DELIVERY)
-                                  ->whereRaw("updated_at >= DATE_SUB(NOW(), INTERVAL {$hoursSql} HOUR)");
-                        }
-                    }),
+            //             if ($data['value'] === 'on_time') {
+            //                 $query->where('status', self::STATUS_OUT_FOR_DELIVERY)
+            //                       ->whereRaw("updated_at >= DATE_SUB(NOW(), INTERVAL {$hoursSql} HOUR)");
+            //             }
+            //         }),
                     
-                \Filament\Tables\Filters\SelectFilter::make('status')
-                    ->label(__('orders.status'))
-                    ->visible($isAdmin || self::userCan('ViewStatusFilter:Order'))
-                    ->options([
-                        self::STATUS_OUT_FOR_DELIVERY => '🚚 ' . __('app.out_for_delivery'),
-                        self::STATUS_DELIVERED => '✅ ' . __('app.delivered'),
-                        self::STATUS_UNDELIVERED => '❌ ' . __('app.undelivered'),
-                        self::STATUS_HOLD => '⏸️ ' . __('app.hold'),
-                    ]),
-                \Filament\Tables\Filters\TernaryFilter::make('collected_shipper')
-                    ->label(__('orders.filters.collected_from_shipper'))
-                    ->visible($isAdmin || self::userCan('ViewCollectedFromShipperFilter:Order'))
-                    ->placeholder(__('statuses.all'))
-                    ->trueLabel(__('statuses.yes'))
-                    ->falseLabel(__('statuses.no')),
-                \Filament\Tables\Filters\TernaryFilter::make('return_shipper')
-                    ->label(__('orders.filters.returned_from_shipper'))
-                    ->visible($isAdmin || self::userCan('ViewReturnedFromShipperFilter:Order'))
-                    ->placeholder(__('statuses.all'))
-                    ->trueLabel(__('statuses.yes'))
-                    ->falseLabel(__('statuses.no')),
-                \Filament\Tables\Filters\TernaryFilter::make('has_return')
-                    ->label(__('orders.filters.has_return'))
-                    ->visible($isAdmin || self::userCan('ViewHasReturnFilter:Order'))
-                    ->placeholder(__('statuses.all'))
-                    ->trueLabel(__('statuses.yes'))
-                    ->falseLabel(__('statuses.no')),
-                \Filament\Tables\Filters\TernaryFilter::make('collected_client')
-                    ->label(__('orders.filters.settled_with_client'))
-                    ->visible($isAdmin || self::userCan('ViewSettledWithClientFilter:Order'))
-                    ->placeholder(__('statuses.all'))
-                    ->trueLabel(__('statuses.yes'))
-                    ->falseLabel(__('statuses.no')),
-                \Filament\Tables\Filters\TernaryFilter::make('return_client')
-                    ->label(__('orders.filters.returned_to_client'))
-                    ->visible($isAdmin || self::userCan('ViewReturnedToClientFilter:Order'))
-                    ->placeholder(__('statuses.all'))
-                    ->trueLabel(__('statuses.yes'))
-                    ->falseLabel(__('statuses.no')),
-            ])
+            //     \Filament\Tables\Filters\SelectFilter::make('status')
+            //         ->label(__('orders.status'))
+            //         ->visible($isAdmin || self::userCan('ViewStatusFilter:Order'))
+            //         ->options([
+            //             self::STATUS_OUT_FOR_DELIVERY => '🚚 ' . __('app.out_for_delivery'),
+            //             self::STATUS_DELIVERED => '✅ ' . __('app.delivered'),
+            //             self::STATUS_UNDELIVERED => '❌ ' . __('app.undelivered'),
+            //             self::STATUS_HOLD => '⏸️ ' . __('app.hold'),
+            //         ]),
+            //     \Filament\Tables\Filters\TernaryFilter::make('collected_shipper')
+            //         ->label(__('orders.filters.collected_from_shipper'))
+            //         ->visible($isAdmin || self::userCan('ViewCollectedFromShipperFilter:Order'))
+            //         ->placeholder(__('statuses.all'))
+            //         ->trueLabel(__('statuses.yes'))
+            //         ->falseLabel(__('statuses.no')),
+            //     \Filament\Tables\Filters\TernaryFilter::make('return_shipper')
+            //         ->label(__('orders.filters.returned_from_shipper'))
+            //         ->visible($isAdmin || self::userCan('ViewReturnedFromShipperFilter:Order'))
+            //         ->placeholder(__('statuses.all'))
+            //         ->trueLabel(__('statuses.yes'))
+            //         ->falseLabel(__('statuses.no')),
+            //     \Filament\Tables\Filters\TernaryFilter::make('has_return')
+            //         ->label(__('orders.filters.has_return'))
+            //         ->visible($isAdmin || self::userCan('ViewHasReturnFilter:Order'))
+            //         ->placeholder(__('statuses.all'))
+            //         ->trueLabel(__('statuses.yes'))
+            //         ->falseLabel(__('statuses.no')),
+            //     \Filament\Tables\Filters\TernaryFilter::make('collected_client')
+            //         ->label(__('orders.filters.settled_with_client'))
+            //         ->visible($isAdmin || self::userCan('ViewSettledWithClientFilter:Order'))
+            //         ->placeholder(__('statuses.all'))
+            //         ->trueLabel(__('statuses.yes'))
+            //         ->falseLabel(__('statuses.no')),
+            //     \Filament\Tables\Filters\TernaryFilter::make('return_client')
+            //         ->label(__('orders.filters.returned_to_client'))
+            //         ->visible($isAdmin || self::userCan('ViewReturnedToClientFilter:Order'))
+            //         ->placeholder(__('statuses.all'))
+            //         ->trueLabel(__('statuses.yes'))
+            //         ->falseLabel(__('statuses.no')),
+            // ])
             ->recordActions(self::getRecordActions())
             ->headerActions(self::getHeaderActions())
             ->toolbarActions([
