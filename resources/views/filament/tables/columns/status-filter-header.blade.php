@@ -1,9 +1,9 @@
 @props(['label', 'field'])
 
-<div class="flex flex-col items-center gap-1.5">
+<div class="flex flex-col items-center gap-1.5" x-data>
     <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ $label }}</span>
     <select
-        wire:change="$set('tableFilters.{{ $field }}.value', $event.target.value === '' ? null : ($event.target.value === '1' ? true : false))"
+        wire:model.live="tableColumnSearches.{{ $field }}"
         class="w-full min-w-[70px] text-xs font-medium border-0 rounded-lg px-2 py-1.5 
                bg-gray-100 dark:bg-gray-700 
                text-gray-600 dark:text-gray-300 
@@ -12,8 +12,8 @@
                cursor-pointer transition-all duration-200
                shadow-sm"
     >
-        <option value="" class="bg-white dark:bg-gray-800">🔘 All</option>
-        <option value="1" class="bg-white dark:bg-gray-800">✅ Yes</option>
-        <option value="0" class="bg-white dark:bg-gray-800">❌ No</option>
+        <option value="" class="bg-white dark:bg-gray-800">🔘 الكل</option>
+        <option value="1" class="bg-white dark:bg-gray-800">✅ نعم</option>
+        <option value="0" class="bg-white dark:bg-gray-800">❌ لا</option>
     </select>
 </div>

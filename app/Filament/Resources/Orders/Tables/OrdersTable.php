@@ -2481,6 +2481,20 @@ class OrdersTable
                     ])->render()
                 ))
                 ->badge()
+                ->searchable(
+                    isGlobal: false,
+                    isIndividual: true,
+                    query: function (Builder $query, string $search) use ($field): Builder {
+                        if ($search === '1') {
+                            return $query->where($field, true);
+                        } elseif ($search === '0') {
+                            return $query->where(function($q) use ($field) {
+                                $q->where($field, false)->orWhereNull($field);
+                            });
+                        }
+                        return $query;
+                    }
+                )
                 ->toggleable()
                 ->visible($config['visible'])  // ⚡ pre-calculated, not per-row
                 ->color(fn ($record) => $record?->{$field} ? 'success' : 'danger')
