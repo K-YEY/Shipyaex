@@ -188,6 +188,7 @@ class OrdersTable
                           // الاسم والعنوان بستخدم فيهم % في الأول والآخر عشان ييجي من أي مكان في النص
                           ->orWhere('order.name', 'like', "%{$escaped}%")
                           ->orWhere('order.address', 'like', "%{$escaped}%");
+                          
                     }
                 });
             })
@@ -662,7 +663,10 @@ class OrdersTable
                     ->searchable(
                         isIndividual: true,
                         isGlobal: false,
-                        query: fn ($query, $search) => $query->whereHas('shipper', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                        query: fn ($query, $search) => $query->whereHas('shipper', fn ($q) => 
+                            $q->where('name', 'like', "%{$search}%")
+                              ->orWhere('phone', 'like', "%{$search}%")
+                        )
                     )
                     ->toggleable()  
                     ->sortable()
@@ -745,6 +749,14 @@ class OrdersTable
                     ->sortable()
                     ->visible($isAdmin || self::userCan('ViewDatesColumn:Order'))
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('shipper_id')
+                    ->label('بحث بالكابتن')
+                    ->relationship('shipper', 'name', fn ($query) => $query->role('shipper'))
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn() => self::$cachedUserIsAdmin || self::userCan('ViewShipperFilter:Order')),
             ])
             // ->filters([
             //     \Filament\Tables\Filters\TrashedFilter::make()
