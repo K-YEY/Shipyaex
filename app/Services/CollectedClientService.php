@@ -29,7 +29,9 @@ class CollectedClientService
     public function validateOrdersForCollection(array $orderIds, int $clientId): array
     {
         $errors = [];
-        $orders = Order::whereIn('id', $orderIds)->get();
+        $orders = Order::whereIn('id', $orderIds)
+            ->with(['collectedShipper', 'returnedShipper'])
+            ->get();
 
         foreach ($orders as $order) {
             // التحقق من أن Order تابع للعميل
