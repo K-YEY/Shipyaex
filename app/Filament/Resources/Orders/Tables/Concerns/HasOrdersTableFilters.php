@@ -51,21 +51,7 @@ trait HasOrdersTableFilters
                 ->searchable()
                 ->multiple(),
 
-            Filter::make('created_at')
-                ->form([
-                    DatePicker::make('from')->label(__('orders.from_date')),
-                    DatePicker::make('until')->label(__('orders.to_date')),
-                ])
-                ->query(function (Builder $query, array $data): Builder {
-                    return $query
-                        ->when($data['from'], fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
-                        ->when($data['until'], fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
-                })->indicateUsing(function (array $data): array {
-                    $indicators = [];
-                    if ($data['from'] ?? null) $indicators[] = __('orders.from_date') . ': ' . $data['from'];
-                    if ($data['until'] ?? null) $indicators[] = __('orders.to_date') . ': ' . $data['until'];
-                    return $indicators;
-                }),
+            
 
             Filter::make('is_return')
                 ->label(__('orders.has_return'))
