@@ -4,13 +4,12 @@ namespace App\Filament\Resources\Orders\Tables\Concerns;
 
 use App\Models\Order;
 use App\Models\Setting;
-use App\Models\User;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -204,7 +203,15 @@ trait HasOrdersTableActions
     protected static function handleBarcodeScan($state, $set)
     {
         if (!$state || strlen($state) < 2) return;
-        $order = Order::with(['client', 'shipper'])->where('code', $state)->orWhere('code', 'like', "%{$state}%")->first();
+        
+        $query = Order::with(['client', 'shipper', 'governorate', 'city']);
+        $user = auth()->user();
+        if ($user->isShipper()) {
+            $query->where('shipper_id', $user->id)->where('collected_shipper', false);
+        }
+
+        $order = $query->where('code', $state)->orWhere('code', 'like', "%{$state}%")->first();
+        
         if ($order) {
             $set('order_id', $order->id);
             $set('order_data', [
@@ -226,7 +233,10 @@ trait HasOrdersTableActions
 
     protected static function handleBarcodeAction(array $data)
     {
-        $order = Order::find($data['order_id']);
+        $orderId = $data['order_id'] ?? null;
+        if (!$orderId) return;
+        
+        $order = Order::find($orderId);
         if (!$order) return;
 
         switch ($data['action_type']) {
@@ -236,35 +246,64 @@ trait HasOrdersTableActions
             case 'mark_undelivered':
                 $order->update(['status' => self::STATUS_UNDELIVERED]);
                 break;
-            // ... add more cases based on original file ...
+            case 'mark_hold':
+                $order->update(['status' => self::STATUS_HOLD]);
+                break;
+            case 'mark_out_for_delivery':
+                $order->update(['status' => self::STATUS_OUT_FOR_DELIVERY]);
+                break;
+            case 'collect_shipper':
+                self::handleToggleShipperCollection($order);
+                break;
+            case 'collect_client':
+                self::handleToggleClientCollection($order);
+                break;
+            case 'print_label':
+                // Handled via notification
+                Notification::make()->title('Opening Label...')->actions([
+                    \Filament\Notifications\Actions\Action::make('open')->url(route('orders.print-label', $order->id), true)
+                ])->send();
+                break;
         }
-        Notification::make()->title('Action Executed')->success()->send();
+        Notification::make()->title('Order updated')->success()->send();
     }
 
     protected static function handleToggleShipperCollection($record)
     {
         if ($record->collected_shipper) {
             $record->update(['collected_shipper' => false, 'collected_shipper_date' => null]);
-            Notification::make()->title('Cancelled')->success()->send();
+            Notification::make()->title('Shipper Collection Cancelled')->success()->send();
             return;
         }
+        
+        if ($record->status !== self::STATUS_DELIVERED && $record->status !== self::STATUS_UNDELIVERED) {
+            Notification::make()->title('Error')->body('Order must be Delivered or Undelivered')->warning()->send();
+            return;
+        }
+
         $record->update(['collected_shipper' => true, 'collected_shipper_date' => now()]);
-        Notification::make()->title('Collected')->success()->send();
+        Notification::make()->title('Collected from Shipper')->success()->send();
     }
 
     protected static function handleToggleClientCollection($record)
     {
         if ($record->collected_client) {
             $record->update(['collected_client' => false, 'collected_client_date' => null]);
-            Notification::make()->title('Cancelled')->success()->send();
+            Notification::make()->title('Client Collection Cancelled')->success()->send();
             return;
         }
+
+        if ($record->status !== self::STATUS_DELIVERED && $record->status !== self::STATUS_UNDELIVERED) {
+            Notification::make()->title('Error')->body('Order must be Delivered or Undelivered')->warning()->send();
+            return;
+        }
+
         if (self::requireShipperFirst() && !$record->collected_shipper) {
             Notification::make()->title('Error')->body('Must collect from shipper first')->danger()->send();
             return;
         }
         $record->update(['collected_client' => true, 'collected_client_date' => now()]);
-        Notification::make()->title('Collected')->success()->send();
+        Notification::make()->title('Settled for Client')->success()->send();
     }
 
     protected static function handleToggleReturnShipper($record)
@@ -276,7 +315,15 @@ trait HasOrdersTableActions
 
     protected static function handleImport(array $data)
     {
-        // ... abbreviated import logic mapping to original ...
-        Notification::make()->title('Import processing...')->info()->send();
+        $file = is_array($data['file']) ? reset($data['file']) : $data['file'];
+        
+        $import = new OrdersImport($data['client_id'] ?? null, $data['shipper_id'] ?? null);
+        
+        try {
+            Excel::import($import, $file, 'local');
+            Notification::make()->title('Import Successful')->success()->send();
+        } catch (\Exception $e) {
+            Notification::make()->title('Import Failed')->body($e->getMessage())->danger()->send();
+        }
     }
 }
