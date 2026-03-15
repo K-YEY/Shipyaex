@@ -39,7 +39,6 @@ trait HasOrdersTableActions
                 ->visible(fn() => $isAdmin || self::userCan('ViewMyOrdersAction:Order'))
                 ->modalHeading('My Orders - Out for Delivery')
                 ->modalWidth('7xl')
-                ->lazy()
                 ->modalContent(fn () => view('filament.orders.shipper-orders-table', [
                     'orders' => Order::where('shipper_id', auth()->id())->where('status', self::STATUS_OUT_FOR_DELIVERY)->get(),
                     'shipper' => auth()->user(),
@@ -90,7 +89,6 @@ trait HasOrdersTableActions
             ->modalHeading('Quick Barcode Scanner')
             ->modalWidth('2xl')
             ->visible(fn() => self::$cachedUserIsAdmin || self::userCan('BarcodeScannerAction:Order'))
-            ->lazy()
             ->schema([
                 TextInput::make('scanned_code')
                     ->label('Order Code')
@@ -160,7 +158,6 @@ trait HasOrdersTableActions
                     ->color(fn($record) => $record->collected_shipper ? 'danger' : 'success')
                     ->visible(fn() => self::userCan('ManageShipperCollectionAction:Order'))
                     ->requiresConfirmation()
-                    ->lazy()
                     ->action(fn($record) => self::handleToggleShipperCollection($record)),
 
                 Action::make('toggleCollectedClient')
@@ -169,7 +166,6 @@ trait HasOrdersTableActions
                     ->color(fn($record) => $record->collected_client ? 'danger' : 'primary')
                     ->visible(fn() => self::userCan('ManageCollections:Order'))
                     ->requiresConfirmation()
-                    ->lazy()
                     ->action(fn($record) => self::handleToggleClientCollection($record)),
                 
                 Action::make('toggleReturnShipper')
@@ -178,7 +174,6 @@ trait HasOrdersTableActions
                     ->color(fn($record) => $record->return_shipper ? 'danger' : 'info')
                     ->visible(fn() => self::userCan('ManageReturns:Order'))
                     ->requiresConfirmation()
-                    ->lazy()
                     ->action(fn($record) => self::handleToggleReturnShipper($record)),
             ])->icon('heroicon-m-ellipsis-vertical'),
         ];

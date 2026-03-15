@@ -253,7 +253,6 @@ trait HasOrdersTableColumns
             })
             ->modalHeading(fn ($record) => '🔄 تغيير حالة الأوردر: #' . ($record?->code ?? ''))
             ->modalWidth('2xl')
-            ->lazy() // ⚡ DEFERRED LOADING TO REDUCE DOM SIZE
             ->schema([
                 Select::make('status')
                     ->label(__('statuses.new_status_label'))
