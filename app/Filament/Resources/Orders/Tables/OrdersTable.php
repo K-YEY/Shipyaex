@@ -70,6 +70,8 @@ class OrdersTable
             ->striped()
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::Modal)
             ->persistSearchInSession()
+            ->recordAction(null)
             ->persistFiltersInSession();
+
     }
 }
