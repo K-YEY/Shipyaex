@@ -85,4 +85,14 @@ class ReturnedClientResource extends Resource
 
         return $query->whereRaw('1 = 0');
     }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
 }

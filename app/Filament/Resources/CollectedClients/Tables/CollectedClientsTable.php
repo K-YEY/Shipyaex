@@ -263,10 +263,6 @@ class CollectedClientsTable
                                 ->send();
                         }),
 
-                    DeleteBulkAction::make()
-                        ->label('حذف المختار')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:CollectedClient')),
-
                     BulkAction::make('exportExcel')
                         ->label('استخراج Excel')
                         ->icon('heroicon-o-document-arrow-down')

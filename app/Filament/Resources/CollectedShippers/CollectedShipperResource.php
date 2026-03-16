@@ -134,4 +134,14 @@ class CollectedShipperResource extends Resource
     {
         return 'warning';
     }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
 }

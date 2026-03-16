@@ -285,10 +285,6 @@ class CollectedShippersTable
                                 ->send();
                         }),
 
-                    DeleteBulkAction::make()
-                        ->label('حذف المختار')
-                        ->visible(fn() => auth()->user()->isAdmin() || auth()->user()->can('DeleteAny:CollectedShipper')),
-
                     BulkAction::make('exportExcel')
                         ->label('استخراج Excel')
                         ->icon('heroicon-o-document-arrow-down')
