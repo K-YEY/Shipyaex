@@ -47,6 +47,7 @@ class OrderObserver
 
         // 2. لو تم تعيين كابتن (سواء عند الإنشاء أو التحديث) -> إشعار للكابتن
         if ($order->shipper_id) {
+            $order->loadMissing('shipper');
             $this->notifyShipper($order);
         }
 
@@ -78,19 +79,22 @@ class OrderObserver
             ]); */
 
             // إشعار للعميل
-            if ($order->client) {
-                Notification::make()
-                    ->title('تحديث حالة الأوردر')
-                    ->body("حالة الأوردر بتاعك رقم **{$order->code}** اتغيرت لـ **{$order->status}**")
-                    ->icon('heroicon-o-arrow-path')
-                    ->color($order->status_color ?? 'info')
-                    ->actions([
-                        Action::make('view')
-                            ->label('عرض الأوردر')
-                            ->url("/admin/orders/{$order->id}")
-                            ->markAsRead(),
-                    ])
-                    ->sendToDatabase($order->client);
+            if ($order->client_id) {
+                $order->loadMissing('client');
+                if ($order->client) {
+                    Notification::make()
+                        ->title('تحديث حالة الأوردر')
+                        ->body("حالة الأوردر بتاعك رقم **{$order->code}** اتغيرت لـ **{$order->status}**")
+                        ->icon('heroicon-o-arrow-path')
+                        ->color($order->status_color ?? 'info')
+                        ->actions([
+                            Action::make('view')
+                                ->label('عرض الأوردر')
+                                ->url("/admin/orders/{$order->id}")
+                                ->markAsRead(),
+                        ])
+                        ->sendToDatabase($order->client);
+                }
             }
 
             // لو Shipper هو اللي غير Status -> إشعار للأدمن
@@ -114,6 +118,7 @@ class OrderObserver
 
         // 2. لو تم Assign Shipper جديد (أو تغير Shipper)
         if ($order->isDirty('shipper_id') && $order->shipper_id) {
+            $order->loadMissing('shipper');
             $oldShipperId = $order->getOriginal('shipper_id');
             $oldShipper = $oldShipperId ? User::select('id', 'name')->find($oldShipperId)?->name : null;
             $newShipper = $order->shipper?->name;

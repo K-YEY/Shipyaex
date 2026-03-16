@@ -204,7 +204,7 @@ class CollectedShipperService
     public function createCollectionSplitByClient(int $shipperId, array $orderIds, ?string $collectionDate = null): array
     {
         return DB::transaction(function () use ($shipperId, $orderIds, $collectionDate) {
-            $orders = Order::whereIn('id', $orderIds)->get();
+            $orders = Order::whereIn('id', $orderIds)->with('client')->get();
 
             // تجميع الأوردرات حسب العميل (client_id)
             $groupedByClient = $orders->groupBy('client_id');

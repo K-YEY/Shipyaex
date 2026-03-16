@@ -16,6 +16,7 @@ class CollectedClientObserver
     {
         // إشعار للأدمن بطلب التحصيل الجديد
         $admins = User::getAdmins();
+        $collectedClient->loadMissing('client');
         $clientName = $collectedClient->client->name ?? 'عميل';
         
         Notification::make()
@@ -52,12 +53,14 @@ class CollectedClientObserver
                 default => 'info',
             };
 
-            if ($collectedClient->client) {
-                Notification::make()
-                    ->title('تحديث حالة طلب التسوية')
-                    ->body("حالة طلب التسوية رقم **{$collectedClient->id}** اتغيرت لـ **{$statusLabel}**")
-                    ->icon('heroicon-o-banknotes')
-                    ->color($color)
+            if ($collectedClient->client_id) {
+                $collectedClient->loadMissing('client');
+                if ($collectedClient->client) {
+                    Notification::make()
+                        ->title('تحديث حالة طلب التسوية')
+                        ->body("حالة طلب التسوية رقم **{$collectedClient->id}** اتغيرت لـ **{$statusLabel}**")
+                        ->icon('heroicon-o-banknotes')
+                        ->color($color)
                     ->actions([
                         Action::make('view')
                             ->label('عرض التفاصيل')
@@ -65,6 +68,7 @@ class CollectedClientObserver
                             ->markAsRead(),
                     ])
                     ->sendToDatabase($collectedClient->client);
+                }
             }
         }
     }

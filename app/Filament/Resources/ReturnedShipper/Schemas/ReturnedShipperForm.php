@@ -125,7 +125,7 @@ class ReturnedShipperForm
                                     $query->orWhere('returned_shipper_id', $record->id);
                                 }
 
-                                return $query->get()
+                                return $query->with('client')->get()
                                     ->mapWithKeys(fn ($order) => [
                                         $order->id => "#{$order->code} | " . ($order->client?->name ?? 'بدون عميل') . " | {$order->name} | {$order->status}"
                                     ]);
