@@ -185,7 +185,7 @@ class CollectedClientsTable
                         ->visible(fn () => auth()->user()->isAdmin() || auth()->user()->can('ViewOrdersAction:CollectedClient'))
                         ->modalHeading(fn ($record) => "طلبات التحصيل رقم #{$record->id}")
                         ->modalContent(fn ($record) => view('filament.collecting.orders-modal', [
-                            'orders' => $record->orders,
+                            'orders' => $record->loadMissing('orders')->orders,
                             'type' => 'client',
                         ])),
 

@@ -91,7 +91,7 @@ class CollectedShipperResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(['shipper']);
         $user = auth()->user();
 
         if ($user->isAdmin() || $user->can('ViewAll:CollectedShipper')) {

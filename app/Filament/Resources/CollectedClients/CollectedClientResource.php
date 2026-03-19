@@ -91,7 +91,7 @@ class CollectedClientResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(['client']);
         $user = auth()->user();
 
         if ($user->isAdmin() || $user->can('ViewAll:CollectedClient')) {

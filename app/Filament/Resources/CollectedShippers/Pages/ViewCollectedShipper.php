@@ -22,6 +22,13 @@ class ViewCollectedShipper extends ViewRecord
 
     protected static ?string $breadcrumb = 'عرض';
 
+    public function mount($record): void
+    {
+        parent::mount($record);
+
+        $this->record->loadMissing(['orders']);
+    }
+
     protected function getHeaderActions(): array
     {
         $isAdmin = auth()->user()->isAdmin();
