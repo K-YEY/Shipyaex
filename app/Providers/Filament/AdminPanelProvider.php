@@ -38,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->maxContentWidth('full')
             ->brandName(__('app.dashboard'))
             ->brandLogo(asset('logo.png'))
             ->brandLogoHeight('3rem')
